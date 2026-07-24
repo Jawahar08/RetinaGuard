@@ -1,0 +1,4 @@
+id,filename,diagnosis,label_name,split
+001,normal_retina_01.png,0,No DR,train
+002,dr_retina_02.png,2,Moderate DR,val
+003,dark_corrupt_03.png,0,No DR,test

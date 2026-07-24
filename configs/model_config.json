@@ -1,0 +1,29 @@
+{
+  "version": "1.0.0",
+  "base_models": {
+    "resnet50": {
+      "feature_dim": 2048,
+      "target_layer": "layer4",
+      "weights": "DEFAULT"
+    },
+    "densenet121": {
+      "feature_dim": 1024,
+      "target_layer": "features.denseblock4",
+      "weights": "DEFAULT"
+    },
+    "efficientnet_b3": {
+      "feature_dim": 1536,
+      "target_layer": "features.7",
+      "weights": "DEFAULT"
+    }
+  },
+  "fusion": {
+    "input_dim": 4608,
+    "hidden_layers": [1024, 512, 256],
+    "dropout": 0.3
+  },
+  "abstention": {
+    "confidence_threshold": 0.55,
+    "max_uncertainty_entropy": 1.4
+  }
+}

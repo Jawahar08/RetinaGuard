@@ -1,0 +1,4 @@
+id,filename,Normal,Diabetic Retinopathy,Glaucoma,Cataract,AMD,split
+001,normal_retina_01.png,1,0,0,0,0,train
+002,dr_retina_02.png,0,1,0,0,0,val
+003,dark_corrupt_03.png,0,0,0,0,0,test

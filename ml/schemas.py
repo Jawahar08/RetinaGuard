@@ -1,0 +1,55 @@
+"""
+Pydantic schemas for Retinal Fundus-Image Analysis Pipeline.
+Ensures strong typing, contract stability, and explicit provenance.
+"""
+from typing import Dict, List, Optional
+from pydantic import BaseModel, Field
+
+
+class QualityGateResult(BaseModel):
+    passed: bool = Field(..., description="Whether image passed quality and OOD checks")
+    quality_score: float = Field(..., description="Calculated overall image quality score (0.0 to 1.0)")
+    rejection_reason: Optional[str] = Field(None, description="Human-readable rejection reason if passed is False")
+    flags: List[str] = Field(default_factory=list, description="Specific quality issue flags detected")
+    blur_score: float = Field(..., description="Laplacian variance blur score")
+    fov_ratio: float = Field(..., description="Estimated field of view ratio")
+    mean_brightness: float = Field(..., description="Mean pixel brightness")
+
+
+class ClassPrediction(BaseModel):
+    label: str
+    probability: float
+    is_positive: bool = Field(False, description="Whether probability exceeds operating threshold")
+
+
+class PredictionResponse(BaseModel):
+    request_id: str
+    task: str = Field(..., description="Task name: 'odir' (multi-label) or 'aptos' (multiclass)")
+    label_schema_version: str = "1.0.0"
+    model_name: str
+    model_version: str = "1.0.0-demo"
+    preprocessing_version: str = "1.0.0"
+    quality_gate: QualityGateResult
+    predictions: List[ClassPrediction]
+    top_prediction: str
+    calibrated_confidence: float = Field(..., description="Calibrated prediction confidence score (0.0 to 1.0)")
+    abstain: bool = Field(False, description="True if model abstains due to low confidence or quality issues")
+    abstention_reason: Optional[str] = Field(None, description="Reason for abstention if abstain is True")
+    disclaimer: str = Field(
+        "For research and educational screening support only. Not clinically validated for diagnostic or treatment decisions.",
+        description="Clinical safety boundary disclaimer"
+    )
+
+
+class HeatmapResponse(BaseModel):
+    request_id: str
+    target_label: str
+    architecture: str
+    target_layer: str
+    original_image_base64: str
+    heatmap_base64: str
+    overlay_base64: str
+    disclaimer: str = Field(
+        "Grad-CAM visual attention highlight shows model feature focus. It is not clinical evidence of pathology.",
+        description="XAI safety disclaimer"
+    )

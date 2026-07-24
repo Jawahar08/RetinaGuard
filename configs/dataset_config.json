@@ -1,0 +1,33 @@
+{
+  "version": "1.0.0",
+  "tasks": {
+    "odir": {
+      "task_type": "multi_label",
+      "labels": ["Normal", "Diabetic Retinopathy", "Glaucoma", "Cataract", "AMD"],
+      "description": "Ocular Disease Intelligent Recognition (ODIR) multi-label disease presence"
+    },
+    "aptos": {
+      "task_type": "multiclass",
+      "labels": ["No DR", "Mild DR", "Moderate DR", "Severe DR", "Proliferative DR"],
+      "description": "APTOS 2019 Blindness Detection 5-class Diabetic Retinopathy severity grading"
+    }
+  },
+  "preprocessing": {
+    "version": "1.0.0",
+    "image_size": [224, 224],
+    "normalize_mean": [0.485, 0.456, 0.406],
+    "normalize_std": [0.229, 0.224, 0.225],
+    "clahe_enabled": true,
+    "clahe_clip_limit": 2.0,
+    "clahe_tile_grid": [8, 8],
+    "crop_black_borders": true
+  },
+  "quality_gate": {
+    "min_resolution": [100, 100],
+    "max_aspect_ratio": 2.5,
+    "min_laplacian_var": 15.0,
+    "min_fov_ratio": 0.25,
+    "max_brightness": 245.0,
+    "min_brightness": 10.0
+  }
+}
