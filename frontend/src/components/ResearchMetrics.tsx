@@ -53,7 +53,7 @@ export default function ResearchMetrics({ t }: { t: any }) {
               <td style={{ padding: '18px 24px' }}>0.0550</td>
             </tr>
             <tr style={{ background: '#FFF9E6', fontWeight: 800 }}>
-              <td style={{ padding: '18px 24px', color: 'var(--ink-black)' }}>OphthaFusion-XAI Stacking Ensemble SOTA</td>
+              <td style={{ padding: '18px 24px', color: 'var(--ink-black)' }}>RetinaGuard Stacking Ensemble SOTA</td>
               <td style={{ padding: '18px 24px' }}>4608d + OOF</td>
               <td style={{ padding: '18px 24px', color: 'var(--electric-blue)', fontSize: '1.1rem' }}>98.22%</td>
               <td style={{ padding: '18px 24px' }}>0.9825</td>

@@ -15,8 +15,8 @@ export default function SiteHeader({ lang, setLang, onStartScreening, onExploreM
     <header style={{ maxWidth: '1360px', margin: '0 auto', padding: '24px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid rgba(20,18,16,0.1)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         <div>
-          <h1 className="font-serif-display" style={{ fontSize: '1.4rem', fontWeight: 800, lineHeight: 1.1 }}>
-            OphthaFusion-XAI
+          <h1 className="font-serif-display" style={{ fontSize: '1.5rem', fontWeight: 800, lineHeight: 1.1 }}>
+            RetinaGuard
           </h1>
           <p className="font-grotesk-mono" style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '2px' }}>
             EXPLAINABLE RETINAL SCREENING

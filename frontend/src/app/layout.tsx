@@ -2,7 +2,7 @@ import './globals.css';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'OphthaFusion-XAI | Explainable Retinal Screening System',
+  title: 'RetinaGuard | Explainable Retinal Screening System',
   description: 'An Explainable Ensemble Deep Learning System for Multi-Disease Retinal Screening with 4608d Feature Fusion, Calibrated Confidence, and Grad-CAM Visual Explainability.',
 };
 

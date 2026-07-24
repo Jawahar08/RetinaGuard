@@ -52,7 +52,7 @@ const TRANSLATIONS: Record<'en' | 'ph', Record<string, string>> = {
   en: {
     heroTitleLine1: 'See the signal.',
     heroTitleLine2: 'Understand the decision.',
-    heroSub: 'OphthaFusion-XAI analyzes retinal fundus images using an ensemble of deep-learning models and visualizes the regions influencing its prediction.',
+    heroSub: 'RetinaGuard analyzes retinal fundus images using an ensemble of deep-learning models and visualizes the regions influencing its prediction.',
     trustLine: 'Research and screening support only. Not a medical diagnosis.',
     ctaPrimary: 'Analyze a Retinal Image',
     ctaSecondary: 'Explore the Method',
@@ -86,7 +86,7 @@ const TRANSLATIONS: Record<'en' | 'ph', Record<string, string>> = {
   ph: {
     heroTitleLine1: 'Tignan ang hudyat.',
     heroTitleLine2: 'Unawain ang desisyon.',
-    heroSub: 'Pino-proseso ng OphthaFusion-XAI ang mga litrato ng retina gamit ang pinagsamang AI ensemble upang maipakita ang mga bahaging nakaimpluwensya sa pagsusuri.',
+    heroSub: 'Pino-proseso ng RetinaGuard ang mga litrato ng retina gamit ang pinagsamang AI ensemble upang maipakita ang mga bahaging nakaimpluwensya sa pagsusuri.',
     trustLine: 'Pang-pananaliksik at suporta lamang. Hindi ito pinal na diagnosis ng doktor.',
     ctaPrimary: 'Suriin ang Litrato ng Retina',
     ctaSecondary: 'Tignan ang Paraan ng AI',
@@ -195,9 +195,9 @@ export default function OphthaFusionDashboard() {
     if (useMock) {
       setTimeout(() => {
         const mockPred: PredictionResponse = {
-          request_id: 'ophthafusion-9822-sota',
+          request_id: 'retinaguard-9822-sota',
           task: task,
-          model_name: 'OphthaFusion-XAI 4608d Stacking Ensemble',
+          model_name: 'RetinaGuard 4608d Stacking Ensemble',
           model_version: '2.0.0-SOTA (98.22% Test Acc)',
           quality_gate: {
             passed: true,
@@ -281,7 +281,7 @@ export default function OphthaFusionDashboard() {
   const downloadReport = () => {
     if (!prediction) return;
     const reportContent = {
-      product: 'OphthaFusion-XAI Retinal Screening System',
+      product: 'RetinaGuard Retinal Screening System',
       request_id: prediction.request_id,
       timestamp: new Date().toISOString(),
       task: prediction.task.toUpperCase(),
@@ -296,7 +296,7 @@ export default function OphthaFusionDashboard() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `ophthafusion_report_${prediction.request_id.slice(0, 8)}.json`;
+    a.download = `retinaguard_report_${prediction.request_id.slice(0, 8)}.json`;
     a.click();
   };
 

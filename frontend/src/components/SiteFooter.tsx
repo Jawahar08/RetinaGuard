@@ -8,7 +8,7 @@ export default function SiteFooter() {
       <div style={{ maxWidth: '1360px', margin: '0 auto', display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '48px', marginBottom: '48px' }}>
         <div>
           <h3 className="font-serif-display" style={{ fontSize: '1.6rem', color: 'var(--signal-yellow)', marginBottom: '12px' }}>
-            OphthaFusion-XAI
+            RetinaGuard
           </h3>
           <p style={{ color: '#A0988E', fontSize: '0.9rem', maxWidth: '480px', lineHeight: 1.6 }}>
             An Explainable Ensemble Deep Learning System for Multi-Disease Retinal Screening. Built with 4608-dimensional feature fusion, automated physical quality gating, and Grad-CAM visual attention mapping.
@@ -33,7 +33,7 @@ export default function SiteFooter() {
       </div>
 
       <div style={{ maxWidth: '1360px', margin: '0 auto', paddingTop: '24px', borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: '#766F68' }}>
-        <span>© 2026 OphthaFusion-XAI. All rights reserved.</span>
+        <span>© 2026 RetinaGuard. All rights reserved.</span>
         <span>Version 2.0.0-SOTA (98.22% Accuracy Benchmark)</span>
       </div>
     </footer>
