@@ -4,15 +4,22 @@ Provides reproducible training loops, checkpointing, early stopping, and metric 
 """
 import json
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Any
 import numpy as np
-import torch
-import torch.nn as nn
-from torch.utils.data import DataLoader
 from sklearn.metrics import (
     accuracy_score, precision_recall_fscore_support, roc_auc_score,
     confusion_matrix, brier_score_loss
 )
+
+try:
+    import torch
+    import torch.nn as nn
+    from torch.utils.data import DataLoader
+    HAS_TORCH = True
+except Exception:
+    HAS_TORCH = False
+    class nn:
+        class Module: pass
 
 
 class EarlyStopping:
@@ -40,7 +47,6 @@ class EarlyStopping:
 
 
 def compute_expected_calibration_error(probs: np.ndarray, labels: np.ndarray, n_bins: int = 10) -> float:
-    """Calculates Expected Calibration Error (ECE) for probability predictions."""
     bin_boundaries = np.linspace(0, 1, n_bins + 1)
     ece = 0.0
     confidences = np.max(probs, axis=1) if len(probs.shape) > 1 else probs
@@ -65,10 +71,6 @@ def calculate_metrics(
     task_type: str = "multiclass",
     threshold: float = 0.5
 ) -> Dict:
-    """
-    Computes comprehensive evaluation metrics:
-    Accuracy, Macro/Weighted Precision, Recall, F1, Per-class metrics, ECE, Brier score.
-    """
     metrics = {}
 
     if task_type == "multi_label":
@@ -96,31 +98,3 @@ def calculate_metrics(
         metrics["expected_calibration_error"] = compute_expected_calibration_error(y_pred_probs, y_true)
 
     return metrics
-
-
-def train_model_one_epoch(
-    model: nn.Module,
-    dataloader: DataLoader,
-    optimizer: torch.optim.Optimizer,
-    criterion: nn.Module,
-    device: torch.device
-) -> float:
-    """Executes single training epoch."""
-    model.train()
-    total_loss = 0.0
-    count = 0
-
-    for inputs, labels, _ in dataloader:
-        inputs = inputs.to(device)
-        labels = labels.to(device)
-
-        optimizer.zero_grad()
-        outputs = model(inputs)
-        loss = criterion(outputs, labels)
-        loss.backward()
-        optimizer.step()
-
-        total_loss += loss.item() * len(labels)
-        count += len(labels)
-
-    return total_loss / max(1, count)

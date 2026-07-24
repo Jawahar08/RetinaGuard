@@ -3,7 +3,7 @@ Data Validation, Duplicate Detection, and Grouped Leakage-Safe Splitting.
 """
 import hashlib
 from pathlib import Path
-from typing import Dict, List, Set, Tuple
+from typing import Dict, List, Set, Tuple, Optional
 import numpy as np
 import pandas as pd
 from PIL import Image
@@ -22,17 +22,11 @@ def compute_dhash(image: Image.Image, hash_size: int = 8) -> str:
     """Computes difference hash (dHash) for perceptual near-duplicate detection."""
     resized = image.convert("L").resize((hash_size + 1, hash_size), Image.Resampling.BILINEAR)
     pixels = np.array(resized)
-    # Compare adjacent pixels in each row
     diff = pixels[:, 1:] > pixels[:, :-1]
-    # Convert boolean array to hex hash string
     return hex(int("".join(diff.flatten().astype(int).astype(str)), 2))[2:].zfill(16)
 
 
 def find_duplicates(img_dir: Path) -> Tuple[Dict[str, List[str]], Dict[str, List[str]]]:
-    """
-    Scans directory for exact (MD5) and near (dHash) duplicate images.
-    Returns (md5_duplicates, dhash_duplicates).
-    """
     md5_map: Dict[str, List[str]] = {}
     dhash_map: Dict[str, List[str]] = {}
 
@@ -86,7 +80,6 @@ def create_grouped_splits(
 
         df["split"] = df[group_col].apply(assign_split)
     else:
-        # Fallback random stratifiable split if subject ID is unavailable
         indices = np.arange(len(df))
         np.random.shuffle(indices)
 
