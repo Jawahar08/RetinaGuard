@@ -10,7 +10,7 @@ try:
     import torch.nn.functional as F
     import torchvision.models as models
     HAS_TORCH = True
-except ImportError:
+except Exception:
     HAS_TORCH = False
     class nn:
         class Module:
