@@ -14,9 +14,6 @@ export default function SiteHeader({ lang, setLang, onStartScreening, onExploreM
   return (
     <header style={{ maxWidth: '1360px', margin: '0 auto', padding: '24px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid rgba(20,18,16,0.1)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-        <div style={{ width: '48px', height: '48px', background: 'var(--ink-black)', borderRadius: '12px', color: 'var(--signal-yellow)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.2rem', border: '2px solid #141210' }}>
-          OF
-        </div>
         <div>
           <h1 className="font-serif-display" style={{ fontSize: '1.4rem', fontWeight: 800, lineHeight: 1.1 }}>
             OphthaFusion-XAI
