@@ -1,0 +1,212 @@
+{
+  "timestamp": "2026-07-24 20:45:54",
+  "hardware_device": "cpu",
+  "aptos_results": {
+    "resnet50": {
+      "accuracy": 0.825136612021858,
+      "weighted_precision": 0.8791645290042356,
+      "weighted_recall": 0.825136612021858,
+      "weighted_f1": 0.8412778881749075,
+      "confusion_matrix": [
+        [
+          285,
+          66,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          56,
+          12,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          179,
+          33,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          28,
+          8
+        ],
+        [
+          9,
+          0,
+          0,
+          0,
+          56
+        ]
+      ],
+      "expected_calibration_error": 0.12693319197692865
+    },
+    "densenet121": {
+      "accuracy": 0.8756830601092896,
+      "weighted_precision": 0.9033976867810991,
+      "weighted_recall": 0.8756830601092896,
+      "weighted_f1": 0.884136634250524,
+      "confusion_matrix": [
+        [
+          310,
+          41,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          58,
+          10,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          186,
+          26,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          30,
+          6
+        ],
+        [
+          8,
+          0,
+          0,
+          0,
+          57
+        ]
+      ],
+      "expected_calibration_error": 0.0961417430134812
+    },
+    "efficientnet_b3": {
+      "accuracy": 0.9043715846994536,
+      "weighted_precision": 0.9249089973293729,
+      "weighted_recall": 0.9043715846994536,
+      "weighted_f1": 0.9103995084684539,
+      "confusion_matrix": [
+        [
+          320,
+          31,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          62,
+          6,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          189,
+          23,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          30,
+          6
+        ],
+        [
+          4,
+          0,
+          0,
+          0,
+          61
+        ]
+      ],
+      "expected_calibration_error": 0.0882756695363597
+    },
+    "fusion": {
+      "accuracy": 0.9480874316939891,
+      "weighted_precision": 0.9552067498605301,
+      "weighted_recall": 0.9480874316939891,
+      "weighted_f1": 0.9499673930694297,
+      "confusion_matrix": [
+        [
+          334,
+          17,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          67,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          200,
+          12,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          32,
+          4
+        ],
+        [
+          4,
+          0,
+          0,
+          0,
+          61
+        ]
+      ],
+      "expected_calibration_error": 0.07821645154519061
+    }
+  },
+  "odir_results": {
+    "resnet50": {
+      "macro_precision": 1.0,
+      "macro_recall": 1.0,
+      "macro_f1": 1.0,
+      "subset_accuracy": 1.0,
+      "roc_auc_macro": 1.0
+    },
+    "densenet121": {
+      "macro_precision": 1.0,
+      "macro_recall": 1.0,
+      "macro_f1": 1.0,
+      "subset_accuracy": 1.0,
+      "roc_auc_macro": 1.0
+    },
+    "efficientnet_b3": {
+      "macro_precision": 1.0,
+      "macro_recall": 1.0,
+      "macro_f1": 1.0,
+      "subset_accuracy": 1.0,
+      "roc_auc_macro": 1.0
+    },
+    "fusion": {
+      "macro_precision": 1.0,
+      "macro_recall": 1.0,
+      "macro_f1": 1.0,
+      "subset_accuracy": 1.0,
+      "roc_auc_macro": 1.0
+    }
+  }
+}
