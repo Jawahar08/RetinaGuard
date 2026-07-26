@@ -9,7 +9,7 @@ import uuid
 from typing import Optional
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse
 import numpy as np
 from PIL import Image
 
@@ -17,6 +17,7 @@ from ml.schemas import HeatmapResponse, PredictionResponse
 from ml.inference import RetinalInferenceService
 from ml.gradcam import generate_gradcam_overlay
 from ml.preprocessing import RetinalPreprocessor
+from ml.pdf_report import generate_html_report
 
 # Configure structured logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -24,7 +25,7 @@ logger = logging.getLogger("retinal-backend")
 
 app = FastAPI(
     title="Retinal Ensemble Disease Screening API",
-    description="FastAPI Service providing AI inference and Grad-CAM explainability for Retinal Fundus-Image Analysis.",
+    description="FastAPI Service providing AI inference and Grad-CAM++ explainability for Retinal Fundus-Image Analysis.",
     version="1.0.0-demo"
 )
 
@@ -68,55 +69,42 @@ def health_check():
 
 @app.get("/metadata", tags=["System"])
 def get_metadata():
-    return {
-        "version": "1.0.0",
-        "tasks": inference_service.dataset_cfg["tasks"],
-        "quality_gate": inference_service.dataset_cfg.get("quality_gate", {}),
-        "preprocessor": inference_service.dataset_cfg.get("preprocessing", {})
-    }
+    return inference_service.dataset_cfg
 
 
 @app.post("/predict", response_model=PredictionResponse, tags=["Inference"])
-async def predict_retinal_image(
+async def predict(
     file: UploadFile = File(...),
     task: str = Form("odir")
 ):
-    """
-    Validates uploaded image, passes through Image Quality Gate, runs model inference,
-    calculates calibrated confidence, and returns predictions & abstention status.
-    """
     if not file.content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="Invalid file type. Please upload a JPG, JPEG, or PNG image.")
+        raise HTTPException(status_code=400, detail="Uploaded file is not a valid image.")
 
-    image_bytes = await file.read()
-    if len(image_bytes) > 15 * 1024 * 1024:  # 15MB limit
-        raise HTTPException(status_code=400, detail="Uploaded file exceeds 15MB size limit.")
-
-    response = inference_service.predict_image_bytes(image_bytes, task=task)
+    content = await file.read()
+    response = inference_service.predict_image_bytes(content, task=task)
     return response
 
 
 @app.post("/generate-heatmap", response_model=HeatmapResponse, tags=["Explainability"])
-async def generate_heatmap_endpoint(
+async def generate_heatmap(
     file: UploadFile = File(...),
     target_label: str = Form("Diabetic Retinopathy"),
     task: str = Form("odir")
 ):
-    """
-    Runs Grad-CAM explainability pipeline on uploaded image and returns base64
-    original image, activation heatmap, and blended visual overlay.
-    """
     if not file.content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="Invalid file type.")
+        raise HTTPException(status_code=400, detail="Uploaded file is not a valid image.")
 
-    image_bytes = await file.read()
+    content = await file.read()
     try:
-        pil_img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+        pil_img = Image.open(io.BytesIO(content)).convert("RGB")
         img_rgb = np.array(pil_img)
     except Exception:
-        raise HTTPException(status_code=400, detail="Corrupt or unreadable image file.")
+        raise HTTPException(status_code=400, detail="Invalid or corrupt image bytes.")
 
-    task_name = task.lower() if task.lower() in inference_service.dataset_cfg["tasks"] else "odir"
+    task_name = task.lower()
+    if task_name not in inference_service.dataset_cfg["tasks"]:
+        task_name = "odir"
+
     labels = inference_service.dataset_cfg["tasks"][task_name]["labels"]
 
     target_idx = 0
@@ -129,13 +117,14 @@ async def generate_heatmap_endpoint(
 
     target_layer = getattr(model, "target_layer", "target_layer")
 
-    _, _, orig_b64, heatmap_b64, overlay_b64 = generate_gradcam_overlay(
+    _, _, orig_b64, heatmap_b64, overlay_b64, boxes = generate_gradcam_overlay(
         model=model,
         target_layer=target_layer,
         input_tensor=tensor,
         original_rgb=cropped_rgb,
         target_class_idx=target_idx,
-        alpha=0.45
+        alpha=0.45,
+        use_plus_plus=True
     )
 
     return HeatmapResponse(
@@ -147,3 +136,49 @@ async def generate_heatmap_endpoint(
         heatmap_base64=heatmap_b64,
         overlay_base64=overlay_b64
     )
+
+
+@app.post("/generate-report", response_class=HTMLResponse, tags=["Reporting"])
+async def generate_report(
+    file: UploadFile = File(...),
+    task: str = Form("odir")
+):
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Uploaded file is not a valid image.")
+
+    content = await file.read()
+    pred_res = inference_service.predict_image_bytes(content, task=task)
+    pred_dict = pred_res.model_dump()
+
+    try:
+        pil_img = Image.open(io.BytesIO(content)).convert("RGB")
+        img_rgb = np.array(pil_img)
+        preprocessor = RetinalPreprocessor()
+        cropped_rgb, tensor = preprocessor.preprocess(img_rgb)
+        task_name = task.lower() if task.lower() in inference_service.dataset_cfg["tasks"] else "odir"
+        model = inference_service.models[task_name]
+        target_layer = getattr(model, "target_layer", "target_layer")
+        top_idx = 0
+        labels = inference_service.dataset_cfg["tasks"][task_name]["labels"]
+        if pred_res.top_prediction in labels:
+            top_idx = labels.index(pred_res.top_prediction)
+
+        _, _, orig_b64, _, overlay_b64, _ = generate_gradcam_overlay(
+            model=model,
+            target_layer=target_layer,
+            input_tensor=tensor,
+            original_rgb=cropped_rgb,
+            target_class_idx=top_idx,
+            alpha=0.45,
+            use_plus_plus=True
+        )
+    except Exception:
+        orig_b64 = None
+        overlay_b64 = None
+
+    html_content = generate_html_report(
+        prediction_response=pred_dict,
+        overlay_base64=overlay_b64,
+        original_base64=orig_b64
+    )
+    return HTMLResponse(content=html_content)

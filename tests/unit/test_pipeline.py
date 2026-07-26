@@ -70,7 +70,7 @@ def test_gradcam_generation(sample_fundus_image):
     prep = RetinalPreprocessor()
     _, tensor = prep.preprocess(sample_fundus_image)
 
-    hm_rgb, overlay_rgb, orig_b64, hm_b64, overlay_b64 = generate_gradcam_overlay(
+    hm_rgb, overlay_rgb, orig_b64, hm_b64, overlay_b64, boxes = generate_gradcam_overlay(
         model=model,
         target_layer=model.target_layer,
         input_tensor=tensor,
@@ -82,6 +82,8 @@ def test_gradcam_generation(sample_fundus_image):
     assert overlay_rgb.shape == sample_fundus_image.shape
     assert orig_b64.startswith("data:image/png;base64,")
     assert overlay_b64.startswith("data:image/png;base64,")
+    assert isinstance(boxes, list)
+
 
 
 def test_fastapi_endpoints(sample_fundus_image):
@@ -117,3 +119,24 @@ def test_fastapi_endpoints(sample_fundus_image):
     hm_data = hm_res.json()
     assert hm_data["target_label"] == "Diabetic Retinopathy"
     assert "overlay_base64" in hm_data
+
+    # 5. Generate Report Endpoint
+    files_rpt = {"file": ("test.png", img_bytes, "image/png")}
+    rpt_res = client.post("/generate-report", files=files_rpt, data={"task": "odir"})
+    assert rpt_res.status_code == 200
+    assert "RetinaGuard AI" in rpt_res.text
+    assert "Diagnostic Screening Summary" in rpt_res.text
+
+
+def test_onnx_exporter(tmp_path):
+    from ml.onnx_exporter import ONNXModelExporter, ONNXInferenceSession
+    exporter = ONNXModelExporter(output_dir=tmp_path)
+    model = SmokeTestModel(num_classes=5)
+    onnx_path = exporter.export_to_onnx(model, "smoke_test")
+    assert onnx_path.exists()
+
+    session = ONNXInferenceSession(onnx_path)
+    dummy_input = np.random.randn(1, 3, 224, 224).astype(np.float32)
+    logits = session.run(dummy_input)
+    assert logits.shape == (1, 5)
+

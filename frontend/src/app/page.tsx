@@ -70,7 +70,7 @@ const TRANSLATIONS: Record<'en' | 'ph', Record<string, string>> = {
     qualityFailedTitle: 'Low-Quality Rejection — Human Review Required',
     abstainTitle: 'Low Confidence — Flagged for Expert Review',
     confidenceLabel: 'Calibrated Confidence',
-    downloadReportBtn: 'Download Summary Report (JSON)',
+    downloadReportBtn: 'Download Diagnostic PDF Report',
     heatmapTitle: 'What Influenced the Model?',
     heatmapSub: 'Visual attention maps generated via Grad-CAM layer activation.',
     tabBlended: 'Blended Overlay',
@@ -334,27 +334,91 @@ export default function OphthaFusionDashboard() {
     }
   };
 
-  const downloadReport = () => {
+  const downloadReport = async () => {
     if (!prediction) return;
-    const reportContent = {
-      product: 'RetinaGuard Retinal Screening System',
-      request_id: prediction.request_id,
-      timestamp: new Date().toISOString(),
-      task: prediction.task.toUpperCase(),
-      top_prediction: prediction.top_prediction,
-      calibrated_confidence: `${(prediction.calibrated_confidence * 100).toFixed(2)}%`,
-      quality_gate: prediction.quality_gate,
-      predictions: prediction.predictions,
-      disclaimer: prediction.disclaimer
-    };
+    let htmlContent = '';
 
-    const blob = new Blob([JSON.stringify(reportContent, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `retinaguard_report_${prediction.request_id.slice(0, 8)}.json`;
-    a.click();
+    if (selectedFile && !useMock) {
+      try {
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+        formData.append('task', task);
+        const res = await fetch(`${apiBaseUrl}/generate-report`, {
+          method: 'POST',
+          body: formData
+        });
+        if (res.ok) {
+          htmlContent = await res.text();
+        }
+      } catch (e) {
+        console.error('Error fetching backend report:', e);
+      }
+    }
+
+    if (!htmlContent) {
+      const predsHtml = prediction.predictions.map(p => `
+        <tr>
+          <td><strong>${p.label}</strong></td>
+          <td>${(p.probability * 100).toFixed(1)}%</td>
+          <td><span style="padding:4px 8px; border-radius:4px; font-weight:bold; background:${p.is_positive ? '#fee2e2' : '#dcfce7'}; color:${p.is_positive ? '#991b1b' : '#166534'};">${p.is_positive ? 'POSSIBLE LESION' : 'CLEAR'}</span></td>
+        </tr>
+      `).join('');
+
+      htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>RetinaGuard AI Clinical Diagnostic Screening Report</title>
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; padding: 30px; background: #fff; color: #1e293b; }
+    .card { max-width: 750px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; padding: 30px; }
+    .header { display: flex; justify-content: space-between; border-bottom: 2px solid #0284c7; padding-bottom: 15px; margin-bottom: 20px; }
+    .logo { font-size: 24px; font-weight: 800; color: #0284c7; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th, td { padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: left; }
+    th { background: #f8fafc; }
+    .disclaimer { margin-top: 25px; font-size: 11px; color: #94a3b8; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 15px; }
+    @media print { body { padding: 0; } .card { border: none; } }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <div><div class="logo">👁️ RetinaGuard AI</div><div>Clinical Retinal Disease Screening Report</div></div>
+      <div style="text-align:right; font-size:12px; color:#64748b;">
+        <div><strong>Request ID:</strong> ${prediction.request_id.slice(0, 12)}</div>
+        <div><strong>Date:</strong> ${new Date().toLocaleString()}</div>
+        <div><strong>Task:</strong> ${prediction.task.toUpperCase()} Screening</div>
+      </div>
+    </div>
+    <div style="background:#f1f5f9; padding:15px; border-radius:8px; display:flex; justify-size:space-around; text-align:center;">
+      <div><div>Primary Impression</div><div style="font-size:20px; font-weight:bold; color:#0284c7;">${prediction.top_prediction}</div></div>
+      <div><div>Calibrated Confidence</div><div style="font-size:20px; font-weight:bold;">${(prediction.calibrated_confidence * 100).toFixed(1)}%</div></div>
+      <div><div>Quality Score</div><div style="font-size:20px; font-weight:bold; color:#166534;">${(prediction.quality_gate.quality_score * 100).toFixed(0)}%</div></div>
+    </div>
+    <h4 style="margin-top:25px; border-left:4px solid #0284c7; padding-left:10px;">Multi-Disease Risk Analysis</h4>
+    <table>
+      <thead><tr><th>Category</th><th>Probability</th><th>Status</th></tr></thead>
+      <tbody>${predsHtml}</tbody>
+    </table>
+    <div class="disclaimer">${prediction.disclaimer}</div>
+  </div>
+</body>
+</html>`;
+    }
+
+    const win = window.open('', '_blank');
+    if (win) {
+      win.document.write(htmlContent);
+      win.document.close();
+      setTimeout(() => {
+        win.print();
+      }, 500);
+    }
   };
+
+
 
   return (
     <div style={{ background: 'var(--bg-paper)', color: 'var(--ink-black)', minHeight: '100vh' }}>

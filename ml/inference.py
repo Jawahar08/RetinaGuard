@@ -175,11 +175,21 @@ class RetinalInferenceService:
         top_pred = labels[top_idx]
         confidence = float(probs[top_idx])
 
+        # Compute Shannon Entropy H(P) for uncertainty estimation
+        eps = 1e-7
+        norm_probs = probs / np.sum(probs) if np.sum(probs) > 0 else probs
+        entropy = float(-np.sum(norm_probs * np.log2(norm_probs + eps)))
+        max_possible_entropy = float(np.log2(len(labels)))
+        normalized_entropy = entropy / max_possible_entropy if max_possible_entropy > 0 else 0.0
+
         abstain = False
         abstention_reason = None
         if confidence < 0.45:
             abstain = True
-            abstention_reason = f"Model confidence ({confidence:.1%}) is below human-review threshold (45%). Case flagged for expert clinician review."
+            abstention_reason = f"Model confidence ({confidence:.1%}) is below human-review safety threshold (45%). Case flagged for expert clinician review."
+        elif normalized_entropy > 0.85:
+            abstain = True
+            abstention_reason = f"High prediction entropy ({normalized_entropy:.2f}). Model predictions are highly uncertain; referred for expert ophthalmologist consultation."
 
         return PredictionResponse(
             request_id=req_id,
