@@ -13,7 +13,7 @@ from fastapi.responses import JSONResponse, HTMLResponse
 import numpy as np
 from PIL import Image
 
-from ml.schemas import HeatmapResponse, PredictionResponse
+from ml.schemas import HeatmapResponse, PredictionResponse, PatientInfo
 from ml.inference import RetinalInferenceService
 from ml.gradcam import generate_gradcam_overlay
 from ml.preprocessing import RetinalPreprocessor
@@ -75,13 +75,30 @@ def get_metadata():
 @app.post("/predict", response_model=PredictionResponse, tags=["Inference"])
 async def predict(
     file: UploadFile = File(...),
-    task: str = Form("odir")
+    task: str = Form("odir"),
+    patient_name: Optional[str] = Form(None),
+    patient_age: Optional[str] = Form(None),
+    gender: Optional[str] = Form(None),
+    blood_group: Optional[str] = Form(None),
+    diabetic_status: Optional[str] = Form(None),
+    hypertension: Optional[str] = Form(None),
+    symptoms: Optional[str] = Form(None)
 ):
     if not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="Uploaded file is not a valid image.")
 
     content = await file.read()
     response = inference_service.predict_image_bytes(content, task=task)
+    if patient_name or patient_age or blood_group:
+        response.patient_info = PatientInfo(
+            name=patient_name,
+            age=patient_age,
+            gender=gender,
+            blood_group=blood_group,
+            diabetic_status=diabetic_status,
+            hypertension=hypertension,
+            symptoms=symptoms
+        )
     return response
 
 
@@ -141,13 +158,30 @@ async def generate_heatmap(
 @app.post("/generate-report", response_class=HTMLResponse, tags=["Reporting"])
 async def generate_report(
     file: UploadFile = File(...),
-    task: str = Form("odir")
+    task: str = Form("odir"),
+    patient_name: Optional[str] = Form(None),
+    patient_age: Optional[str] = Form(None),
+    gender: Optional[str] = Form(None),
+    blood_group: Optional[str] = Form(None),
+    diabetic_status: Optional[str] = Form(None),
+    hypertension: Optional[str] = Form(None),
+    symptoms: Optional[str] = Form(None)
 ):
     if not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="Uploaded file is not a valid image.")
 
     content = await file.read()
     pred_res = inference_service.predict_image_bytes(content, task=task)
+    if patient_name or patient_age or blood_group:
+        pred_res.patient_info = PatientInfo(
+            name=patient_name,
+            age=patient_age,
+            gender=gender,
+            blood_group=blood_group,
+            diabetic_status=diabetic_status,
+            hypertension=hypertension,
+            symptoms=symptoms
+        )
     pred_dict = pred_res.model_dump()
 
     try:
@@ -182,3 +216,4 @@ async def generate_report(
         original_base64=orig_b64
     )
     return HTMLResponse(content=html_content)
+

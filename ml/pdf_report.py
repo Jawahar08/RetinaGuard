@@ -47,6 +47,29 @@ def generate_html_report(
         </tr>
         """
 
+    p_info = prediction_response.get("patient_info") or {}
+    patient_name = p_info.get("name") or "Unspecified Patient"
+    patient_age = p_info.get("age") or "N/A"
+    patient_gender = p_info.get("gender") or "N/A"
+    blood_group = p_info.get("blood_group") or "N/A"
+    diabetic_status = p_info.get("diabetic_status") or "Unspecified"
+    hypertension = p_info.get("hypertension") or "Unspecified"
+    symptoms = p_info.get("symptoms") or "None reported"
+
+    patient_profile_html = f"""
+    <div class="patient-card">
+        <div style="font-weight: 700; font-size: 15px; color: #0f172a; margin-bottom: 8px;">👤 PATIENT MEDICAL PROFILE</div>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; font-size: 13px;">
+            <div><strong>Patient Name:</strong> {patient_name}</div>
+            <div><strong>Age / Gender:</strong> {patient_age} yrs ({patient_gender})</div>
+            <div><strong>Blood Group:</strong> <span class="blood-badge">{blood_group}</span></div>
+            <div><strong>Diabetes:</strong> {diabetic_status}</div>
+            <div><strong>Hypertension:</strong> {hypertension}</div>
+            <div style="grid-column: span 3;"><strong>Visual Symptoms:</strong> {symptoms}</div>
+        </div>
+    </div>
+    """
+
     img_section = ""
     if original_base64 and overlay_base64:
         img_section = f"""
@@ -97,6 +120,8 @@ def generate_html_report(
         .image-grid {{ display: flex; gap: 20px; margin-top: 15px; }}
         .img-card {{ flex: 1; text-align: center; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; }}
         .img-card img {{ width: 100%; max-height: 250px; object-fit: contain; border-radius: 6px; }}
+        .patient-card {{ background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 14px; margin-bottom: 20px; color: #1e3a8a; }}
+        .blood-badge {{ background: #dc2626; color: #ffffff; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 11px; }}
         .alert-warning {{ background: #fffbeeb; border: 1px solid #fde68a; color: #92400e; padding: 12px; border-radius: 8px; margin-top: 15px; font-size: 13px; }}
         .disclaimer {{ margin-top: 30px; padding-top: 15px; border-top: 1px solid #e2e8f0; font-size: 11px; color: #94a3b8; text-align: center; line-height: 1.4; }}
     </style>
@@ -115,6 +140,7 @@ def generate_html_report(
             </div>
         </div>
 
+        {patient_profile_html}
         {abstain_box}
 
         <div class="section-title">Diagnostic Screening Summary</div>
