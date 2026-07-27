@@ -5,6 +5,7 @@ Used strictly for CPU smoke tests, API integration tests, and frontend UI previe
 Does NOT use real patient data or external datasets.
 """
 import sys
+sys.path = [p for p in sys.path if not (p.endswith("Python311") or p.endswith("Python311\\"))]
 from pathlib import Path
 import numpy as np
 import cv2
