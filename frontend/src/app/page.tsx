@@ -9,6 +9,7 @@ import EnsemblePipeline from '../components/EnsemblePipeline';
 import ResearchMetrics from '../components/ResearchMetrics';
 import DiseaseReference from '../components/DiseaseReference';
 import SiteFooter from '../components/SiteFooter';
+import { PatientInfoData } from '../components/PatientIntakeForm';
 
 interface ClassPrediction {
   label: string;
@@ -23,6 +24,16 @@ interface QualityGateResult {
   flags: string[];
 }
 
+interface PatientInfo {
+  name?: string;
+  age?: string;
+  gender?: string;
+  blood_group?: string;
+  diabetic_status?: string;
+  hypertension?: string;
+  symptoms?: string;
+}
+
 interface PredictionResponse {
   request_id: string;
   task: string;
@@ -34,6 +45,7 @@ interface PredictionResponse {
   calibrated_confidence: number;
   abstain: boolean;
   abstention_reason?: string;
+  patient_info?: PatientInfo;
   disclaimer: string;
 }
 
@@ -70,7 +82,7 @@ const TRANSLATIONS: Record<'en' | 'ph', Record<string, string>> = {
     qualityFailedTitle: 'Low-Quality Rejection — Human Review Required',
     abstainTitle: 'Low Confidence — Flagged for Expert Review',
     confidenceLabel: 'Calibrated Confidence',
-    downloadReportBtn: 'Download Summary Report (JSON)',
+    downloadReportBtn: 'Download Diagnostic PDF Report',
     heatmapTitle: 'What Influenced the Model?',
     heatmapSub: 'Visual attention maps generated via Grad-CAM layer activation.',
     tabBlended: 'Blended Overlay',
@@ -221,6 +233,15 @@ export default function OphthaFusionDashboard() {
   const t = TRANSLATIONS[lang];
 
   const [task, setTask] = useState<'odir' | 'aptos'>('odir');
+  const [patientInfo, setPatientInfo] = useState<PatientInfoData>({
+    name: '',
+    age: '',
+    gender: 'Female',
+    bloodGroup: 'O+',
+    diabeticStatus: 'Non-Diabetic',
+    hypertension: 'No',
+    symptoms: ['None']
+  });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -275,6 +296,17 @@ export default function OphthaFusionDashboard() {
     if (useMock) {
       setTimeout(() => {
         const dynamicPred = generateImageSpecificPrediction(selectedFile, task, t.trustLine);
+        if (patientInfo.name) {
+          dynamicPred.patient_info = {
+            name: patientInfo.name,
+            age: patientInfo.age,
+            gender: patientInfo.gender,
+            blood_group: patientInfo.bloodGroup,
+            diabetic_status: patientInfo.diabeticStatus,
+            hypertension: patientInfo.hypertension,
+            symptoms: patientInfo.symptoms.join(', ')
+          };
+        }
         setPrediction(dynamicPred);
         setIsLoading(false);
       }, 800);
@@ -285,6 +317,13 @@ export default function OphthaFusionDashboard() {
       const formData = new FormData();
       formData.append('file', selectedFile);
       formData.append('task', task);
+      if (patientInfo.name) formData.append('patient_name', patientInfo.name);
+      if (patientInfo.age) formData.append('patient_age', patientInfo.age);
+      if (patientInfo.gender) formData.append('gender', patientInfo.gender);
+      if (patientInfo.bloodGroup) formData.append('blood_group', patientInfo.bloodGroup);
+      if (patientInfo.diabeticStatus) formData.append('diabetic_status', patientInfo.diabeticStatus);
+      if (patientInfo.hypertension) formData.append('hypertension', patientInfo.hypertension);
+      if (patientInfo.symptoms.length > 0) formData.append('symptoms', patientInfo.symptoms.join(', '));
 
       const res = await fetch(`${apiBaseUrl}/predict`, {
         method: 'POST',
@@ -305,6 +344,17 @@ export default function OphthaFusionDashboard() {
     } catch (err: any) {
       console.warn('Backend API connection error, executing image-content-driven inference engine:', err);
       const dynamicPred = generateImageSpecificPrediction(selectedFile, task, t.trustLine);
+      if (patientInfo.name) {
+        dynamicPred.patient_info = {
+          name: patientInfo.name,
+          age: patientInfo.age,
+          gender: patientInfo.gender,
+          blood_group: patientInfo.bloodGroup,
+          diabetic_status: patientInfo.diabeticStatus,
+          hypertension: patientInfo.hypertension,
+          symptoms: patientInfo.symptoms.join(', ')
+        };
+      }
       setPrediction(dynamicPred);
       setErrorMsg(null);
     } finally {
@@ -334,26 +384,119 @@ export default function OphthaFusionDashboard() {
     }
   };
 
-  const downloadReport = () => {
+  const downloadReport = async () => {
     if (!prediction) return;
-    const reportContent = {
-      product: 'RetinaGuard Retinal Screening System',
-      request_id: prediction.request_id,
-      timestamp: new Date().toISOString(),
-      task: prediction.task.toUpperCase(),
-      top_prediction: prediction.top_prediction,
-      calibrated_confidence: `${(prediction.calibrated_confidence * 100).toFixed(2)}%`,
-      quality_gate: prediction.quality_gate,
-      predictions: prediction.predictions,
-      disclaimer: prediction.disclaimer
-    };
+    let htmlContent = '';
 
-    const blob = new Blob([JSON.stringify(reportContent, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `retinaguard_report_${prediction.request_id.slice(0, 8)}.json`;
-    a.click();
+    if (selectedFile && !useMock) {
+      try {
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+        formData.append('task', task);
+        if (patientInfo.name) formData.append('patient_name', patientInfo.name);
+        if (patientInfo.age) formData.append('patient_age', patientInfo.age);
+        if (patientInfo.gender) formData.append('gender', patientInfo.gender);
+        if (patientInfo.bloodGroup) formData.append('blood_group', patientInfo.bloodGroup);
+        if (patientInfo.diabeticStatus) formData.append('diabetic_status', patientInfo.diabeticStatus);
+        if (patientInfo.hypertension) formData.append('hypertension', patientInfo.hypertension);
+        if (patientInfo.symptoms.length > 0) formData.append('symptoms', patientInfo.symptoms.join(', '));
+
+        const res = await fetch(`${apiBaseUrl}/generate-report`, {
+          method: 'POST',
+          body: formData
+        });
+        if (res.ok) {
+          htmlContent = await res.text();
+        }
+      } catch (e) {
+        console.error('Error fetching backend report:', e);
+      }
+    }
+
+    if (!htmlContent) {
+      const predsHtml = prediction.predictions.map(p => `
+        <tr>
+          <td><strong>${p.label}</strong></td>
+          <td>${(p.probability * 100).toFixed(1)}%</td>
+          <td><span style="padding:4px 8px; border-radius:4px; font-weight:bold; background:${p.is_positive ? '#fee2e2' : '#dcfce7'}; color:${p.is_positive ? '#991b1b' : '#166534'};">${p.is_positive ? 'POSSIBLE LESION' : 'CLEAR'}</span></td>
+        </tr>
+      `).join('');
+
+      const nameDisp = patientInfo.name || 'Unspecified Patient';
+      const ageDisp = patientInfo.age || 'N/A';
+      const genderDisp = patientInfo.gender || 'N/A';
+      const bgDisp = patientInfo.bloodGroup || 'N/A';
+      const diabDisp = patientInfo.diabeticStatus || 'Unspecified';
+      const hypDisp = patientInfo.hypertension || 'Unspecified';
+      const sympDisp = patientInfo.symptoms.length > 0 ? patientInfo.symptoms.join(', ') : 'None reported';
+
+      const patientBox = `
+        <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:14px; margin-bottom:20px; color:#1e3a8a; font-size:13px;">
+          <div style="font-weight:bold; font-size:14px; margin-bottom:6px;">👤 PATIENT MEDICAL PROFILE</div>
+          <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:6px;">
+            <div><strong>Patient Name:</strong> ${nameDisp}</div>
+            <div><strong>Age / Gender:</strong> ${ageDisp} yrs (${genderDisp})</div>
+            <div><strong>Blood Group:</strong> <span style="background:#dc2626; color:#fff; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:11px;">${bgDisp}</span></div>
+            <div><strong>Diabetes:</strong> ${diabDisp}</div>
+            <div><strong>Hypertension:</strong> ${hypDisp}</div>
+            <div><strong>Visual Symptoms:</strong> ${sympDisp}</div>
+          </div>
+        </div>
+      `;
+
+      htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>RetinaGuard AI Clinical Diagnostic Screening Report</title>
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; padding: 30px; background: #fff; color: #1e293b; }
+    .card { max-width: 750px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; padding: 30px; }
+    .header { display: flex; justify-content: space-between; border-bottom: 2px solid #0284c7; padding-bottom: 15px; margin-bottom: 20px; }
+    .logo { font-size: 24px; font-weight: 800; color: #0284c7; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th, td { padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: left; }
+    th { background: #f8fafc; }
+    .disclaimer { margin-top: 25px; font-size: 11px; color: #94a3b8; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 15px; }
+    @media print { body { padding: 0; } .card { border: none; } }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <div><div class="logo">👁️ RetinaGuard AI</div><div>Clinical Retinal Disease Screening Report</div></div>
+      <div style="text-align:right; font-size:12px; color:#64748b;">
+        <div><strong>Request ID:</strong> ${prediction.request_id.slice(0, 12)}</div>
+        <div><strong>Date:</strong> ${new Date().toLocaleString()}</div>
+        <div><strong>Task:</strong> ${prediction.task.toUpperCase()} Screening</div>
+      </div>
+    </div>
+    ${patientBox}
+    <div style="background:#f1f5f9; padding:15px; border-radius:8px; display:flex; justify-content:space-around; text-align:center;">
+      <div><div>Primary Impression</div><div style="font-size:20px; font-weight:bold; color:#0284c7;">${prediction.top_prediction}</div></div>
+      <div><div>Calibrated Confidence</div><div style="font-size:20px; font-weight:bold;">${(prediction.calibrated_confidence * 100).toFixed(1)}%</div></div>
+      <div><div>Quality Score</div><div style="font-size:20px; font-weight:bold; color:#166534;">${(prediction.quality_gate.quality_score * 100).toFixed(0)}%</div></div>
+    </div>
+    <h4 style="margin-top:25px; border-left:4px solid #0284c7; padding-left:10px;">Multi-Disease Risk Analysis</h4>
+    <table>
+      <thead><tr><th>Category</th><th>Probability</th><th>Status</th></tr></thead>
+      <tbody>${predsHtml}</tbody>
+    </table>
+    <div class="disclaimer">${prediction.disclaimer}</div>
+  </div>
+</body>
+</html>`;
+    }
+
+    const win = window.open('', '_blank');
+    if (win) {
+      win.document.write(htmlContent);
+      win.document.close();
+      setTimeout(() => {
+        win.print();
+      }, 500);
+    }
   };
 
   return (
@@ -377,6 +520,8 @@ export default function OphthaFusionDashboard() {
         t={t}
         task={task}
         setTask={setTask}
+        patientInfo={patientInfo}
+        setPatientInfo={setPatientInfo}
         selectedFile={selectedFile}
         previewUrl={previewUrl}
         isLoading={isLoading}

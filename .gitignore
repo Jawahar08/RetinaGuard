@@ -42,15 +42,6 @@ build/
 *.tsbuildinfo
 next-env.d.ts
 
-# Datasets and Large Artifacts
-data/raw/*
-data/processed/*
-!data/fixtures/
-artifacts/*
-!artifacts/.gitkeep
-reports/*
-!reports/.gitkeep
-
 # Environment variables & secrets
 .env
 .env.local
@@ -67,3 +58,6 @@ Thumbs.db
 .codex/
 work/
 outputs/
+data/raw/
+data/processed/
+

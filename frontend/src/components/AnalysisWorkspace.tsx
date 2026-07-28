@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useRef } from 'react';
-import { Eye, Activity, AlertTriangle, RefreshCw, Sparkles, Download } from 'lucide-react';
+import { Eye, Activity, AlertTriangle, RefreshCw, Sparkles, Download, UserCheck } from 'lucide-react';
+import PatientIntakeForm, { PatientInfoData } from './PatientIntakeForm';
 
 interface ClassPrediction {
   label: string;
@@ -16,6 +17,16 @@ interface QualityGateResult {
   flags: string[];
 }
 
+interface PatientInfo {
+  name?: string;
+  age?: string;
+  gender?: string;
+  blood_group?: string;
+  diabetic_status?: string;
+  hypertension?: string;
+  symptoms?: string;
+}
+
 interface PredictionResponse {
   request_id: string;
   task: string;
@@ -27,6 +38,7 @@ interface PredictionResponse {
   calibrated_confidence: number;
   abstain: boolean;
   abstention_reason?: string;
+  patient_info?: PatientInfo;
   disclaimer: string;
 }
 
@@ -45,6 +57,8 @@ interface AnalysisWorkspaceProps {
   t: Record<string, string>;
   task: 'odir' | 'aptos';
   setTask: (task: 'odir' | 'aptos') => void;
+  patientInfo: PatientInfoData;
+  setPatientInfo: React.Dispatch<React.SetStateAction<PatientInfoData>>;
   selectedFile: File | null;
   previewUrl: string | null;
   isLoading: boolean;
@@ -66,6 +80,8 @@ export default function AnalysisWorkspace({
   t,
   task,
   setTask,
+  patientInfo,
+  setPatientInfo,
   selectedFile,
   previewUrl,
   isLoading,
@@ -86,12 +102,21 @@ export default function AnalysisWorkspace({
 
   return (
     <section id="analyze" ref={workspaceRef} style={{ maxWidth: '1360px', margin: '0 auto', padding: '32px 32px 64px' }}>
+      
+      {/* Step 1: Patient Medical Intake Form */}
+      <PatientIntakeForm
+        t={t}
+        patientInfo={patientInfo}
+        setPatientInfo={setPatientInfo}
+        onComplete={() => {}}
+      />
+
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.15fr', gap: '40px', alignItems: 'start' }}>
         
         {/* Left Column: Form & Upload */}
         <div className="editorial-card" style={{ padding: '36px' }}>
           <h2 className="font-serif-display" style={{ fontSize: '1.6rem', fontWeight: 800, marginBottom: '24px' }}>
-            {t.step1Title}
+            Step 2: {t.step1Title}
           </h2>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '32px' }}>
@@ -115,7 +140,7 @@ export default function AnalysisWorkspace({
           </div>
 
           <h2 className="font-serif-display" style={{ fontSize: '1.6rem', fontWeight: 800, marginBottom: '18px' }}>
-            {t.step2Title}
+            Step 3: {t.step2Title}
           </h2>
 
           <div
@@ -182,7 +207,7 @@ export default function AnalysisWorkspace({
                 Awaiting Image Submission
               </h3>
               <p style={{ color: 'var(--text-muted)', marginTop: '8px', fontSize: '0.95rem', maxWidth: '420px', margin: '8px auto 0' }}>
-                Select a screening task, upload a retinal fundus photograph, and run analysis to view 4608d ensemble predictions and Grad-CAM visual heatmaps.
+                Complete patient intake, select a screening task, upload a retinal fundus photograph, and run analysis to view 4608d ensemble predictions and Grad-CAM visual heatmaps.
               </p>
             </div>
           ) : (
@@ -206,6 +231,24 @@ export default function AnalysisWorkspace({
               ) : null}
 
               <div className="editorial-card" style={{ padding: '36px' }}>
+                {/* Patient Summary Badge */}
+                {patientInfo.name && (
+                  <div style={{ background: '#F0F9FF', border: 'var(--border-thick)', borderRadius: '16px', padding: '14px 18px', marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <UserCheck size={20} color="#0284C7" />
+                      <div>
+                        <div style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--ink-black)' }}>
+                          {patientInfo.name} <span style={{ fontSize: '0.78rem', opacity: 0.7 }}>({patientInfo.age} yrs, {patientInfo.gender})</span>
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                          Blood Group: <strong style={{ color: '#DC2626' }}>{patientInfo.bloodGroup}</strong> | Diabetes: <strong>{patientInfo.diabeticStatus}</strong> | High BP: <strong>{patientInfo.hypertension}</strong>
+                        </div>
+                      </div>
+                    </div>
+                    <span className="pill-badge" style={{ background: '#E0F2FE', color: '#0369A1' }}>LINKED RECORD</span>
+                  </div>
+                )}
+
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
                   <div>
                     <span className="pill-badge pill-badge-yellow" style={{ marginBottom: '12px' }}>
