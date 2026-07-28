@@ -56,6 +56,20 @@ class RetinalPreprocessor:
             return img_rgb[y:y+h, x:x+w]
         return img_rgb
 
+    def apply_ben_graham(self, img_rgb: np.ndarray, sigma: int = 10) -> np.ndarray:
+        """
+        Applies Ben Graham color normalization:
+        Blends local average blurring to subtract illumination variations and highlight vascular structures.
+        """
+        bgr = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2BGR)
+        blurred = cv2.GaussianBlur(bgr, (0, 0), sigma)
+        weighted = cv2.addWeighted(bgr, 4.0, blurred, -4.0, 128)
+        # Apply circular mask to retain true fundus disc boundary
+        gray = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2GRAY)
+        _, mask = cv2.threshold(gray, 10, 255, cv2.THRESH_BINARY)
+        masked_bgr = cv2.bitwise_and(weighted, weighted, mask=mask)
+        return cv2.cvtColor(masked_bgr, cv2.COLOR_BGR2RGB)
+
     def apply_clahe(self, img_rgb: np.ndarray) -> np.ndarray:
         """Applies CLAHE on LAB L-channel."""
         lab = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2LAB)
@@ -65,9 +79,9 @@ class RetinalPreprocessor:
         lab_clahe = cv2.merge((l_clahe, a, b))
         return cv2.cvtColor(lab_clahe, cv2.COLOR_LAB2RGB)
 
-    def preprocess(self, img_rgb: np.ndarray) -> Tuple[np.ndarray, Any]:
+    def preprocess(self, img_rgb: np.ndarray, mode: str = "clahe") -> Tuple[np.ndarray, Any]:
         """
-        Executes crop, CLAHE, resize, and returns:
+        Executes crop, CLAHE / Ben Graham normalization, resize, and returns:
         1. Preprocessed RGB image (H, W, C) numpy array uint8
         2. Normalized Tensor or numpy array (1, C, H, W)
         """
@@ -75,7 +89,12 @@ class RetinalPreprocessor:
         if self.crop_black_borders:
             out = self.crop_retinal_fov(out)
 
-        if self.clahe_enabled:
+        if mode == "ben_graham":
+            out = self.apply_ben_graham(out)
+        elif mode == "hybrid":
+            out = self.apply_ben_graham(out)
+            out = self.apply_clahe(out)
+        elif self.clahe_enabled:
             out = self.apply_clahe(out)
 
         out = cv2.resize(out, self.target_size, interpolation=cv2.INTER_AREA)
@@ -88,3 +107,4 @@ class RetinalPreprocessor:
             tensor = torch.tensor(chw, dtype=torch.float32)
             return out, tensor
         return out, chw
+

@@ -71,16 +71,78 @@ class GradCAM:
         return cam
 
 
+class GradCAMPlusPlus(GradCAM):
+    """
+    Grad-CAM++ algorithm for improved visual localization of multi-lesion retinal features.
+    Computes second and third order partial derivatives to weight feature activations.
+    """
+    def generate(self, input_tensor: Any, target_class_idx: int) -> np.ndarray:
+        if HAS_TORCH and hasattr(self.model, "zero_grad"):
+            self.model.zero_grad()
+            output = self.model(input_tensor)
+
+            if target_class_idx is None:
+                target_class_idx = int(output.argmax(dim=1).item())
+
+            score = output[0, target_class_idx]
+            score.backward(retain_graph=True)
+
+            if self.gradients is not None and self.activations is not None:
+                grads = self.gradients[0]  # (C, H, W)
+                acts = self.activations[0]  # (C, H, W)
+
+                # Positive gradients
+                pos_grads = F.relu(grads)
+
+                # Higher-order derivatives approximation
+                g2 = grads ** 2
+                g3 = grads ** 3
+                sum_acts = torch.sum(acts, dim=(1, 2), keepdim=True)
+                aij = g2 / (2.0 * g2 + sum_acts * g3 + 1e-7)
+
+                weights = torch.sum(aij * pos_grads, dim=(1, 2), keepdim=True)
+                cam = torch.sum(weights * acts, dim=0)
+                cam = F.relu(cam)
+                cam_np = cam.cpu().numpy()
+
+                h, w = input_tensor.shape[2:]
+                cam_resized = cv2.resize(cam_np, (w, h))
+
+                max_val, min_val = np.max(cam_resized), np.min(cam_resized)
+                if max_val > min_val:
+                    return ((cam_resized - min_val) / (max_val - min_val)).astype(np.float32)
+
+        return super().generate(input_tensor, target_class_idx)
+
+
+def extract_lesion_bounding_boxes(heatmap_2d: np.ndarray, threshold: float = 0.6) -> list:
+    """Extracts bounding boxes (x, y, w, h) around high activation focus regions."""
+    binary = (heatmap_2d > threshold).astype(np.uint8) * 255
+    contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    boxes = []
+    h, w = heatmap_2d.shape[:2]
+    for c in contours:
+        x, y, bw, bh = cv2.boundingRect(c)
+        if bw * bh > (w * h * 0.005):  # Filter micro noise
+            boxes.append({"x": int(x), "y": int(y), "w": int(bw), "h": int(bh)})
+    return boxes
+
+
 def generate_gradcam_overlay(
     model: Any,
     target_layer: Any,
     input_tensor: Any,
     original_rgb: np.ndarray,
     target_class_idx: int,
-    alpha: float = 0.45
-) -> Tuple[np.ndarray, np.ndarray, str, str, str]:
-    gradcam = GradCAM(model, target_layer)
-    heatmap_2d = gradcam.generate(input_tensor, target_class_idx)
+    alpha: float = 0.45,
+    use_plus_plus: bool = True
+) -> Tuple[np.ndarray, np.ndarray, str, str, str, list]:
+    if use_plus_plus:
+        cam_engine = GradCAMPlusPlus(model, target_layer)
+    else:
+        cam_engine = GradCAM(model, target_layer)
+
+    heatmap_2d = cam_engine.generate(input_tensor, target_class_idx)
 
     orig_h, orig_w = original_rgb.shape[:2]
     heatmap_resized = cv2.resize(heatmap_2d, (orig_w, orig_h))
@@ -91,10 +153,16 @@ def generate_gradcam_overlay(
 
     overlay_rgb = cv2.addWeighted(original_rgb, 1 - alpha, heatmap_rgb, alpha, 0)
 
+    # Draw bounding boxes on overlay for visual grounding
+    boxes = extract_lesion_bounding_boxes(heatmap_resized)
+    for b in boxes:
+        cv2.rectangle(overlay_rgb, (b["x"], b["y"]), (b["x"] + b["w"], b["y"] + b["h"]), (255, 215, 0), 2)
+
     def to_b64(arr_rgb: np.ndarray) -> str:
         pil_img = Image.fromarray(arr_rgb)
         buf = io.BytesIO()
         pil_img.save(buf, format="PNG")
         return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode("utf-8")
 
-    return heatmap_rgb, overlay_rgb, to_b64(original_rgb), to_b64(heatmap_rgb), to_b64(overlay_rgb)
+    return heatmap_rgb, overlay_rgb, to_b64(original_rgb), to_b64(heatmap_rgb), to_b64(overlay_rgb), boxes
+

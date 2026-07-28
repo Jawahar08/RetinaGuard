@@ -22,6 +22,16 @@ class ClassPrediction(BaseModel):
     is_positive: bool = Field(False, description="Whether probability exceeds operating threshold")
 
 
+class PatientInfo(BaseModel):
+    name: Optional[str] = Field(None, description="Patient full name")
+    age: Optional[str] = Field(None, description="Patient age")
+    gender: Optional[str] = Field(None, description="Patient gender")
+    blood_group: Optional[str] = Field(None, description="Patient blood group")
+    diabetic_status: Optional[str] = Field(None, description="Patient diabetes history/status")
+    hypertension: Optional[str] = Field(None, description="Hypertension status")
+    symptoms: Optional[str] = Field(None, description="Visual symptoms reported")
+
+
 class PredictionResponse(BaseModel):
     request_id: str
     task: str = Field(..., description="Task name: 'odir' (multi-label) or 'aptos' (multiclass)")
@@ -35,6 +45,7 @@ class PredictionResponse(BaseModel):
     calibrated_confidence: float = Field(..., description="Calibrated prediction confidence score (0.0 to 1.0)")
     abstain: bool = Field(False, description="True if model abstains due to low confidence or quality issues")
     abstention_reason: Optional[str] = Field(None, description="Reason for abstention if abstain is True")
+    patient_info: Optional[PatientInfo] = Field(None, description="Patient medical background information")
     disclaimer: str = Field(
         "For research and educational screening support only. Not clinically validated for diagnostic or treatment decisions.",
         description="Clinical safety boundary disclaimer"
