@@ -46,13 +46,29 @@ class PredictionResponse(BaseModel):
     abstain: bool = Field(False, description="True if model abstains due to low confidence or quality issues")
     abstention_reason: Optional[str] = Field(None, description="Reason for abstention if abstain is True")
     patient_info: Optional[PatientInfo] = Field(None, description="Patient medical background information")
+    dip_biomarkers: Optional["DIPBiomarkerResult"] = Field(None, description="Classical DIP structural biomarker results")
     disclaimer: str = Field(
         "For research and educational screening support only. Not clinically validated for diagnostic or treatment decisions.",
         description="Clinical safety boundary disclaimer"
     )
 
 
+class DIPBiomarkerResult(BaseModel):
+    """Classical DIP structural biomarker results for Feature 1."""
+    vessel_density_index: float = Field(..., description="Ratio of vessel pixels to FOV pixels (0.0–1.0)")
+    microaneurysm_candidate_count: int = Field(..., description="Estimated microaneurysm / haemorrhage blob count")
+    exudate_candidate_count: int = Field(..., description="Estimated exudate candidate blob count")
+    exudate_area_ratio: float = Field(..., description="Exudate pixel area / total image pixels (0.0–1.0)")
+    optic_disc_found: bool = Field(..., description="Whether optic disc candidate was detected")
+    optic_disc_bbox: Optional[List[int]] = Field(None, description="Optic disc bounding box [x, y, w, h]")
+    macula_center: Optional[List[int]] = Field(None, description="Estimated macula fovea center [x, y]")
+    anatomy_overlay_base64: Optional[str] = Field(None, description="Annotated anatomy overlay PNG (base64)")
+    vessel_mask_base64: Optional[str] = Field(None, description="Binary vessel segmentation mask PNG (base64)")
+    lesion_mask_base64: Optional[str] = Field(None, description="Binary lesion candidate mask PNG (base64)")
+
+
 class HeatmapResponse(BaseModel):
+
     request_id: str
     target_label: str
     architecture: str

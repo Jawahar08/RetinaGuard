@@ -1,6 +1,6 @@
 """
 FastAPI Backend Application for Retinal Disease Screening System.
-Exposes /health, /predict, /generate-heatmap, and /metadata endpoints.
+Exposes /health, /predict, /generate-heatmap, /dip-analysis, and /metadata endpoints.
 """
 import io
 import logging
@@ -13,11 +13,12 @@ from fastapi.responses import JSONResponse, HTMLResponse
 import numpy as np
 from PIL import Image
 
-from ml.schemas import HeatmapResponse, PredictionResponse, PatientInfo
+from ml.schemas import HeatmapResponse, PredictionResponse, PatientInfo, DIPBiomarkerResult
 from ml.inference import RetinalInferenceService
 from ml.gradcam import generate_gradcam_overlay
 from ml.preprocessing import RetinalPreprocessor
 from ml.pdf_report import generate_html_report
+from ml.dip_features import RetinalDIPExtractor
 
 # Configure structured logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -42,6 +43,9 @@ app.add_middleware(
 
 # Initialize Inference Service instance
 inference_service = RetinalInferenceService(model_name="smoke_test")
+
+# Initialize DIP Extractor
+_dip_extractor = RetinalDIPExtractor(target_size=(512, 512))
 
 
 @app.middleware("http")
@@ -99,7 +103,42 @@ async def predict(
             hypertension=hypertension,
             symptoms=symptoms
         )
+
+    # Run classical DIP biomarker extraction
+    try:
+        pil_img = Image.open(io.BytesIO(content)).convert("RGB")
+        img_rgb = np.array(pil_img)
+        response.dip_biomarkers = _dip_extractor.analyze(img_rgb)
+    except Exception as e:
+        logger.warning(f"DIP extraction failed (non-critical): {e}")
+
     return response
+
+
+@app.post("/dip-analysis", response_model=DIPBiomarkerResult, tags=["DIP Biomarkers"])
+async def dip_analysis(file: UploadFile = File(...)):
+    """
+    Run classical DIP structural biomarker extraction on a retinal fundus image.
+    Returns vessel density index, microaneurysm candidates, exudate candidates,
+    optic disc location, macula centre, and annotated overlay images.
+    """
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Uploaded file is not a valid image.")
+
+    content = await file.read()
+    try:
+        pil_img = Image.open(io.BytesIO(content)).convert("RGB")
+        img_rgb = np.array(pil_img)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid or corrupt image bytes.")
+
+    try:
+        result = _dip_extractor.analyze(img_rgb)
+    except Exception as e:
+        logger.error(f"DIP analysis failed: {e}")
+        raise HTTPException(status_code=500, detail=f"DIP analysis failed: {str(e)}")
+
+    return result
 
 
 @app.post("/generate-heatmap", response_model=HeatmapResponse, tags=["Explainability"])
