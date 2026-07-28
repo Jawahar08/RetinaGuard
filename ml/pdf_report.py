@@ -135,7 +135,7 @@ def generate_html_report(
         rec_items = "".join(f"<li>{r}</li>" for r in recs)
 
         risk_section_html = f"""
-        <div class="section-title">🎯 Clinical Risk Assessment (Feature 3)</div>
+        <div class="section-title">🎯 Clinical Risk Assessment</div>
         <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 15px;">
             <div style="flex: 0 0 220px; text-align: center;">
                 {gauge_svg}
@@ -183,7 +183,7 @@ def generate_html_report(
             dip_images = f'<div class="image-grid" style="grid-template-columns: repeat(3, 1fr);">{img_cards}</div>'
 
         dip_section_html = f"""
-        <div class="section-title">🔬 DIP Structural Biomarker Analysis (Feature 1)</div>
+        <div class="section-title">🔬 DIP Structural Biomarker Analysis</div>
         <div class="summary-box" style="grid-template-columns: repeat(4, 1fr);">
             <div>
                 <div>Vessel Density</div>

@@ -10,6 +10,7 @@ import ResearchMetrics from '../components/ResearchMetrics';
 import DiseaseReference from '../components/DiseaseReference';
 import SiteFooter from '../components/SiteFooter';
 import DIPExplorer from '../components/DIPExplorer';
+import ProgressionTrackerUI from '../components/ProgressionTrackerUI';
 import { PatientInfoData } from '../components/PatientIntakeForm';
 
 interface ClassPrediction {
@@ -544,6 +545,8 @@ export default function OphthaFusionDashboard() {
         previewUrl={previewUrl}
         selectedFile={selectedFile}
       />
+
+      <ProgressionTrackerUI />
 
       <EnsemblePipeline
         t={t}
