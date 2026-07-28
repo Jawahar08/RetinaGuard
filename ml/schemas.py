@@ -67,6 +67,29 @@ class DIPBiomarkerResult(BaseModel):
     lesion_mask_base64: Optional[str] = Field(None, description="Binary lesion candidate mask PNG (base64)")
 
 
+class ImageQualityMetrics(BaseModel):
+    """Per-image quality measurements used by the restoration engine."""
+    blur_score: float = Field(..., description="Laplacian variance blur score (higher = sharper)")
+    brightness: float = Field(..., description="Mean pixel brightness (0–255)")
+    contrast: float = Field(..., description="Pixel intensity standard deviation")
+    fov_ratio: float = Field(..., description="Fraction of pixels belonging to retinal FOV")
+    has_noise: bool = Field(..., description="Whether salt-and-pepper noise was detected")
+
+
+class RestorationResult(BaseModel):
+    """Feature 2: Adaptive image restoration result."""
+    quality_score_before: float = Field(..., description="Composite image quality score before restoration (0.0–1.0)")
+    quality_score_after: float = Field(..., description="Composite image quality score after restoration (0.0–1.0)")
+    quality_improved: bool = Field(..., description="Whether restoration improved the quality score")
+    steps_applied: List[str] = Field(default_factory=list, description="List of restoration steps applied")
+    quality_before: ImageQualityMetrics = Field(..., description="Raw quality metrics before restoration")
+    quality_after: ImageQualityMetrics = Field(..., description="Raw quality metrics after restoration")
+    original_image_base64: Optional[str] = Field(None, description="Original image PNG (base64)")
+    restored_image_base64: Optional[str] = Field(None, description="Restored image PNG (base64)")
+
+
+
+
 class HeatmapResponse(BaseModel):
 
     request_id: str

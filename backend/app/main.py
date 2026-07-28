@@ -13,12 +13,13 @@ from fastapi.responses import JSONResponse, HTMLResponse
 import numpy as np
 from PIL import Image
 
-from ml.schemas import HeatmapResponse, PredictionResponse, PatientInfo, DIPBiomarkerResult
+from ml.schemas import HeatmapResponse, PredictionResponse, PatientInfo, DIPBiomarkerResult, RestorationResult, ImageQualityMetrics
 from ml.inference import RetinalInferenceService
 from ml.gradcam import generate_gradcam_overlay
 from ml.preprocessing import RetinalPreprocessor
 from ml.pdf_report import generate_html_report
 from ml.dip_features import RetinalDIPExtractor
+from ml.image_restoration import RetinalImageRestorer
 
 # Configure structured logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -46,6 +47,9 @@ inference_service = RetinalInferenceService(model_name="smoke_test")
 
 # Initialize DIP Extractor
 _dip_extractor = RetinalDIPExtractor(target_size=(512, 512))
+
+# Initialize Image Restorer
+_restorer = RetinalImageRestorer()
 
 
 @app.middleware("http")
@@ -113,6 +117,46 @@ async def predict(
         logger.warning(f"DIP extraction failed (non-critical): {e}")
 
     return response
+
+
+@app.post("/restore", response_model=RestorationResult, tags=["Image Restoration"])
+async def restore_image(file: UploadFile = File(...)):
+    """
+    Feature 2: Adaptive image quality assessment and DIP-based restoration.
+    Detects blur, poor brightness, low contrast, noisy pixels, and poor FOV,
+    then applies targeted corrections and returns the restored image as base64.
+    """
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Uploaded file is not a valid image.")
+
+    content = await file.read()
+    try:
+        pil_img = Image.open(io.BytesIO(content)).convert("RGB")
+        img_rgb = np.array(pil_img)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid or corrupt image bytes.")
+
+    try:
+        score_before = _restorer.compute_quality_score(img_rgb)
+        result = _restorer.restore(img_rgb)
+        score_after = _restorer.compute_quality_score(result["restored_image"])
+
+        qb = result["quality_before"]
+        qa = result["quality_after"]
+
+        return RestorationResult(
+            quality_score_before=score_before,
+            quality_score_after=score_after,
+            quality_improved=score_after > score_before,
+            steps_applied=result["steps_applied"],
+            quality_before=ImageQualityMetrics(**qb),
+            quality_after=ImageQualityMetrics(**qa),
+            original_image_base64=result["original_base64"],
+            restored_image_base64=result["restored_base64"],
+        )
+    except Exception as e:
+        logger.error(f"Image restoration failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Restoration failed: {str(e)}")
 
 
 @app.post("/dip-analysis", response_model=DIPBiomarkerResult, tags=["DIP Biomarkers"])
