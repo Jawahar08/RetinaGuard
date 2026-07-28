@@ -99,7 +99,7 @@ export default function ProgressionTrackerUI() {
         <span style={{ fontSize: 22 }}>📈</span>
         <div>
           <h3 className="font-grotesk-mono" style={{ fontSize: 14, color: 'var(--electric-blue)' }}>
-            FEATURE 5: LONGITUDINAL DISEASE PROGRESSION TRACKER
+            LONGITUDINAL DISEASE PROGRESSION TRACKER
           </h3>
           <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
             Compare baseline vs. follow-up retinal scans to quantify structural changes & disease trajectory
