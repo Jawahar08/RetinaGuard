@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="70" viewBox="0 0 1200 70">
+  <rect width="1200" height="70" fill="#0f172a" rx="10"/>
+  <rect x="0" y="0" width="1200" height="1" fill="#1e293b"/>
+  <!-- Stat: Models -->
+  <g font-family="'Segoe UI',sans-serif" text-anchor="middle">
+    <text x="100" y="25" font-size="11" fill="#64748b" font-weight="600">ENSEMBLE MODELS</text>
+    <text x="100" y="52" font-size="24" fill="#00d2ff" font-weight="800">3</text>
+  </g>
+  <line x1="200" y1="12" x2="200" y2="58" stroke="#1e293b" stroke-width="1"/>
+  <!-- Stat: Features -->
+  <g font-family="'Segoe UI',sans-serif" text-anchor="middle">
+    <text x="320" y="25" font-size="11" fill="#64748b" font-weight="600">FEATURE FUSION</text>
+    <text x="320" y="52" font-size="24" fill="#7b2ff7" font-weight="800">4608-d</text>
+  </g>
+  <line x1="440" y1="12" x2="440" y2="58" stroke="#1e293b" stroke-width="1"/>
+  <!-- Stat: DIP Metrics -->
+  <g font-family="'Segoe UI',sans-serif" text-anchor="middle">
+    <text x="540" y="25" font-size="11" fill="#64748b" font-weight="600">DIP BIOMARKERS</text>
+    <text x="540" y="52" font-size="24" fill="#64ffda" font-weight="800">6</text>
+  </g>
+  <line x1="640" y1="12" x2="640" y2="58" stroke="#1e293b" stroke-width="1"/>
+  <!-- Stat: API Endpoints -->
+  <g font-family="'Segoe UI',sans-serif" text-anchor="middle">
+    <text x="750" y="25" font-size="11" fill="#64748b" font-weight="600">API ENDPOINTS</text>
+    <text x="750" y="52" font-size="24" fill="#ffd93d" font-weight="800">8</text>
+  </g>
+  <line x1="860" y1="12" x2="860" y2="58" stroke="#1e293b" stroke-width="1"/>
+  <!-- Stat: Disease Classes -->
+  <g font-family="'Segoe UI',sans-serif" text-anchor="middle">
+    <text x="960" y="25" font-size="11" fill="#64748b" font-weight="600">DISEASE CLASSES</text>
+    <text x="960" y="52" font-size="24" fill="#ff6b6b" font-weight="800">5</text>
+  </g>
+  <line x1="1060" y1="12" x2="1060" y2="58" stroke="#1e293b" stroke-width="1"/>
+  <!-- Stat: Components -->
+  <g font-family="'Segoe UI',sans-serif" text-anchor="middle">
+    <text x="1140" y="25" font-size="11" fill="#64748b" font-weight="600">UI COMPONENTS</text>
+    <text x="1140" y="52" font-size="24" fill="#f093fb" font-weight="800">10</text>
+  </g>
+  <!-- Animated underline -->
+  <rect x="0" y="68" width="0" height="2" fill="url(#ul)"><animate attributeName="width" values="0;1200;0" dur="5s" repeatCount="indefinite"/></rect>
+  <defs><linearGradient id="ul" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#00d2ff"/><stop offset="50%" style="stop-color:#7b2ff7"/><stop offset="100%" style="stop-color:#ff6b6b"/></linearGradient></defs>
+</svg>

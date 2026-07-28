@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="100" viewBox="0 0 1200 100">
+  <defs>
+    <linearGradient id="fbg" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#020617"/><stop offset="100%" style="stop-color:#0f172a"/></linearGradient>
+  </defs>
+  <rect width="1200" height="100" fill="url(#fbg)" rx="12"/>
+  <!-- Feature cards -->
+  <g font-family="'Segoe UI',sans-serif" text-anchor="middle">
+    <!-- DL Ensemble -->
+    <rect x="20" y="10" width="170" height="80" rx="10" fill="#0f172a" stroke="#00d2ff" stroke-width="1.2"><animate attributeName="stroke-opacity" values="0.4;1;0.4" dur="4s" repeatCount="indefinite"/></rect>
+    <text x="105" y="40" font-size="22">🧠</text>
+    <text x="105" y="60" font-size="10" fill="#00d2ff" font-weight="700">DL Ensemble</text>
+    <text x="105" y="75" font-size="8" fill="#64748b">ResNet·Dense·Efficient</text>
+    <!-- DIP Biomarkers -->
+    <rect x="210" y="10" width="170" height="80" rx="10" fill="#0f172a" stroke="#64ffda" stroke-width="1.2"><animate attributeName="stroke-opacity" values="0.4;1;0.4" dur="4s" begin="0.5s" repeatCount="indefinite"/></rect>
+    <text x="295" y="40" font-size="22">🔬</text>
+    <text x="295" y="60" font-size="10" fill="#64ffda" font-weight="700">DIP Biomarkers</text>
+    <text x="295" y="75" font-size="8" fill="#64748b">CDR·Vessels·Exudates</text>
+    <!-- Quality Gate -->
+    <rect x="400" y="10" width="170" height="80" rx="10" fill="#0f172a" stroke="#ffd93d" stroke-width="1.2"><animate attributeName="stroke-opacity" values="0.4;1;0.4" dur="4s" begin="1s" repeatCount="indefinite"/></rect>
+    <text x="485" y="40" font-size="22">🛡️</text>
+    <text x="485" y="60" font-size="10" fill="#ffd93d" font-weight="700">Quality Gate</text>
+    <text x="485" y="75" font-size="8" fill="#64748b">Auto-Restore Pipeline</text>
+    <!-- Risk Engine -->
+    <rect x="590" y="10" width="170" height="80" rx="10" fill="#0f172a" stroke="#ff6b6b" stroke-width="1.2"><animate attributeName="stroke-opacity" values="0.4;1;0.4" dur="4s" begin="1.5s" repeatCount="indefinite"/></rect>
+    <text x="675" y="40" font-size="22">📊</text>
+    <text x="675" y="60" font-size="10" fill="#ff6b6b" font-weight="700">Risk Engine</text>
+    <text x="675" y="75" font-size="8" fill="#64748b">0-100 Severity Grade</text>
+    <!-- Grad-CAM -->
+    <rect x="780" y="10" width="170" height="80" rx="10" fill="#0f172a" stroke="#7b2ff7" stroke-width="1.2"><animate attributeName="stroke-opacity" values="0.4;1;0.4" dur="4s" begin="2s" repeatCount="indefinite"/></rect>
+    <text x="865" y="40" font-size="22">🔮</text>
+    <text x="865" y="60" font-size="10" fill="#7b2ff7" font-weight="700">Grad-CAM++</text>
+    <text x="865" y="75" font-size="8" fill="#64748b">Visual Explainability</text>
+    <!-- PDF Reports -->
+    <rect x="970" y="10" width="210" height="80" rx="10" fill="#0f172a" stroke="#f093fb" stroke-width="1.2"><animate attributeName="stroke-opacity" values="0.4;1;0.4" dur="4s" begin="2.5s" repeatCount="indefinite"/></rect>
+    <text x="1075" y="40" font-size="22">📄</text>
+    <text x="1075" y="60" font-size="10" fill="#f093fb" font-weight="700">Clinical PDF Reports</text>
+    <text x="1075" y="75" font-size="8" fill="#64748b">Patient Data + Visuals</text>
+  </g>
+</svg>

@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="340" viewBox="0 0 1200 340">
+  <defs>
+    <linearGradient id="dbg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#020617"/><stop offset="100%" style="stop-color:#0f172a"/></linearGradient>
+    <filter id="dg"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="1200" height="340" rx="14" fill="url(#dbg)"/>
+  <!-- Browser chrome -->
+  <rect x="40" y="20" width="1120" height="300" rx="10" fill="#0f172a" stroke="#1e293b" stroke-width="1"/>
+  <rect x="40" y="20" width="1120" height="32" rx="10" fill="#1e293b"/>
+  <circle cx="62" cy="36" r="5" fill="#ff6b6b"/>
+  <circle cx="80" cy="36" r="5" fill="#ffd93d"/>
+  <circle cx="98" cy="36" r="5" fill="#22c55e"/>
+  <rect x="180" y="28" width="280" height="16" rx="5" fill="#0f172a"/>
+  <text x="320" y="40" text-anchor="middle" font-family="monospace" font-size="9" fill="#475569">localhost:3000 — RetinaGuard Dashboard</text>
+  <!-- Header -->
+  <rect x="45" y="56" width="1110" height="30" fill="#020617"/>
+  <text x="70" y="76" font-family="'Segoe UI',sans-serif" font-size="12" fill="#00d2ff" font-weight="700">👁️ RetinaGuard</text>
+  <g font-family="'Segoe UI',sans-serif" font-size="9" fill="#475569">
+    <text x="800" y="76">Dashboard</text><text x="870" y="76">Analysis</text><text x="940" y="76">Reports</text><text x="1010" y="76">DIP Explorer</text><text x="1090" y="76">API Docs</text>
+  </g>
+  <!-- Tab bar -->
+  <g transform="translate(55,96)">
+    <rect width="90" height="22" rx="5" fill="#00d2ff" opacity="0.2"><animate attributeName="opacity" values="0.2;0.5;0.2" dur="6s" repeatCount="indefinite"/></rect>
+    <text x="45" y="15" text-anchor="middle" font-family="monospace" font-size="8" fill="#00d2ff">Original</text>
+    <rect x="100" width="90" height="22" rx="5" fill="#7b2ff7" opacity="0.15"><animate attributeName="opacity" values="0.15;0.4;0.15" dur="6s" begin="1s" repeatCount="indefinite"/></rect>
+    <text x="145" y="15" text-anchor="middle" font-family="monospace" font-size="8" fill="#7b2ff7">Restored</text>
+    <rect x="200" width="90" height="22" rx="5" fill="#ff6b6b" opacity="0.15"><animate attributeName="opacity" values="0.15;0.4;0.15" dur="6s" begin="2s" repeatCount="indefinite"/></rect>
+    <text x="245" y="15" text-anchor="middle" font-family="monospace" font-size="8" fill="#ff6b6b">Vessels</text>
+    <rect x="300" width="90" height="22" rx="5" fill="#ffd93d" opacity="0.15"><animate attributeName="opacity" values="0.15;0.4;0.15" dur="6s" begin="3s" repeatCount="indefinite"/></rect>
+    <text x="345" y="15" text-anchor="middle" font-family="monospace" font-size="8" fill="#ffd93d">Optic Disc</text>
+    <rect x="400" width="90" height="22" rx="5" fill="#64ffda" opacity="0.15"><animate attributeName="opacity" values="0.15;0.4;0.15" dur="6s" begin="4s" repeatCount="indefinite"/></rect>
+    <text x="445" y="15" text-anchor="middle" font-family="monospace" font-size="8" fill="#64ffda">Grad-CAM</text>
+  </g>
+  <!-- Image area with scan -->
+  <rect x="55" y="125" width="380" height="180" rx="8" fill="#020617" stroke="#1e293b" stroke-width="1"/>
+  <circle cx="245" cy="215" r="65" fill="#1a0a00" stroke="#1e293b" stroke-width="0.5"/>
+  <circle cx="245" cy="215" r="50" fill="#2a1505" opacity="0.7"/>
+  <circle cx="215" cy="200" r="12" fill="#301a08"/>
+  <line x1="55" y1="125" x2="435" y2="125" stroke="#00d2ff" stroke-width="1" opacity="0.2"><animate attributeName="y1" values="125;305;125" dur="4s" repeatCount="indefinite"/><animate attributeName="y2" values="125;305;125" dur="4s" repeatCount="indefinite"/></line>
+  <!-- Gauge panel -->
+  <g transform="translate(500,135)">
+    <text x="90" y="0" text-anchor="middle" font-family="'Segoe UI',sans-serif" font-size="10" fill="#475569" font-weight="600">LIVE METRICS</text>
+    <!-- CDR -->
+    <g transform="translate(50,55)"><circle r="32" fill="none" stroke="#1e293b" stroke-width="5"/><circle r="32" fill="none" stroke="#00d2ff" stroke-width="5" stroke-dasharray="201" stroke-dashoffset="201" transform="rotate(-90)"><animate attributeName="stroke-dashoffset" values="201;80" dur="2s" fill="freeze"/></circle><text x="0" y="4" text-anchor="middle" font-family="monospace" font-size="11" fill="#00d2ff" font-weight="bold">0.42</text><text x="0" y="46" text-anchor="middle" font-family="monospace" font-size="8" fill="#475569">CDR</text></g>
+    <!-- VDI -->
+    <g transform="translate(140,55)"><circle r="32" fill="none" stroke="#1e293b" stroke-width="5"/><circle r="32" fill="none" stroke="#64ffda" stroke-width="5" stroke-dasharray="201" stroke-dashoffset="201" transform="rotate(-90)"><animate attributeName="stroke-dashoffset" values="201;120" dur="2s" begin="0.3s" fill="freeze"/></circle><text x="0" y="4" text-anchor="middle" font-family="monospace" font-size="11" fill="#64ffda" font-weight="bold">14.2%</text><text x="0" y="46" text-anchor="middle" font-family="monospace" font-size="8" fill="#475569">VDI</text></g>
+    <!-- Risk -->
+    <g transform="translate(50,150)"><circle r="32" fill="none" stroke="#1e293b" stroke-width="5"/><circle r="32" fill="none" stroke="#ff6b6b" stroke-width="5" stroke-dasharray="201" stroke-dashoffset="201" transform="rotate(-90)"><animate attributeName="stroke-dashoffset" values="201;50" dur="2s" begin="0.6s" fill="freeze"/></circle><text x="0" y="4" text-anchor="middle" font-family="monospace" font-size="11" fill="#ff6b6b" font-weight="bold">62</text><text x="0" y="46" text-anchor="middle" font-family="monospace" font-size="8" fill="#475569">Risk</text></g>
+    <!-- Confidence -->
+    <g transform="translate(140,150)"><circle r="32" fill="none" stroke="#1e293b" stroke-width="5"/><circle r="32" fill="none" stroke="#f093fb" stroke-width="5" stroke-dasharray="201" stroke-dashoffset="201" transform="rotate(-90)"><animate attributeName="stroke-dashoffset" values="201;35" dur="2s" begin="0.9s" fill="freeze"/></circle><text x="0" y="4" text-anchor="middle" font-family="monospace" font-size="11" fill="#f093fb" font-weight="bold">87%</text><text x="0" y="46" text-anchor="middle" font-family="monospace" font-size="8" fill="#475569">Confidence</text></g>
+  </g>
+  <!-- Prediction sidebar -->
+  <g transform="translate(780,135)">
+    <rect width="360" height="170" rx="8" fill="#020617" stroke="#1e293b" stroke-width="1"/>
+    <text x="180" y="22" text-anchor="middle" font-family="'Segoe UI',sans-serif" font-size="10" fill="#475569" font-weight="600">PREDICTION RESULTS</text>
+    <!-- Bars -->
+    <rect x="15" y="35" width="0" height="16" rx="3" fill="#ff6b6b"><animate attributeName="width" values="0;280" dur="1.5s" begin="1s" fill="freeze"/></rect>
+    <text x="20" y="48" font-family="monospace" font-size="8" fill="#fff" opacity="0"><animate attributeName="opacity" values="0;1" dur="0.3s" begin="1.5s" fill="freeze"/>Diabetic Retinopathy — 87%</text>
+    <rect x="15" y="58" width="0" height="16" rx="3" fill="#22c55e"><animate attributeName="width" values="0;50" dur="1.5s" begin="1.3s" fill="freeze"/></rect>
+    <text x="20" y="71" font-family="monospace" font-size="8" fill="#fff" opacity="0"><animate attributeName="opacity" values="0;1" dur="0.3s" begin="1.8s" fill="freeze"/>Normal — 8%</text>
+    <rect x="15" y="81" width="0" height="16" rx="3" fill="#ffd93d"><animate attributeName="width" values="0;25" dur="1.5s" begin="1.6s" fill="freeze"/></rect>
+    <text x="20" y="94" font-family="monospace" font-size="8" fill="#fff" opacity="0"><animate attributeName="opacity" values="0;1" dur="0.3s" begin="2.1s" fill="freeze"/>Glaucoma — 3%</text>
+    <rect x="15" y="104" width="0" height="16" rx="3" fill="#7b2ff7"><animate attributeName="width" values="0;15" dur="1.5s" begin="1.9s" fill="freeze"/></rect>
+    <text x="20" y="117" font-family="monospace" font-size="8" fill="#fff" opacity="0"><animate attributeName="opacity" values="0;1" dur="0.3s" begin="2.4s" fill="freeze"/>Cataract — 1%</text>
+    <rect x="15" y="127" width="0" height="16" rx="3" fill="#00d2ff"><animate attributeName="width" values="0;10" dur="1.5s" begin="2.2s" fill="freeze"/></rect>
+    <text x="20" y="140" font-family="monospace" font-size="8" fill="#fff" opacity="0"><animate attributeName="opacity" values="0;1" dur="0.3s" begin="2.7s" fill="freeze"/>AMD — 1%</text>
+  </g>
+</svg>
