@@ -13,7 +13,7 @@ from fastapi.responses import JSONResponse, HTMLResponse
 import numpy as np
 from PIL import Image
 
-from ml.schemas import HeatmapResponse, PredictionResponse, PatientInfo, DIPBiomarkerResult, RestorationResult, ImageQualityMetrics, ClinicalRiskResult, SubScores
+from ml.schemas import HeatmapResponse, PredictionResponse, PatientInfo, DIPBiomarkerResult, RestorationResult, ImageQualityMetrics, ClinicalRiskResult, SubScores, ProgressionAnalysisResult, BiomarkerDeltas
 from ml.inference import RetinalInferenceService
 from ml.gradcam import generate_gradcam_overlay
 from ml.preprocessing import RetinalPreprocessor
@@ -21,6 +21,7 @@ from ml.pdf_report import generate_html_report
 from ml.dip_features import RetinalDIPExtractor
 from ml.image_restoration import RetinalImageRestorer
 from ml.risk_score import ClinicalRiskScorer
+from ml.progression_tracker import ProgressionTracker
 
 # Configure structured logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -54,6 +55,9 @@ _restorer = RetinalImageRestorer()
 
 # Initialize Clinical Risk Scorer
 _risk_scorer = ClinicalRiskScorer()
+
+# Initialize Progression Tracker
+_progression_tracker = ProgressionTracker(_dip_extractor, _risk_scorer)
 
 
 @app.middleware("http")
@@ -245,6 +249,62 @@ async def compute_risk_score(file: UploadFile = File(...)):
         interpretations=risk_data["interpretations"],
         recommendations=risk_data["recommendations"],
     )
+
+
+@app.post("/progression-analysis", response_model=ProgressionAnalysisResult, tags=["Disease Progression"])
+async def analyze_progression(
+    baseline_file: UploadFile = File(...),
+    followup_file: UploadFile = File(...)
+):
+    """
+    Feature 5: Multi-image longitudinal disease progression analysis.
+    Compares baseline vs. follow-up fundus scans to compute biomarker deltas,
+    classify trajectory (Improving, Stable, Progressing), and generate structural difference map.
+    """
+    if not baseline_file.content_type.startswith("image/") or not followup_file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Both files must be valid image files.")
+
+    b_content = await baseline_file.read()
+    f_content = await followup_file.read()
+
+    try:
+        b_img = np.array(Image.open(io.BytesIO(b_content)).convert("RGB"))
+        f_img = np.array(Image.open(io.BytesIO(f_content)).convert("RGB"))
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid or corrupt image bytes.")
+
+    try:
+        res = _progression_tracker.analyze(b_img, f_img)
+        deltas_dict = res["deltas"]
+
+        return ProgressionAnalysisResult(
+            deltas=BiomarkerDeltas(**deltas_dict),
+            baseline_biomarkers=res["baseline_biomarkers"],
+            followup_biomarkers=res["followup_biomarkers"],
+            baseline_risk=ClinicalRiskResult(
+                risk_score=res["baseline_risk"]["risk_score"],
+                severity_grade=res["baseline_risk"]["severity_grade"],
+                risk_level=res["baseline_risk"]["risk_level"],
+                risk_color=res["baseline_risk"]["risk_color"],
+                sub_scores=SubScores(**res["baseline_risk"]["sub_scores"]),
+                interpretations=res["baseline_risk"]["interpretations"],
+                recommendations=res["baseline_risk"]["recommendations"],
+            ),
+            followup_risk=ClinicalRiskResult(
+                risk_score=res["followup_risk"]["risk_score"],
+                severity_grade=res["followup_risk"]["severity_grade"],
+                risk_level=res["followup_risk"]["risk_level"],
+                risk_color=res["followup_risk"]["risk_color"],
+                sub_scores=SubScores(**res["followup_risk"]["sub_scores"]),
+                interpretations=res["followup_risk"]["interpretations"],
+                recommendations=res["followup_risk"]["recommendations"],
+            ),
+            difference_map_base64=res["difference_map_base64"],
+            recommendations=res["recommendations"],
+        )
+    except Exception as e:
+        logger.error(f"Progression analysis failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Progression analysis failed: {str(e)}")
 
 
 @app.post("/generate-heatmap", response_model=HeatmapResponse, tags=["Explainability"])

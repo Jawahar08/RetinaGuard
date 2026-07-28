@@ -105,6 +105,30 @@ class ClinicalRiskResult(BaseModel):
     risk_color: str = Field(..., description="Hex color for risk display (e.g., '#ef4444')")
     sub_scores: SubScores = Field(..., description="Per-component risk sub-scores")
     interpretations: List[str] = Field(default_factory=list, description="Per-biomarker clinical interpretations")
+class BiomarkerDeltas(BaseModel):
+    """Changes between baseline and follow-up DIP biomarkers."""
+    delta_vessel_density_index: float = Field(..., description="Change in Vessel Density Index")
+    delta_microaneurysm_count: int = Field(..., description="Change in Microaneurysm candidate count")
+    delta_exudate_count: int = Field(..., description="Change in Exudate candidate count")
+    delta_exudate_area_ratio: float = Field(..., description="Change in Exudate area ratio")
+    delta_risk_score: float = Field(..., description="Change in Clinical Risk Score")
+    trajectory: str = Field(..., description="Classification: e.g. 'Stable / Unchanged', 'Mild Progression'")
+    trajectory_color: str = Field(..., description="Hex color for UI display")
+    badge_text: str = Field(..., description="Badge text for UI display")
+    baseline_risk_score: float = Field(..., description="Baseline risk score")
+    followup_risk_score: float = Field(..., description="Follow-up risk score")
+    baseline_severity: str = Field(..., description="Baseline severity grade")
+    followup_severity: str = Field(..., description="Follow-up severity grade")
+
+
+class ProgressionAnalysisResult(BaseModel):
+    """Feature 5: Serial image comparison and progression tracker result."""
+    deltas: BiomarkerDeltas = Field(..., description="Biomarker delta metrics")
+    baseline_biomarkers: DIPBiomarkerResult = Field(..., description="Full DIP biomarkers for baseline scan")
+    followup_biomarkers: DIPBiomarkerResult = Field(..., description="Full DIP biomarkers for follow-up scan")
+    baseline_risk: ClinicalRiskResult = Field(..., description="Clinical risk assessment for baseline scan")
+    followup_risk: ClinicalRiskResult = Field(..., description="Clinical risk assessment for follow-up scan")
+    difference_map_base64: str = Field(..., description="Color-coded structural difference map PNG (base64)")
     recommendations: List[str] = Field(default_factory=list, description="Clinical action recommendations")
 
 
