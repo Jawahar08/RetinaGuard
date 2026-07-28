@@ -9,6 +9,7 @@ import EnsemblePipeline from '../components/EnsemblePipeline';
 import ResearchMetrics from '../components/ResearchMetrics';
 import DiseaseReference from '../components/DiseaseReference';
 import SiteFooter from '../components/SiteFooter';
+import DIPExplorer from '../components/DIPExplorer';
 import { PatientInfoData } from '../components/PatientIntakeForm';
 
 interface ClassPrediction {
@@ -537,6 +538,11 @@ export default function OphthaFusionDashboard() {
         runPrediction={runPrediction}
         downloadReport={downloadReport}
         workspaceRef={workspaceRef}
+      />
+
+      <DIPExplorer
+        previewUrl={previewUrl}
+        selectedFile={selectedFile}
       />
 
       <EnsemblePipeline
