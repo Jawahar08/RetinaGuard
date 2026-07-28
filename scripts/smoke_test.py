@@ -5,6 +5,7 @@ inference pipeline, Grad-CAM overlays, and FastAPI endpoints.
 """
 import os
 import sys
+sys.path = [p for p in sys.path if not (p.endswith("Python311") or p.endswith("Python311\\"))]
 from pathlib import Path
 import numpy as np
 
