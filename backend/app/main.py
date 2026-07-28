@@ -13,13 +13,14 @@ from fastapi.responses import JSONResponse, HTMLResponse
 import numpy as np
 from PIL import Image
 
-from ml.schemas import HeatmapResponse, PredictionResponse, PatientInfo, DIPBiomarkerResult, RestorationResult, ImageQualityMetrics
+from ml.schemas import HeatmapResponse, PredictionResponse, PatientInfo, DIPBiomarkerResult, RestorationResult, ImageQualityMetrics, ClinicalRiskResult, SubScores
 from ml.inference import RetinalInferenceService
 from ml.gradcam import generate_gradcam_overlay
 from ml.preprocessing import RetinalPreprocessor
 from ml.pdf_report import generate_html_report
 from ml.dip_features import RetinalDIPExtractor
 from ml.image_restoration import RetinalImageRestorer
+from ml.risk_score import ClinicalRiskScorer
 
 # Configure structured logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -50,6 +51,9 @@ _dip_extractor = RetinalDIPExtractor(target_size=(512, 512))
 
 # Initialize Image Restorer
 _restorer = RetinalImageRestorer()
+
+# Initialize Clinical Risk Scorer
+_risk_scorer = ClinicalRiskScorer()
 
 
 @app.middleware("http")
@@ -183,6 +187,64 @@ async def dip_analysis(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"DIP analysis failed: {str(e)}")
 
     return result
+
+
+@app.post("/risk-score", response_model=ClinicalRiskResult, tags=["Clinical Risk"])
+async def compute_risk_score(file: UploadFile = File(...)):
+    """
+    Feature 3: Run DIP biomarker extraction + ML prediction, then compute
+    a unified clinical risk score (0–100) with severity grading,
+    per-biomarker interpretations, and clinical recommendations.
+    """
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Uploaded file is not a valid image.")
+
+    content = await file.read()
+    try:
+        pil_img = Image.open(io.BytesIO(content)).convert("RGB")
+        img_rgb = np.array(pil_img)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid or corrupt image bytes.")
+
+    # Run DIP analysis
+    try:
+        dip_result = _dip_extractor.analyze(img_rgb)
+    except Exception as e:
+        logger.error(f"DIP analysis failed in risk-score: {e}")
+        raise HTTPException(status_code=500, detail=f"DIP analysis failed: {str(e)}")
+
+    # Run ML prediction for confidence
+    try:
+        pred_response = inference_service.predict(
+            img_rgb, task="odir", request_id="risk-score"
+        )
+        ml_confidence = pred_response.calibrated_confidence
+        top_prediction = pred_response.top_prediction
+    except Exception:
+        ml_confidence = 0.0
+        top_prediction = "Unknown"
+
+    # Compute risk score
+    risk_data = _risk_scorer.compute(
+        vessel_density_index=dip_result.vessel_density_index,
+        microaneurysm_count=dip_result.microaneurysm_candidate_count,
+        exudate_count=dip_result.exudate_candidate_count,
+        exudate_area_ratio=dip_result.exudate_area_ratio,
+        ml_confidence=ml_confidence,
+        top_prediction=top_prediction,
+        optic_disc_found=dip_result.optic_disc_found,
+        macula_center=dip_result.macula_center,
+    )
+
+    return ClinicalRiskResult(
+        risk_score=risk_data["risk_score"],
+        severity_grade=risk_data["severity_grade"],
+        risk_level=risk_data["risk_level"],
+        risk_color=risk_data["risk_color"],
+        sub_scores=SubScores(**risk_data["sub_scores"]),
+        interpretations=risk_data["interpretations"],
+        recommendations=risk_data["recommendations"],
+    )
 
 
 @app.post("/generate-heatmap", response_model=HeatmapResponse, tags=["Explainability"])

@@ -88,6 +88,24 @@ class RestorationResult(BaseModel):
     restored_image_base64: Optional[str] = Field(None, description="Restored image PNG (base64)")
 
 
+class SubScores(BaseModel):
+    """Individual risk component scores (0–100 each)."""
+    vessel_density_risk: float = Field(..., description="Vessel density sub-risk score")
+    lesion_risk: float = Field(..., description="Microaneurysm/haemorrhage sub-risk score")
+    exudate_risk: float = Field(..., description="Exudate sub-risk score")
+    ml_confidence_risk: float = Field(..., description="ML model confidence sub-risk score")
+    anatomy_risk: float = Field(..., description="Anatomical structure detection sub-risk score")
+
+
+class ClinicalRiskResult(BaseModel):
+    """Feature 3: DIP-guided clinical risk score and severity grading."""
+    risk_score: float = Field(..., description="Composite clinical risk score (0.0–100.0)")
+    severity_grade: str = Field(..., description="ICDR-inspired severity grade (e.g., 'Mild NPDR')")
+    risk_level: str = Field(..., description="Human-readable risk level (e.g., 'Moderate Risk')")
+    risk_color: str = Field(..., description="Hex color for risk display (e.g., '#ef4444')")
+    sub_scores: SubScores = Field(..., description="Per-component risk sub-scores")
+    interpretations: List[str] = Field(default_factory=list, description="Per-biomarker clinical interpretations")
+    recommendations: List[str] = Field(default_factory=list, description="Clinical action recommendations")
 
 
 class HeatmapResponse(BaseModel):
