@@ -460,7 +460,25 @@ export default function OphthaFusionDashboard() {
       } else {
         nextDate.setFullYear(nextDate.getFullYear() + 1);
       }
-      const nextDateStr = nextDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+      const origSrc = heatmapData?.original_base64 ? `data:image/png;base64,${heatmapData.original_base64}` : (previewUrl || '');
+      const overlaySrc = heatmapData?.overlay_base64 ? `data:image/png;base64,${heatmapData.overlay_base64}` : (previewUrl || '');
+
+      let imageGridHtml = '';
+      if (origSrc) {
+        imageGridHtml = `
+          <h4 style="margin-top:25px; border-left:4px solid #0284c7; padding-left:10px;">Visual Explainability & Lesion Grounding</h4>
+          <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:15px; margin-top:15px;">
+            <div style="text-align:center; background:#f8fafc; padding:10px; border-radius:8px; border:1px solid #e2e8f0;">
+              <h4 style="margin:0 0 8px 0; font-size:13px; color:#475569;">Original Retinal Image</h4>
+              <img src="${origSrc}" style="width:100%; max-height:250px; object-fit:contain; border-radius:6px;" alt="Original Retinal Image" />
+            </div>
+            <div style="text-align:center; background:#f8fafc; padding:10px; border-radius:8px; border:1px solid #e2e8f0;">
+              <h4 style="margin:0 0 8px 0; font-size:13px; color:#475569;">Grad-CAM++ Lesion Grounding Map</h4>
+              <img src="${overlaySrc}" style="width:100%; max-height:250px; object-fit:contain; border-radius:6px;" alt="Grad-CAM Overlay" />
+            </div>
+          </div>
+        `;
+      }
 
       htmlContent = `
 <!DOCTYPE html>
@@ -511,6 +529,7 @@ export default function OphthaFusionDashboard() {
       <thead><tr><th>Category</th><th>Probability</th><th>Status</th></tr></thead>
       <tbody>${predsHtml}</tbody>
     </table>
+    ${imageGridHtml}
     <div class="disclaimer">${prediction.disclaimer}</div>
   </div>
 </body>
