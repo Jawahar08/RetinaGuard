@@ -460,6 +460,7 @@ export default function OphthaFusionDashboard() {
       } else {
         nextDate.setFullYear(nextDate.getFullYear() + 1);
       }
+      const nextDateStr = nextDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
       const origSrc = heatmapData?.original_base64 ? `data:image/png;base64,${heatmapData.original_base64}` : (previewUrl || '');
       const overlaySrc = heatmapData?.overlay_base64 ? `data:image/png;base64,${heatmapData.overlay_base64}` : (previewUrl || '');
 
