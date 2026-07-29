@@ -236,11 +236,17 @@ class ClinicalRiskScorer:
             risk_score, severity_grade, microaneurysm_count, exudate_area_ratio
         )
 
+        # Expected Next Check-up Date Calculation
+        next_checkup_date, followup_interval, followup_days = self._compute_next_checkup(risk_score)
+
         return {
             "risk_score": risk_score,
             "severity_grade": severity_grade,
             "risk_level": risk_level,
             "risk_color": risk_color,
+            "next_checkup_date": next_checkup_date,
+            "followup_interval": followup_interval,
+            "followup_days": followup_days,
             "sub_scores": {
                 "vessel_density_risk": round(vdi_r * 100, 1),
                 "lesion_risk": round(les_r * 100, 1),
@@ -251,6 +257,30 @@ class ClinicalRiskScorer:
             "interpretations": interpretations,
             "recommendations": recommendations,
         }
+
+    def _compute_next_checkup(self, score: float) -> Tuple[str, str, int]:
+        """Computes expected next checkup date based on risk score severity."""
+        from datetime import datetime, timedelta
+        now = datetime.now()
+        if score <= 15:
+            days = 365
+            interval = "12 Months (Annual Routine Screening)"
+        elif score <= 35:
+            days = 180
+            interval = "6 Months (Follow-up Examination)"
+        elif score <= 55:
+            days = 90
+            interval = "3 Months (Ophthalmologist Review & OCT)"
+        elif score <= 75:
+            days = 30
+            interval = "1 Month (Urgent Retinal Specialist Referral)"
+        else:
+            days = 14
+            interval = "2 Weeks (Immediate Vitreoretinal Consultation)"
+
+        next_date = now + timedelta(days=days)
+        next_date_str = next_date.strftime("%B %d, %Y")
+        return next_date_str, interval, days
 
     def _grade(self, score: float) -> Tuple[str, str, str]:
         """Map risk score to severity grade."""

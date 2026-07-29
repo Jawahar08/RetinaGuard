@@ -446,6 +446,22 @@ export default function OphthaFusionDashboard() {
         </div>
       `;
 
+      const nextDate = new Date();
+      let frequencyText = '12 Months (Annual Routine Screening)';
+      if (prediction.top_prediction.includes('Severe') || prediction.top_prediction.includes('Proliferative')) {
+        nextDate.setDate(nextDate.getDate() + 30);
+        frequencyText = '1 Month (Urgent Specialist Referral)';
+      } else if (prediction.top_prediction.includes('Moderate')) {
+        nextDate.setDate(nextDate.getDate() + 90);
+        frequencyText = '3 Months (Ophthalmologist Review & OCT)';
+      } else if (prediction.top_prediction.includes('Mild')) {
+        nextDate.setDate(nextDate.getDate() + 180);
+        frequencyText = '6 Months (Follow-up Examination)';
+      } else {
+        nextDate.setFullYear(nextDate.getFullYear() + 1);
+      }
+      const nextDateStr = nextDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
       htmlContent = `
 <!DOCTYPE html>
 <html>
@@ -479,6 +495,16 @@ export default function OphthaFusionDashboard() {
       <div><div>Primary Impression</div><div style="font-size:20px; font-weight:bold; color:#0284c7;">${prediction.top_prediction}</div></div>
       <div><div>Calibrated Confidence</div><div style="font-size:20px; font-weight:bold;">${(prediction.calibrated_confidence * 100).toFixed(1)}%</div></div>
       <div><div>Quality Score</div><div style="font-size:20px; font-weight:bold; color:#166534;">${(prediction.quality_gate.quality_score * 100).toFixed(0)}%</div></div>
+    </div>
+    <div style="background:#f0f9ff; border:2px solid #0284c7; border-radius:10px; padding:16px; margin:20px 0; display:flex; justify-content:space-between; align-items:center;">
+      <div>
+        <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:#0369a1; font-weight:800;">Recommended Next Check-up Date</div>
+        <div style="font-size:20px; font-weight:800; color:#0284c7; margin-top:4px;">📅 ${nextDateStr}</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:#64748b; font-weight:700;">Recommended Frequency</div>
+        <div style="font-size:13px; font-weight:700; color:#0f172a; margin-top:4px;">⏱️ ${frequencyText}</div>
+      </div>
     </div>
     <h4 style="margin-top:25px; border-left:4px solid #0284c7; padding-left:10px;">Multi-Disease Risk Analysis</h4>
     <table>

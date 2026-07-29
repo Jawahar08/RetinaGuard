@@ -132,6 +132,9 @@ def generate_html_report(
             </tr>"""
 
         interp_items = "".join(f"<li>{i}</li>" for i in interps)
+        next_checkup_date = risk_result.get("next_checkup_date", "To be determined by clinician")
+        followup_interval = risk_result.get("followup_interval", "Standard Annual Screening")
+
         rec_items = "".join(f"<li>{r}</li>" for r in recs)
 
         risk_section_html = f"""
@@ -146,6 +149,18 @@ def generate_html_report(
                     <thead><tr><th>Risk Component</th><th>Score</th><th>Level</th></tr></thead>
                     <tbody>{sub_score_rows}</tbody>
                 </table>
+            </div>
+        </div>
+
+        <div class="section-title">🗓️ EXPECTED NEXT CHECK-UP SCHEDULE</div>
+        <div style="background: #f0f9ff; border: 2px solid #0284c7; border-radius: 10px; padding: 16px; margin: 12px 0; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #0369a1; font-weight: 800;">Recommended Follow-up Date</div>
+                <div style="font-size: 22px; font-weight: 800; color: #0284c7; margin-top: 4px;">📅 {next_checkup_date}</div>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; font-weight: 700;">Recommended Frequency</div>
+                <div style="font-size: 14px; font-weight: 700; color: #0f172a; margin-top: 4px;">⏱️ {followup_interval}</div>
             </div>
         </div>
 
