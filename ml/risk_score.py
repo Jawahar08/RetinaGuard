@@ -258,6 +258,9 @@ class ClinicalRiskScorer:
             "recommendations": recommendations,
         }
 
+    # Alias for backward compatibility
+    score = compute
+
     def _compute_next_checkup(self, score: float) -> Tuple[str, str, int]:
         """Computes expected next checkup date based on risk score severity."""
         from datetime import datetime, timedelta

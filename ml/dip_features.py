@@ -489,3 +489,7 @@ class RetinalDIPExtractor:
             vessel_mask_base64=_arr_to_b64(vessel_mask),
             lesion_mask_base64=_arr_to_b64(lesion_mask),
         )
+
+    # Aliases for backward compatibility
+    extract_biomarkers = analyze
+    extract = analyze

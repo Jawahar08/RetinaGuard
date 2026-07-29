@@ -8,7 +8,7 @@ Generates structured HTML/PDF diagnostic screening summaries with:
   - DIP overlay images (vessel mask, lesion mask, anatomy overlay)
 """
 import base64
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional
 
 
@@ -169,6 +169,34 @@ def generate_html_report(
 
         <div class="section-title">💊 Clinical Recommendations</div>
         <ul class="rec-list">{rec_items}</ul>
+        """
+    else:
+        now = datetime.now()
+        if "Severe" in top_pred or "Proliferative" in top_pred:
+            n_date = (now + timedelta(days=30)).strftime("%B %d, %Y")
+            f_interval = "1 Month (Urgent Specialist Referral)"
+        elif "Moderate" in top_pred:
+            n_date = (now + timedelta(days=90)).strftime("%B %d, %Y")
+            f_interval = "3 Months (Ophthalmologist Review & OCT)"
+        elif "Mild" in top_pred:
+            n_date = (now + timedelta(days=180)).strftime("%B %d, %Y")
+            f_interval = "6 Months (Follow-up Examination)"
+        else:
+            n_date = (now + timedelta(days=365)).strftime("%B %d, %Y")
+            f_interval = "12 Months (Annual Routine Screening)"
+
+        risk_section_html = f"""
+        <div class="section-title">🗓️ EXPECTED NEXT CHECK-UP SCHEDULE</div>
+        <div style="background: #f0f9ff; border: 2px solid #0284c7; border-radius: 10px; padding: 16px; margin: 12px 0; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #0369a1; font-weight: 800;">Recommended Follow-up Date</div>
+                <div style="font-size: 22px; font-weight: 800; color: #0284c7; margin-top: 4px;">📅 {n_date}</div>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; font-weight: 700;">Recommended Frequency</div>
+                <div style="font-size: 14px; font-weight: 700; color: #0f172a; margin-top: 4px;">⏱️ {f_interval}</div>
+            </div>
+        </div>
         """
 
     # ── Feature 1: DIP Biomarker Section ──
