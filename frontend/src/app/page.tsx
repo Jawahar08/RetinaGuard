@@ -461,8 +461,14 @@ export default function OphthaFusionDashboard() {
         nextDate.setFullYear(nextDate.getFullYear() + 1);
       }
       const nextDateStr = nextDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-      const origSrc = heatmapData?.original_base64 ? `data:image/png;base64,${heatmapData.original_base64}` : (previewUrl || '');
-      const overlaySrc = heatmapData?.overlay_base64 ? `data:image/png;base64,${heatmapData.overlay_base64}` : (previewUrl || '');
+      const formatB64 = (src?: string | null) => {
+        if (!src) return '';
+        if (src.startsWith('data:image/')) return src;
+        return `data:image/png;base64,${src}`;
+      };
+
+      const origSrc = formatB64(heatmapData?.original_base64) || previewUrl || '';
+      const overlaySrc = formatB64(heatmapData?.overlay_base64) || previewUrl || '';
 
       let imageGridHtml = '';
       if (origSrc) {
