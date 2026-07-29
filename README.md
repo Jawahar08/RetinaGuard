@@ -16,11 +16,13 @@
 
 <!-- ─────────── SHIELD.IO BADGES ─────────── -->
 
+[![Model Training](https://img.shields.io/badge/Model_Training-COMPLETED-success?style=flat-square&logo=pytorch&logoColor=white)](#-model-training--checkpoint-milestone)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776ab?style=flat-square&logo=python&logoColor=white)](https://python.org)
 [![PyTorch 2.0+](https://img.shields.io/badge/PyTorch-2.0%2B-ee4c2c?style=flat-square&logo=pytorch&logoColor=white)](https://pytorch.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100%2B-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Next.js 14](https://img.shields.io/badge/Next.js-14-000000?style=flat-square&logo=next.js&logoColor=white)](https://nextjs.org)
 [![OpenCV](https://img.shields.io/badge/OpenCV-4.7%2B-5C3EE8?style=flat-square&logo=opencv&logoColor=white)](https://opencv.org)
+[![Git LFS](https://img.shields.io/badge/Git_LFS-Tracked-blue?style=flat-square&logo=git&logoColor=white)](#-model-training--checkpoint-milestone)
 [![License](https://img.shields.io/badge/License-Research_MIT-00d2ff?style=flat-square&logo=opensourceinitiative&logoColor=white)](LICENSE)
 [![Research System](https://img.shields.io/badge/💎_All_Features-FREE-10b981?style=flat-square&logo=opensourceinitiative&logoColor=white)]()
 [![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-7b2ff7?style=flat-square&logo=git&logoColor=white)](https://github.com/Jawahar08/RetinaGuard/pulls)
@@ -317,6 +319,30 @@ flowchart TD
     style HEAD2 fill:#020617,stroke:#ffd93d,stroke-width:2px,color:#ffd93d
 ```
 
+### 🏆 Model Training & Checkpoint Milestone (Completed)
+
+> **Script:** `scripts/train.py` &nbsp;|&nbsp; **Checkpoints Directory:** `models/checkpoints/` (Tracked via **Git LFS**)
+
+The full end-to-end training pipeline has been executed and completed across both clinical task benchmarks using **EfficientNet-B3 (pretrained ImageNet backbone)**:
+
+| Task / Dataset | Output Classes | Saved Checkpoint | Size | Optimization Strategies |
+|:---|:---|:---|:---:|:---|
+| **APTOS 2019** | 5-Class DR Severity Grading (*No DR* $\rightarrow$ *Proliferative DR*) | `models/checkpoints/aptos_best.pth` | **138.7 MB** | Class-balanced WeightedRandomSampler, Ben Graham + CLAHE preprocessing, Cross-Entropy Loss |
+| **ODIR-5K** | 8-Class Multi-Label Retinal Disease Screening (*N, D, G, C, A, H, M, O*) | `models/checkpoints/odir_best.pth` | **138.7 MB** | Focal Loss (handles class imbalance), Cosine Annealing LR Schedule, Test-Time Augmentation (TTA) |
+
+#### Execute Training Pipeline
+
+```bash
+# Train APTOS 2019 DR Severity Model (30 epochs)
+python scripts/train.py --task aptos --epochs 30
+
+# Train ODIR-5K Multi-Label Screening Model (30 epochs)
+python scripts/train.py --task odir --epochs 30
+
+# Train Both Benchmarks Sequentially
+python scripts/train.py --task both --epochs 30
+```
+
 <br />
 
 <!-- ═══════════════════════════ GRADIENT SEPARATOR ═══════════════════════════ -->
@@ -571,10 +597,14 @@ RetinaGuard/
 │   ├── dataset_adapters.py             # ODIR & APTOS dataset loaders
 │   ├── data_validation.py              # Dataset integrity verification
 │   └── onnx_exporter.py                # ONNX model compilation utility
+├── 📦 models/                           # Model Checkpoints (Git LFS)
+│   └── checkpoints/
+│       ├── aptos_best.pth              # Trained 5-Class DR Severity Model (138.7 MB)
+│       └── odir_best.pth               # Trained 8-Class Multi-Label Model (138.7 MB)
 │
 ├── 📂 .github/assets/                  # Animated SVG badges & graphics
 ├── 📂 configs/                         # YAML dataset & model configurations
-├── 📂 scripts/                         # generate_fixtures.py · smoke_test.py
+├── 📂 scripts/                         # train.py · generate_fixtures.py · smoke_test.py
 ├── 📂 tests/                           # PyTest automated unit & integration tests
 ├── 📂 docs/                            # PROJECT_COMPLETE_DOCUMENTATION.md
 ├── 🐳 docker-compose.yml               # Docker multi-container orchestrator
