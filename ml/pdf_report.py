@@ -8,32 +8,24 @@ Generates structured HTML/PDF diagnostic screening summaries with:
   - DIP overlay images (vessel mask, lesion mask, anatomy overlay)
 """
 import base64
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional
 
 
 def _risk_gauge_svg(score: float, color: str, label: str) -> str:
-    """Generate an SVG semi-circle gauge for risk score visualization."""
-    # Arc from 180° to 0° (left to right semicircle)
-    # score 0 = leftmost, score 100 = rightmost
-    angle = 180 - (score / 100.0 * 180)
-    import math
-    rad = math.radians(angle)
-    cx, cy, r = 100, 100, 80
-    # End point of the arc
-    ex = cx + r * math.cos(rad)
-    ey = cy - r * math.sin(rad)
-    large_arc = 1 if score > 50 else 0
-
+    """Generate an SVG semi-circle gauge for risk score visualization using stroke-dashoffset."""
+    # Circumference of semicircle with r=70 is pi * 70 = 219.91
+    arc_len = 219.91
+    offset = arc_len * (1.0 - max(0.0, min(100.0, score)) / 100.0)
     return f"""
     <svg viewBox="0 0 200 120" width="200" height="120" style="margin: 0 auto; display: block;">
         <!-- Background arc -->
-        <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#e2e8f0" stroke-width="12" stroke-linecap="round"/>
+        <path d="M 30 95 A 70 70 0 0 1 170 95" fill="none" stroke="#e2e8f0" stroke-width="12" stroke-linecap="round"/>
         <!-- Score arc -->
-        <path d="M 20 100 A 80 80 0 {large_arc} 1 {ex:.1f} {ey:.1f}" fill="none" stroke="{color}" stroke-width="12" stroke-linecap="round"/>
+        <path d="M 30 95 A 70 70 0 0 1 170 95" fill="none" stroke="{color}" stroke-width="12" stroke-linecap="round" stroke-dasharray="{arc_len:.2f}" stroke-dashoffset="{offset:.2f}"/>
         <!-- Score text -->
-        <text x="100" y="90" text-anchor="middle" font-size="28" font-weight="800" fill="{color}">{score:.0f}</text>
-        <text x="100" y="108" text-anchor="middle" font-size="11" fill="#64748b">{label}</text>
+        <text x="100" y="78" text-anchor="middle" font-size="28" font-weight="800" fill="{color}">{score:.0f}</text>
+        <text x="100" y="94" text-anchor="middle" font-size="11" font-weight="700" fill="#64748b">{label}</text>
     </svg>
     """
 
@@ -132,6 +124,9 @@ def generate_html_report(
             </tr>"""
 
         interp_items = "".join(f"<li>{i}</li>" for i in interps)
+        next_checkup_date = risk_result.get("next_checkup_date", "To be determined by clinician")
+        followup_interval = risk_result.get("followup_interval", "Standard Annual Screening")
+
         rec_items = "".join(f"<li>{r}</li>" for r in recs)
 
         risk_section_html = f"""
@@ -149,11 +144,51 @@ def generate_html_report(
             </div>
         </div>
 
+        <div class="section-title">🗓️ EXPECTED NEXT CHECK-UP SCHEDULE</div>
+        <div style="background: #f0f9ff; border: 2px solid #0284c7; border-radius: 10px; padding: 16px; margin: 12px 0; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #0369a1; font-weight: 800;">Recommended Follow-up Date</div>
+                <div style="font-size: 22px; font-weight: 800; color: #0284c7; margin-top: 4px;">📅 {next_checkup_date}</div>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; font-weight: 700;">Recommended Frequency</div>
+                <div style="font-size: 14px; font-weight: 700; color: #0f172a; margin-top: 4px;">⏱️ {followup_interval}</div>
+            </div>
+        </div>
+
         <div class="section-title">📋 Clinical Interpretations</div>
         <ul class="interp-list">{interp_items}</ul>
 
         <div class="section-title">💊 Clinical Recommendations</div>
         <ul class="rec-list">{rec_items}</ul>
+        """
+    else:
+        now = datetime.now()
+        if "Severe" in top_pred or "Proliferative" in top_pred:
+            n_date = (now + timedelta(days=30)).strftime("%B %d, %Y")
+            f_interval = "1 Month (Urgent Specialist Referral)"
+        elif "Moderate" in top_pred:
+            n_date = (now + timedelta(days=90)).strftime("%B %d, %Y")
+            f_interval = "3 Months (Ophthalmologist Review & OCT)"
+        elif "Mild" in top_pred:
+            n_date = (now + timedelta(days=180)).strftime("%B %d, %Y")
+            f_interval = "6 Months (Follow-up Examination)"
+        else:
+            n_date = (now + timedelta(days=365)).strftime("%B %d, %Y")
+            f_interval = "12 Months (Annual Routine Screening)"
+
+        risk_section_html = f"""
+        <div class="section-title">🗓️ EXPECTED NEXT CHECK-UP SCHEDULE</div>
+        <div style="background: #f0f9ff; border: 2px solid #0284c7; border-radius: 10px; padding: 16px; margin: 12px 0; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #0369a1; font-weight: 800;">Recommended Follow-up Date</div>
+                <div style="font-size: 22px; font-weight: 800; color: #0284c7; margin-top: 4px;">📅 {n_date}</div>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; font-weight: 700;">Recommended Frequency</div>
+                <div style="font-size: 14px; font-weight: 700; color: #0f172a; margin-top: 4px;">⏱️ {f_interval}</div>
+            </div>
+        </div>
         """
 
     # ── Feature 1: DIP Biomarker Section ──

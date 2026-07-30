@@ -446,6 +446,47 @@ export default function OphthaFusionDashboard() {
         </div>
       `;
 
+      const nextDate = new Date();
+      let frequencyText = '12 Months (Annual Routine Screening)';
+      if (prediction.top_prediction.includes('Severe') || prediction.top_prediction.includes('Proliferative')) {
+        nextDate.setDate(nextDate.getDate() + 30);
+        frequencyText = '1 Month (Urgent Specialist Referral)';
+      } else if (prediction.top_prediction.includes('Moderate')) {
+        nextDate.setDate(nextDate.getDate() + 90);
+        frequencyText = '3 Months (Ophthalmologist Review & OCT)';
+      } else if (prediction.top_prediction.includes('Mild')) {
+        nextDate.setDate(nextDate.getDate() + 180);
+        frequencyText = '6 Months (Follow-up Examination)';
+      } else {
+        nextDate.setFullYear(nextDate.getFullYear() + 1);
+      }
+      const nextDateStr = nextDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+      const formatB64 = (src?: string | null) => {
+        if (!src) return '';
+        if (src.startsWith('data:image/')) return src;
+        return `data:image/png;base64,${src}`;
+      };
+
+      const origSrc = formatB64(heatmapData?.original_base64) || previewUrl || '';
+      const overlaySrc = formatB64(heatmapData?.overlay_base64) || previewUrl || '';
+
+      let imageGridHtml = '';
+      if (origSrc) {
+        imageGridHtml = `
+          <h4 style="margin-top:25px; border-left:4px solid #0284c7; padding-left:10px;">Visual Explainability & Lesion Grounding</h4>
+          <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:15px; margin-top:15px;">
+            <div style="text-align:center; background:#f8fafc; padding:10px; border-radius:8px; border:1px solid #e2e8f0;">
+              <h4 style="margin:0 0 8px 0; font-size:13px; color:#475569;">Original Retinal Image</h4>
+              <img src="${origSrc}" style="width:100%; max-height:250px; object-fit:contain; border-radius:6px;" alt="Original Retinal Image" />
+            </div>
+            <div style="text-align:center; background:#f8fafc; padding:10px; border-radius:8px; border:1px solid #e2e8f0;">
+              <h4 style="margin:0 0 8px 0; font-size:13px; color:#475569;">Grad-CAM++ Lesion Grounding Map</h4>
+              <img src="${overlaySrc}" style="width:100%; max-height:250px; object-fit:contain; border-radius:6px;" alt="Grad-CAM Overlay" />
+            </div>
+          </div>
+        `;
+      }
+
       htmlContent = `
 <!DOCTYPE html>
 <html>
@@ -480,11 +521,22 @@ export default function OphthaFusionDashboard() {
       <div><div>Calibrated Confidence</div><div style="font-size:20px; font-weight:bold;">${(prediction.calibrated_confidence * 100).toFixed(1)}%</div></div>
       <div><div>Quality Score</div><div style="font-size:20px; font-weight:bold; color:#166534;">${(prediction.quality_gate.quality_score * 100).toFixed(0)}%</div></div>
     </div>
+    <div style="background:#f0f9ff; border:2px solid #0284c7; border-radius:10px; padding:16px; margin:20px 0; display:flex; justify-content:space-between; align-items:center;">
+      <div>
+        <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:#0369a1; font-weight:800;">Recommended Next Check-up Date</div>
+        <div style="font-size:20px; font-weight:800; color:#0284c7; margin-top:4px;">📅 ${nextDateStr}</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:#64748b; font-weight:700;">Recommended Frequency</div>
+        <div style="font-size:13px; font-weight:700; color:#0f172a; margin-top:4px;">⏱️ ${frequencyText}</div>
+      </div>
+    </div>
     <h4 style="margin-top:25px; border-left:4px solid #0284c7; padding-left:10px;">Multi-Disease Risk Analysis</h4>
     <table>
       <thead><tr><th>Category</th><th>Probability</th><th>Status</th></tr></thead>
       <tbody>${predsHtml}</tbody>
     </table>
+    ${imageGridHtml}
     <div class="disclaimer">${prediction.disclaimer}</div>
   </div>
 </body>

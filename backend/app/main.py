@@ -411,14 +411,35 @@ async def generate_report(
             alpha=0.45,
             use_plus_plus=True
         )
-    except Exception:
+
+        dip_extractor = RetinalDIPExtractor()
+        dip_res = dip_extractor.extract_biomarkers(img_rgb)
+
+        risk_scorer = ClinicalRiskScorer()
+        risk_res = risk_scorer.score(
+            vessel_density_index=dip_res.vessel_density_index,
+            microaneurysm_count=dip_res.microaneurysm_candidate_count,
+            exudate_area_ratio=dip_res.exudate_area_ratio,
+            exudate_count=dip_res.exudate_candidate_count,
+            ml_confidence=pred_res.calibrated_confidence,
+            top_prediction=pred_res.top_prediction,
+            optic_disc_found=dip_res.optic_disc_found,
+            macula_center=dip_res.macula_center
+        )
+        dip_dict = dip_res.model_dump()
+    except Exception as e:
+        logger.error(f"Report image analysis error: {e}")
         orig_b64 = None
         overlay_b64 = None
+        risk_res = None
+        dip_dict = None
 
     html_content = generate_html_report(
         prediction_response=pred_dict,
         overlay_base64=overlay_b64,
-        original_base64=orig_b64
+        original_base64=orig_b64,
+        risk_result=risk_res,
+        dip_biomarkers=dip_dict
     )
     return HTMLResponse(content=html_content)
 

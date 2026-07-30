@@ -105,6 +105,11 @@ class ClinicalRiskResult(BaseModel):
     risk_color: str = Field(..., description="Hex color for risk display (e.g., '#ef4444')")
     sub_scores: SubScores = Field(..., description="Per-component risk sub-scores")
     interpretations: List[str] = Field(default_factory=list, description="Per-biomarker clinical interpretations")
+    recommendations: List[str] = Field(default_factory=list, description="Clinical action recommendations")
+    next_checkup_date: Optional[str] = Field(None, description="Recommended next check-up date (e.g. 'October 29, 2026')")
+    followup_interval: Optional[str] = Field(None, description="Recommended follow-up interval (e.g. '6 Months')")
+
+
 class BiomarkerDeltas(BaseModel):
     """Changes between baseline and follow-up DIP biomarkers."""
     delta_vessel_density_index: float = Field(..., description="Change in Vessel Density Index")
