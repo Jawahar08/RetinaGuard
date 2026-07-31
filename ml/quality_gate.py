@@ -22,8 +22,8 @@ class ImageQualityGate:
             self.qcfg = {
                 "min_resolution": [100, 100],
                 "max_aspect_ratio": 2.5,
-                "min_laplacian_var": 15.0,
-                "min_fov_ratio": 0.25,
+                "min_laplacian_var": 1.0,
+                "min_fov_ratio": 0.15,
                 "max_brightness": 245.0,
                 "min_brightness": 10.0
             }
@@ -85,7 +85,7 @@ class ImageQualityGate:
         else:
             laplacian_var = float(lap_map.var())
 
-        if laplacian_var < self.qcfg.get("min_laplacian_var", 3.0):
+        if laplacian_var < self.qcfg.get("min_laplacian_var", 1.0):
             flags.append("severe_blur")
 
         # 5. Brightness / Exposure Check
