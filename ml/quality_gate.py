@@ -72,23 +72,28 @@ class ImageQualityGate:
                 mean_brightness=0.0
             )
 
-        # 3. Blur Detection (Laplacian Variance)
-        laplacian_var = float(cv2.Laplacian(gray, cv2.CV_64F).var())
-        if laplacian_var < self.qcfg["min_laplacian_var"]:
-            flags.append("severe_blur")
-
-        # 4. Brightness / Exposure Check
-        mean_brightness = float(np.mean(gray))
-        if mean_brightness < self.qcfg["min_brightness"]:
-            flags.append("extremely_dark")
-        elif mean_brightness > self.qcfg["max_brightness"]:
-            flags.append("overexposed")
-
-        # 5. Field of View Coverage Check (retinal disk presence)
+        # 3. Field of View Coverage Check (retinal disk presence)
         _, mask = cv2.threshold(gray, 15, 255, cv2.THRESH_BINARY)
         fov_ratio = float(np.count_nonzero(mask) / (h * w))
-        if fov_ratio < self.qcfg["min_fov_ratio"]:
+        if fov_ratio < self.qcfg.get("min_fov_ratio", 0.15):
             flags.append("poor_field_of_view")
+
+        # 4. Blur Detection (Laplacian Variance inside retinal FOV)
+        lap_map = cv2.Laplacian(gray, cv2.CV_64F)
+        if np.count_nonzero(mask) > 0:
+            laplacian_var = float(lap_map[mask > 0].var())
+        else:
+            laplacian_var = float(lap_map.var())
+
+        if laplacian_var < self.qcfg.get("min_laplacian_var", 3.0):
+            flags.append("severe_blur")
+
+        # 5. Brightness / Exposure Check
+        mean_brightness = float(np.mean(gray))
+        if mean_brightness < self.qcfg.get("min_brightness", 10.0):
+            flags.append("extremely_dark")
+        elif mean_brightness > self.qcfg.get("max_brightness", 245.0):
+            flags.append("overexposed")
 
         # Score calculation (0.0 to 1.0)
         penalty = len(flags) * 0.25
