@@ -166,3 +166,60 @@ class HeatmapResponse(BaseModel):
         "Grad-CAM visual attention highlight shows model feature focus. It is not clinical evidence of pathology.",
         description="XAI safety disclaimer"
     )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Multi-Task Learning (MTL) Schemas for RetinaGuard++ (Contribution #1)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class AIQualityAssessment(BaseModel):
+    """Head 3 Output: Deep Image Quality Assessment."""
+    blur_score: float = Field(..., description="Predicted sharpness / blur score (0.0 to 1.0)")
+    exposure_score: float = Field(..., description="Predicted illumination exposure score (0.0 to 1.0)")
+    illumination_score: float = Field(..., description="Predicted uniformity score (0.0 to 1.0)")
+    focus_score: float = Field(..., description="Predicted focus score (0.0 to 1.0)")
+    overall_quality_score: float = Field(..., description="Composite AI quality score (0.0 to 1.0)")
+    passed: bool = Field(..., description="Whether image meets quality criteria")
+
+
+class AIBiomarkerRegression(BaseModel):
+    """Head 4 Output: Continuous Retinal Biomarker Regression."""
+    vessel_density_index: float = Field(..., description="Predicted vessel density ratio (0.0 to 0.5)")
+    microaneurysm_count: int = Field(..., description="Predicted microaneurysm candidate count")
+    exudate_area_ratio: float = Field(..., description="Predicted exudate area ratio")
+    cup_to_disc_ratio: float = Field(..., description="Predicted optic cup-to-disc ratio (CDR)")
+    vessel_tortuosity: float = Field(..., description="Predicted vessel tortuosity index")
+    optic_disc_radius: float = Field(..., description="Predicted optic disc radius (pixels)")
+
+
+class DRGradePrediction(BaseModel):
+    """Head 2 Output: DR ICDR Severity Grade."""
+    grade: int = Field(..., description="Severity grade (0 to 4)")
+    grade_name: str = Field(..., description="ICDR Grade Name (e.g. 'Moderate NPDR')")
+    probabilities: List[float] = Field(..., description="Softmax probabilities for grades 0-4")
+
+
+class MultiTaskOutputs(BaseModel):
+    """Container for all 5 prediction heads from a single forward pass."""
+    disease_screening: List[ClassPrediction] = Field(..., description="Head 1: Multi-disease predictions")
+    dr_severity: DRGradePrediction = Field(..., description="Head 2: ICDR DR severity grade")
+    ai_quality: AIQualityAssessment = Field(..., description="Head 3: Deep image quality assessment")
+    ai_biomarkers: AIBiomarkerRegression = Field(..., description="Head 4: Biomarker regression estimates")
+    predicted_risk_score: float = Field(..., description="Head 5: Continuous clinical risk score (0-100)")
+
+
+class MultiTaskPredictionResponse(BaseModel):
+    """Unified Single-Pass Multi-Task Response for RetinaGuard++."""
+    request_id: str
+    architecture: str = "MultiTask-EfficientNet-B3"
+    version: str = "2.0.0-multitask"
+    quality_gate: QualityGateResult
+    multitask_outputs: MultiTaskOutputs
+    dip_biomarkers: Optional[DIPBiomarkerResult] = None
+    clinical_risk: Optional[ClinicalRiskResult] = None
+    patient_info: Optional[PatientInfo] = None
+    disclaimer: str = Field(
+        "Single-pass Multi-Task research prediction. Not clinically validated for sole diagnostic decisions.",
+        description="Clinical safety boundary disclaimer"
+    )
+

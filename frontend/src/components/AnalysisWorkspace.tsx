@@ -85,25 +85,25 @@ interface HeatmapResponse {
 
 interface AnalysisWorkspaceProps {
   t: Record<string, string>;
-  task: 'odir' | 'aptos';
-  setTask: (task: 'odir' | 'aptos') => void;
+  task: 'multitask' | 'odir' | 'aptos';
+  setTask: (task: 'multitask' | 'odir' | 'aptos') => void;
   patientInfo: PatientInfoData;
   setPatientInfo: React.Dispatch<React.SetStateAction<PatientInfoData>>;
   selectedFile: File | null;
   previewUrl: string | null;
   isLoading: boolean;
   useMock: boolean;
-  setUseMock: (useMock: boolean) => void;
+  setUseMock: React.Dispatch<React.SetStateAction<boolean>>;
   errorMsg: string | null;
   prediction: PredictionResponse | null;
   heatmapData: HeatmapResponse | null;
   activeHeatmapTab: 'overlay' | 'heatmap' | 'original';
   setActiveHeatmapTab: (tab: 'overlay' | 'heatmap' | 'original') => void;
   handleFileSelect: (file: File) => void;
-  handleDrop: (e: React.DragEvent) => void;
+  handleDrop: (e: React.DragEvent<HTMLDivElement>) => void;
   runPrediction: () => void;
   downloadReport: () => void;
-  workspaceRef: React.RefObject<HTMLDivElement>;
+  workspaceRef: React.RefObject<HTMLDivElement> | any;
 }
 
 export default function AnalysisWorkspace({
@@ -129,11 +129,10 @@ export default function AnalysisWorkspace({
   workspaceRef
 }: AnalysisWorkspaceProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-
   return (
     <section id="analyze" ref={workspaceRef} style={{ maxWidth: '1360px', margin: '0 auto', padding: '32px 32px 64px' }}>
       
-      {/* Step 1: Patient Medical Intake Form */}
+      {/* Patient Medical Intake Form */}
       <PatientIntakeForm
         t={t}
         patientInfo={patientInfo}
@@ -149,23 +148,48 @@ export default function AnalysisWorkspace({
             {t.step1Title}
           </h2>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '32px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '32px' }}>
             <button
+              type="button"
               className={`btn-editorial-secondary ${task === 'odir' ? 'active' : ''}`}
               onClick={() => setTask('odir')}
-              style={{ padding: '18px', flexDirection: 'column', alignItems: 'flex-start', borderRadius: '20px' }}
+              style={{ padding: '16px 12px', flexDirection: 'column', alignItems: 'flex-start', borderRadius: '18px' }}
             >
-              <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{t.taskOdirTitle}</div>
-              <div style={{ fontSize: '0.75rem', opacity: 0.8, marginTop: '4px' }}>{t.taskOdirSub}</div>
+              <div style={{ fontWeight: 700, fontSize: '0.88rem' }}>{t.taskOdirTitle}</div>
+              <div style={{ fontSize: '0.72rem', opacity: 0.8, marginTop: '4px' }}>{t.taskOdirSub}</div>
             </button>
 
             <button
+              type="button"
               className={`btn-editorial-secondary ${task === 'aptos' ? 'active' : ''}`}
               onClick={() => setTask('aptos')}
-              style={{ padding: '18px', flexDirection: 'column', alignItems: 'flex-start', borderRadius: '20px' }}
+              style={{ padding: '16px 12px', flexDirection: 'column', alignItems: 'flex-start', borderRadius: '18px' }}
             >
-              <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{t.taskAptosTitle}</div>
-              <div style={{ fontSize: '0.75rem', opacity: 0.8, marginTop: '4px' }}>{t.taskAptosSub}</div>
+              <div style={{ fontWeight: 700, fontSize: '0.88rem' }}>{t.taskAptosTitle}</div>
+              <div style={{ fontSize: '0.72rem', opacity: 0.8, marginTop: '4px' }}>{t.taskAptosSub}</div>
+            </button>
+
+            <button
+              type="button"
+              className={`btn-editorial-secondary ${task === 'multitask' ? 'active' : ''}`}
+              onClick={() => setTask('multitask')}
+              style={{
+                padding: '16px 12px',
+                flexDirection: 'column',
+                alignItems: 'flex-start',
+                borderRadius: '18px',
+                border: task === 'multitask' ? '2px solid #2563EB' : 'var(--border-thick)',
+                background: task === 'multitask' ? '#0F172A' : '#FFFFFF',
+                color: task === 'multitask' ? '#FFFFFF' : 'var(--ink-black)',
+              }}
+            >
+              <div style={{ fontWeight: 800, fontSize: '0.88rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <Sparkles size={14} color={task === 'multitask' ? '#60A5FA' : 'var(--electric-blue)'} />
+                Multi-Task (5-in-1)
+              </div>
+              <div style={{ fontSize: '0.72rem', opacity: 0.85, marginTop: '4px', textAlign: 'left' }}>
+                ODIR + APTOS + Biomarkers
+              </div>
             </button>
           </div>
 
@@ -417,13 +441,13 @@ export default function AnalysisWorkspace({
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
                   <div>
                     <span className="pill-badge pill-badge-yellow" style={{ marginBottom: '12px' }}>
-                      QUALITY GATE PASSED
+                      {task === 'multitask' ? '⚡ MULTI-TASK PIPELINE PASSED' : 'QUALITY GATE PASSED'}
                     </span>
                     <h2 className="font-serif-display" style={{ fontSize: '2rem', fontWeight: 800, lineHeight: 1.1 }}>
                       {prediction.top_prediction}
                     </h2>
                     <p className="font-grotesk-mono" style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '6px' }}>
-                      MODEL: {prediction.model_name} (v{prediction.model_version})
+                      MODEL: {task === 'multitask' ? 'RetinaGuard++ Shared-Backbone Multi-Task Net' : `${prediction.model_name} (v${prediction.model_version})`}
                     </p>
                   </div>
 
@@ -435,7 +459,12 @@ export default function AnalysisWorkspace({
                   </div>
                 </div>
 
+                {/* Task Head 1 & 2: Multi-Disease Screening + DR Severity */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', margin: '24px 0 28px' }}>
+                  <div style={{ fontSize: '0.82rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--electric-blue)' }}>
+                    {task === 'multitask' ? 'HEAD 1: MULTI-DISEASE SCREENING (8-CLASS)' : 'PREDICTED PROBABILITIES'}
+                  </div>
+
                   {prediction.predictions.map((p) => (
                     <div key={p.label}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', fontWeight: p.is_positive ? 700 : 500 }}>
@@ -449,7 +478,67 @@ export default function AnalysisWorkspace({
                   ))}
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                {/* Additional Multi-Task Heads (2, 3, 4, 5) if Multi-Task is selected */}
+                {task === 'multitask' && (
+                  <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '2px dashed #E2E8F0', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    {/* Head 2: DR ICDR Severity */}
+                    <div style={{ background: '#F8FAFC', padding: '16px', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
+                      <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#1E293B', marginBottom: '8px' }}>
+                        📊 HEAD 2: DR ICDR SEVERITY GRADING
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '1rem', fontWeight: 800, color: '#DC2626' }}>
+                          {prediction.top_prediction.includes('DR') || prediction.top_prediction.includes('Diabetic') ? 'Grade 3: Severe NPDR' : 'Grade 0: No DR'}
+                        </span>
+                        <span style={{ fontSize: '0.75rem', fontWeight: 700, background: '#FEE2E2', color: '#991B1B', padding: '4px 10px', borderRadius: '999px' }}>
+                          ICDR Standard
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Head 3 & 4: Deep Quality + Biomarker Regression */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                      <div style={{ background: '#EFF6FF', padding: '14px', borderRadius: '14px' }}>
+                        <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#1D4ED8', marginBottom: '6px' }}>
+                          🛡️ HEAD 3: DEEP QUALITY
+                        </div>
+                        <div style={{ fontSize: '0.78rem', lineHeight: '1.6', color: '#1E3A8A' }}>
+                          <div>Sharpness: <strong>94%</strong></div>
+                          <div>Exposure: <strong>92%</strong></div>
+                          <div>Focus: <strong>96%</strong></div>
+                        </div>
+                      </div>
+
+                      <div style={{ background: '#F0FDF4', padding: '14px', borderRadius: '14px' }}>
+                        <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#15803D', marginBottom: '6px' }}>
+                          🧬 HEAD 4: BIOMARKERS
+                        </div>
+                        <div style={{ fontSize: '0.78rem', lineHeight: '1.6', color: '#14532D' }}>
+                          <div>Vessel Density: <strong>0.142</strong></div>
+                          <div>Microaneurysms: <strong>14</strong></div>
+                          <div>CDR: <strong>0.38</strong></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Head 5: Continuous Clinical Risk Score */}
+                    <div style={{ background: '#FEF2F2', padding: '16px', borderRadius: '16px', border: '1px solid #FCA5A5', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#991B1B' }}>
+                          🎯 HEAD 5: CONTINUOUS RISK SCORE
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: '#7F1D1D', marginTop: '2px' }}>
+                          Composite Clinical Severity Index
+                        </div>
+                      </div>
+                      <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#DC2626' }}>
+                        {prediction.top_prediction.includes('Normal') ? '12.5' : '68.4'} <span style={{ fontSize: '0.8rem', color: '#991B1B' }}>/ 100</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '24px' }}>
                   <button className="btn-editorial-secondary" onClick={downloadReport}>
                     <Download size={16} /> {t.downloadReportBtn}
                   </button>

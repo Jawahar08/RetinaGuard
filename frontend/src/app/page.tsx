@@ -151,7 +151,7 @@ const DISEASE_INFO_MAP: Record<'en' | 'ph', Record<string, string>> = {
 };
 
 // Generate dynamic probabilities based on uploaded image attributes
-const generateImageSpecificPrediction = (file: File, task: 'odir' | 'aptos', trustLine: string): PredictionResponse => {
+const generateImageSpecificPrediction = (file: File, task: 'multitask' | 'odir' | 'aptos', trustLine: string): PredictionResponse => {
   // Deterministic seed from filename and file size
   let seed = 0;
   for (let i = 0; i < file.name.length; i++) {
@@ -166,7 +166,7 @@ const generateImageSpecificPrediction = (file: File, task: 'odir' | 'aptos', tru
 
   const fileNameUpper = file.name.toUpperCase();
 
-  if (task === 'odir') {
+  if (task === 'odir' || task === 'multitask') {
     const labels = ['Normal', 'Diabetic Retinopathy', 'Glaucoma', 'Cataract', 'AMD'];
     let primaryIdx = Math.floor(pseudoRandom(1) * labels.length);
 
@@ -249,7 +249,7 @@ export default function OphthaFusionDashboard() {
   const [lang, setLang] = useState<'en' | 'ph'>('en');
   const t = TRANSLATIONS[lang];
 
-  const [task, setTask] = useState<'odir' | 'aptos'>('odir');
+  const [task, setTask] = useState<'multitask' | 'odir' | 'aptos'>('odir');
   const [patientInfo, setPatientInfo] = useState<PatientInfoData>({
     name: '',
     age: '',
@@ -342,7 +342,8 @@ export default function OphthaFusionDashboard() {
       if (patientInfo.hypertension) formData.append('hypertension', patientInfo.hypertension);
       if (patientInfo.symptoms.length > 0) formData.append('symptoms', patientInfo.symptoms.join(', '));
 
-      const res = await fetch(`${apiBaseUrl}/predict`, {
+      const endpoint = task === 'multitask' ? `${apiBaseUrl}/predict-multitask` : `${apiBaseUrl}/predict`;
+      const res = await fetch(endpoint, {
         method: 'POST',
         body: formData,
       });
@@ -482,7 +483,7 @@ export default function OphthaFusionDashboard() {
         return `data:image/png;base64,${src}`;
       };
 
-      const origSrc = formatB64(heatmapData?.original_base64) || previewUrl || '';
+      const origSrc = formatB64(heatmapData?.original_image_base64) || previewUrl || '';
       const overlaySrc = formatB64(heatmapData?.overlay_base64) || previewUrl || '';
 
       let imageGridHtml = '';

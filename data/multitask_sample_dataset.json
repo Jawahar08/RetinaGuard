@@ -1,0 +1,62 @@
+[
+  {
+    "sample_id": "RET_001",
+    "image_path": "data/test_images/01_Normal_Healthy_Retina.jpg",
+    "patient_id": "P-1001",
+    "disease_labels": [1, 0, 0, 0, 0, 0, 0, 0],
+    "disease_names": ["Normal"],
+    "dr_grade": 0,
+    "dr_grade_name": "No DR (Grade 0)",
+    "quality": [0.95, 0.92, 0.94, 0.96, 0.94, 1.0],
+    "biomarkers": [0.165, 0, 0.0, 0.32, 1.05, 45.0],
+    "risk_score": 8.5
+  },
+  {
+    "sample_id": "RET_002",
+    "image_path": "data/test_images/02_Diabetic_Retinopathy_Severe.jpg",
+    "patient_id": "P-1002",
+    "disease_labels": [0, 1, 0, 0, 0, 1, 0, 0],
+    "disease_names": ["Diabetic Retinopathy", "Hypertensive Retinopathy"],
+    "dr_grade": 3,
+    "dr_grade_name": "Severe NPDR (Grade 3)",
+    "quality": [0.88, 0.84, 0.86, 0.89, 0.87, 1.0],
+    "biomarkers": [0.082, 18, 0.045, 0.42, 1.45, 48.0],
+    "risk_score": 68.0
+  },
+  {
+    "sample_id": "RET_003",
+    "image_path": "data/test_images/03_Glaucoma_Optic_Nerve_Damage.jpg",
+    "patient_id": "P-1003",
+    "disease_labels": [0, 0, 1, 0, 0, 0, 0, 0],
+    "disease_names": ["Glaucoma"],
+    "dr_grade": 0,
+    "dr_grade_name": "No DR (Grade 0)",
+    "quality": [0.91, 0.89, 0.90, 0.93, 0.91, 1.0],
+    "biomarkers": [0.140, 1, 0.002, 0.78, 1.10, 52.0],
+    "risk_score": 54.0
+  },
+  {
+    "sample_id": "RET_004",
+    "image_path": "data/test_images/07_APTOS_Stage1_Mild_DR.png",
+    "patient_id": "P-1004",
+    "disease_labels": [0, 1, 0, 0, 0, 0, 0, 0],
+    "disease_names": ["Diabetic Retinopathy"],
+    "dr_grade": 1,
+    "dr_grade_name": "Mild NPDR (Grade 1)",
+    "quality": [0.90, 0.88, 0.89, 0.91, 0.90, 1.0],
+    "biomarkers": [0.135, 4, 0.005, 0.35, 1.12, 46.0],
+    "risk_score": 28.0
+  },
+  {
+    "sample_id": "RET_005",
+    "image_path": "data/test_images/10_APTOS_Stage4_Proliferative_DR.png",
+    "patient_id": "P-1005",
+    "disease_labels": [0, 1, 0, 0, 0, 0, 0, 0],
+    "disease_names": ["Diabetic Retinopathy"],
+    "dr_grade": 4,
+    "dr_grade_name": "Proliferative DR (Grade 4)",
+    "quality": [0.85, 0.82, 0.84, 0.86, 0.84, 1.0],
+    "biomarkers": [0.045, 35, 0.095, 0.50, 1.75, 50.0],
+    "risk_score": 88.5
+  }
+]
