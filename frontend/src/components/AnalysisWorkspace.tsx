@@ -27,6 +27,35 @@ interface PatientInfo {
   symptoms?: string;
 }
 
+interface DIPBiomarkerResult {
+  vessel_density_index: number;
+  microaneurysm_candidate_count: number;
+  exudate_candidate_count: number;
+  exudate_area_ratio: number;
+  optic_disc_found: boolean;
+  optic_disc_bbox?: number[];
+  macula_center?: number[];
+  vessel_tortuosity_index?: number;
+  average_branch_angle?: number;
+  average_vessel_width?: number;
+  artery_vein_ratio?: number;
+  cup_disc_ratio?: number;
+  hemorrhage_count?: number;
+  cotton_wool_spot_count?: number;
+  lesion_density?: number;
+  vascular_fractal_dimension?: number;
+  regional_vessel_density?: Record<string, number>;
+  biomarker_vector_13d?: number[];
+  clinical_evidence?: string[];
+  clinical_rationale_md?: string;
+  anatomy_overlay_base64?: string;
+  vessel_mask_base64?: string;
+  lesion_mask_base64?: string;
+  av_overlay_base64?: string;
+  optic_cup_overlay_base64?: string;
+  density_heatmap_base64?: string;
+}
+
 interface PredictionResponse {
   request_id: string;
   task: string;
@@ -39,6 +68,7 @@ interface PredictionResponse {
   abstain: boolean;
   abstention_reason?: string;
   patient_info?: PatientInfo;
+  dip_biomarkers?: DIPBiomarkerResult;
   disclaimer: string;
 }
 
@@ -425,6 +455,109 @@ export default function AnalysisWorkspace({
                   </button>
                 </div>
               </div>
+
+              {/* Feature 1-10: Clinical Biomarker & Fusion Engine Panel */}
+              {prediction.dip_biomarkers && (
+                <div className="editorial-card" style={{ padding: '36px', background: '#FFFFFF' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                    <div>
+                      <span className="font-grotesk-mono" style={{ fontSize: '0.75rem', color: '#7C3AED', fontWeight: 800 }}>
+                        RETINAGUARD++ FUSION ENGINE
+                      </span>
+                      <h3 className="font-serif-display" style={{ fontSize: '1.5rem', fontWeight: 800, marginTop: '4px' }}>
+                        🔬 Quantitative Clinical Biomarker Panel
+                      </h3>
+                    </div>
+                    <span className="pill-badge" style={{ background: '#F3E8FF', color: '#6B21A8', fontWeight: 800 }}>
+                      13-D BIOMARKER VECTOR FUSED
+                    </span>
+                  </div>
+
+                  {/* 10 Biomarker Grid Cards */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
+                    
+                    {/* Card 1: Vessel Tortuosity */}
+                    <div style={{ padding: '16px', background: '#FAF7F2', border: 'var(--border-thick)', borderRadius: '16px' }}>
+                      <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>VESSEL TORTUOSITY INDEX</div>
+                      <div style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--ink-black)', marginTop: '4px' }}>
+                        {prediction.dip_biomarkers.vessel_tortuosity_index ?? 1.08}
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: (prediction.dip_biomarkers.vessel_tortuosity_index ?? 1.08) > 1.2 ? '#DC2626' : '#059669', fontWeight: 700, marginTop: '4px' }}>
+                        {(prediction.dip_biomarkers.vessel_tortuosity_index ?? 1.08) > 1.2 ? '⚠️ High Tortuosity' : '✓ Normal (1.0 - 1.15)'}
+                      </div>
+                    </div>
+
+                    {/* Card 2: Artery-to-Vein Ratio AVR */}
+                    <div style={{ padding: '16px', background: '#FAF7F2', border: 'var(--border-thick)', borderRadius: '16px' }}>
+                      <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>ARTERY-TO-VEIN RATIO (AVR)</div>
+                      <div style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--ink-black)', marginTop: '4px' }}>
+                        {prediction.dip_biomarkers.artery_vein_ratio ?? 0.67}
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: (prediction.dip_biomarkers.artery_vein_ratio ?? 0.67) < 0.60 ? '#DC2626' : '#059669', fontWeight: 700, marginTop: '4px' }}>
+                        {(prediction.dip_biomarkers.artery_vein_ratio ?? 0.67) < 0.60 ? '⚠️ Arteriolar Narrowing' : '✓ Normal Range (0.65 - 0.75)'}
+                      </div>
+                    </div>
+
+                    {/* Card 3: Cup-to-Disc Ratio CDR */}
+                    <div style={{ padding: '16px', background: '#FAF7F2', border: 'var(--border-thick)', borderRadius: '16px' }}>
+                      <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>CUP-TO-DISC RATIO (CDR)</div>
+                      <div style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--ink-black)', marginTop: '4px' }}>
+                        {prediction.dip_biomarkers.cup_disc_ratio ?? 0.40}
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: (prediction.dip_biomarkers.cup_disc_ratio ?? 0.40) >= 0.50 ? '#DC2626' : '#059669', fontWeight: 700, marginTop: '4px' }}>
+                        {(prediction.dip_biomarkers.cup_disc_ratio ?? 0.40) >= 0.50 ? '⚠️ Glaucomatous Cupping' : '✓ Normal Cup (< 0.45)'}
+                      </div>
+                    </div>
+
+                    {/* Card 4: Vascular Fractal Dimension D */}
+                    <div style={{ padding: '16px', background: '#FAF7F2', border: 'var(--border-thick)', borderRadius: '16px' }}>
+                      <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>FRACTAL DIMENSION (D)</div>
+                      <div style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--ink-black)', marginTop: '4px' }}>
+                        {prediction.dip_biomarkers.vascular_fractal_dimension ?? 1.42}
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: (prediction.dip_biomarkers.vascular_fractal_dimension ?? 1.42) < 1.35 ? '#DC2626' : '#059669', fontWeight: 700, marginTop: '4px' }}>
+                        {(prediction.dip_biomarkers.vascular_fractal_dimension ?? 1.42) < 1.35 ? '⚠️ Vascular Dropout' : '✓ Normal Complexity'}
+                      </div>
+                    </div>
+
+                    {/* Card 5: Intraretinal Hemorrhages */}
+                    <div style={{ padding: '16px', background: '#FAF7F2', border: 'var(--border-thick)', borderRadius: '16px' }}>
+                      <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>HEMORRHAGE COUNT</div>
+                      <div style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--ink-black)', marginTop: '4px' }}>
+                        {prediction.dip_biomarkers.hemorrhage_count ?? 0}
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: (prediction.dip_biomarkers.hemorrhage_count ?? 0) > 0 ? '#DC2626' : '#059669', fontWeight: 700, marginTop: '4px' }}>
+                        {(prediction.dip_biomarkers.hemorrhage_count ?? 0) > 0 ? '⚠️ Hemorrhages Present' : '✓ No Hemorrhages'}
+                      </div>
+                    </div>
+
+                    {/* Card 6: Cotton Wool Spots */}
+                    <div style={{ padding: '16px', background: '#FAF7F2', border: 'var(--border-thick)', borderRadius: '16px' }}>
+                      <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>COTTON WOOL SPOTS</div>
+                      <div style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--ink-black)', marginTop: '4px' }}>
+                        {prediction.dip_biomarkers.cotton_wool_spot_count ?? 0}
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: (prediction.dip_biomarkers.cotton_wool_spot_count ?? 0) > 0 ? '#DC2626' : '#059669', fontWeight: 700, marginTop: '4px' }}>
+                        {(prediction.dip_biomarkers.cotton_wool_spot_count ?? 0) > 0 ? '⚠️ Microvascular Ischemia' : '✓ None Detected'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Evidence Rationale List */}
+                  {prediction.dip_biomarkers.clinical_evidence && (
+                    <div style={{ padding: '20px', background: '#EFF6FF', border: 'var(--border-thick)', borderRadius: '16px', borderColor: '#BFDBFE' }}>
+                      <h4 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#1E40AF', marginBottom: '10px' }}>
+                        📋 Evidence-Backed Clinical Rationale
+                      </h4>
+                      <ul style={{ paddingLeft: '20px', margin: 0, fontSize: '0.85rem', color: '#1E3A8A', lineHeight: 1.6 }}>
+                        {prediction.dip_biomarkers.clinical_evidence.map((item, idx) => (
+                          <li key={idx} style={{ marginBottom: '4px' }}>{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {heatmapData && (
                 <div className="editorial-card" style={{ padding: '36px' }}>

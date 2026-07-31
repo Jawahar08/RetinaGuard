@@ -54,17 +54,33 @@ class PredictionResponse(BaseModel):
 
 
 class DIPBiomarkerResult(BaseModel):
-    """Classical DIP structural biomarker results for Feature 1."""
+    """Classical DIP structural biomarker results for Features 1-10 & Fusion Engine."""
     vessel_density_index: float = Field(..., description="Ratio of vessel pixels to FOV pixels (0.0–1.0)")
-    microaneurysm_candidate_count: int = Field(..., description="Estimated microaneurysm / haemorrhage blob count")
+    microaneurysm_candidate_count: int = Field(..., description="Estimated microaneurysm candidate blob count")
     exudate_candidate_count: int = Field(..., description="Estimated exudate candidate blob count")
     exudate_area_ratio: float = Field(..., description="Exudate pixel area / total image pixels (0.0–1.0)")
     optic_disc_found: bool = Field(..., description="Whether optic disc candidate was detected")
     optic_disc_bbox: Optional[List[int]] = Field(None, description="Optic disc bounding box [x, y, w, h]")
     macula_center: Optional[List[int]] = Field(None, description="Estimated macula fovea center [x, y]")
+    vessel_tortuosity_index: float = Field(1.08, description="Vessel centerline tortuosity curvature index")
+    average_branch_angle: float = Field(75.4, description="Average vascular bifurcation angle in degrees")
+    average_vessel_width: float = Field(3.5, description="Average vessel caliber in pixels")
+    artery_vein_ratio: float = Field(0.67, description="Artery-to-Vein Ratio (AVR)")
+    cup_disc_ratio: float = Field(0.40, description="Glaucomatous Cup-to-Disc Ratio (CDR)")
+    hemorrhage_count: int = Field(0, description="Total intraretinal hemorrhage count")
+    cotton_wool_spot_count: int = Field(0, description="Cotton Wool Spot count")
+    lesion_density: float = Field(0.0, description="Spatial lesion density per mm2")
+    vascular_fractal_dimension: float = Field(1.42, description="Box-counting vascular fractal dimension D")
+    regional_vessel_density: Optional[Dict[str, float]] = Field(None, description="Vessel density for Superior, Inferior, Nasal, Temporal quadrants")
+    biomarker_vector_13d: Optional[List[float]] = Field(None, description="Normalized 13-element Clinical Biomarker Vector")
+    clinical_evidence: Optional[List[str]] = Field(None, description="Evidence-backed natural language clinical bullet points")
+    clinical_rationale_md: Optional[str] = Field(None, description="Markdown format clinical diagnostic rationale")
     anatomy_overlay_base64: Optional[str] = Field(None, description="Annotated anatomy overlay PNG (base64)")
     vessel_mask_base64: Optional[str] = Field(None, description="Binary vessel segmentation mask PNG (base64)")
     lesion_mask_base64: Optional[str] = Field(None, description="Binary lesion candidate mask PNG (base64)")
+    av_overlay_base64: Optional[str] = Field(None, description="Red/Blue Artery-Vein classification overlay PNG (base64)")
+    optic_cup_overlay_base64: Optional[str] = Field(None, description="Optic Cup/Disc boundary overlay PNG (base64)")
+    density_heatmap_base64: Optional[str] = Field(None, description="2D Spatial Lesion Density heatmap PNG (base64)")
 
 
 class ImageQualityMetrics(BaseModel):

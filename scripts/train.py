@@ -141,12 +141,15 @@ class APTOSDataset(Dataset):
         self.files = []
         self.labels = []
         for fname, label in labels_dict.items():
-            p = img_dir / fname
-            if not p.exists():
-                # Try without extension
-                p = img_dir / (fname.replace('.png', '') + '.png')
-            if p.exists():
-                self.files.append(p)
+            candidates = [
+                img_dir / fname,
+                img_dir / "train_images" / fname,
+                img_dir / (fname.replace('.png', '') + '.png'),
+                img_dir / "train_images" / (fname.replace('.png', '') + '.png'),
+            ]
+            valid_p = next((p for p in candidates if p.exists()), None)
+            if valid_p:
+                self.files.append(valid_p)
                 self.labels.append(label)
         self.transform = transform
         logger.info(f"APTOSDataset: {len(self.files)} valid images found")
@@ -176,10 +179,16 @@ class ODIRDataset(Dataset):
         self.label_cols = label_cols
         for _, row in df.iterrows():
             fname = str(row.get("filename", ""))
-            p = img_dir / fname
-            if p.exists():
+            candidates = [
+                img_dir / fname,
+                img_dir / "preprocessed_images" / fname,
+                img_dir / "ODIR-5K" / "preprocessed_images" / fname,
+                img_dir.parent / "preprocessed_images" / fname,
+            ]
+            valid_p = next((p for p in candidates if p.exists()), None)
+            if valid_p:
                 labels = [float(row.get(c, 0)) for c in label_cols]
-                self.records.append((p, labels))
+                self.records.append((valid_p, labels))
         self.transform = transform
         logger.info(f"ODIRDataset: {len(self.records)} valid images found")
 
@@ -375,15 +384,16 @@ def train_task(
         val_ds = APTOSDataset(APTOS_IMG_DIR, val_items, transform=get_val_transforms())
 
         # Class-weighted sampler
-        label_vals = [v for _, v in train_items.items() if (APTOS_IMG_DIR / _).exists()]
+        label_vals = train_ds.labels
         n_classes = 5
         class_counts = np.bincount(label_vals, minlength=n_classes)
         class_weights = 1.0 / np.maximum(class_counts, 1)
         sample_weights = [class_weights[lbl] for lbl in label_vals]
         sampler = WeightedRandomSampler(sample_weights, num_samples=len(sample_weights), replacement=True)
 
-        train_loader = DataLoader(train_ds, batch_size=batch_size, sampler=sampler, num_workers=4, pin_memory=False)
-        val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False, num_workers=4, pin_memory=False)
+        num_workers = 0 if os.name == 'nt' else 4
+        train_loader = DataLoader(train_ds, batch_size=batch_size, sampler=sampler, num_workers=num_workers, pin_memory=False)
+        val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False, num_workers=num_workers, pin_memory=False)
 
         model = build_efficientnet_b3(num_classes=5, task_type="multiclass").to(device)
         criterion = LabelSmoothingCrossEntropy(smoothing=0.1)
@@ -392,7 +402,15 @@ def train_task(
         higher_is_better = True
 
     elif task == "odir":
-        df = pd.read_csv(ODIR_CSV)
+        csv_candidates = [
+            ODIR_CSV,
+            ODIR_IMG_DIR / "full_df.csv",
+            ODIR_IMG_DIR.parent / "full_df.csv",
+            ODIR_IMG_DIR / "ODIR-5K" / "full_df.csv",
+        ]
+        actual_csv = next((c for c in csv_candidates if c.exists()), ODIR_CSV)
+        logger.info(f"Loading ODIR CSV from {actual_csv}")
+        df = pd.read_csv(actual_csv)
         df = df.sample(frac=1, random_state=SEED).reset_index(drop=True)
         n_val = max(1, int(len(df) * val_split))
         train_df, val_df = df.iloc[n_val:].reset_index(drop=True), df.iloc[:n_val].reset_index(drop=True)
@@ -400,8 +418,9 @@ def train_task(
         train_ds = ODIRDataset(ODIR_IMG_DIR, train_df, ODIR_LABELS, transform=get_train_transforms())
         val_ds = ODIRDataset(ODIR_IMG_DIR, val_df, ODIR_LABELS, transform=get_val_transforms())
 
-        train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=False)
-        val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False, num_workers=4, pin_memory=False)
+        num_workers = 0 if os.name == 'nt' else 4
+        train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True, num_workers=num_workers, pin_memory=False)
+        val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False, num_workers=num_workers, pin_memory=False)
 
         model = build_efficientnet_b3(num_classes=8, task_type="multi_label").to(device)
         criterion = FocalLoss(alpha=0.25, gamma=2.0)
