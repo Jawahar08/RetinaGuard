@@ -23,6 +23,7 @@ import logging
 from typing import Optional, Tuple
 
 import numpy as np
+import cv2
 from PIL import Image, ImageDraw, ImageFilter
 
 from ml.schemas import DIPBiomarkerResult
@@ -63,30 +64,10 @@ def _arr_to_b64(arr: np.ndarray) -> str:
 # ---------------------------------------------------------------------------
 
 def _clahe_green(img_rgb: np.ndarray, clip_limit: float = 3.0, tile: int = 8) -> np.ndarray:
-    """
-    Extract green channel and apply CLAHE-style local histogram equalisation.
-    Uses tiled grid approximation (Gonzalez §3.3 – histogram processing).
-    """
-    green = img_rgb[:, :, 1].astype(np.float32)
-    h, w = green.shape
-    th = max(1, h // tile)
-    tw = max(1, w // tile)
-    out = np.zeros_like(green)
-
-    for i in range(0, h, th):
-        for j in range(0, w, tw):
-            patch = green[i:i + th, j:j + tw]
-            hist, _ = np.histogram(patch.flatten(), bins=256, range=(0, 256))
-            # Clip histogram
-            excess = np.maximum(hist - clip_limit * patch.size / 256, 0).sum()
-            hist = np.minimum(hist, int(clip_limit * patch.size / 256))
-            hist += int(excess / 256)
-            cdf = np.cumsum(hist)
-            cdf = (cdf - cdf.min()) * 255.0 / max(cdf.max() - cdf.min(), 1)
-            patch_eq = cdf[patch.astype(np.uint8)]
-            out[i:i + th, j:j + tw] = patch_eq
-
-    return out.astype(np.float32)
+    """Extract green channel and apply OpenCV C++ CLAHE for high-speed equalisation."""
+    green = img_rgb[:, :, 1].astype(np.uint8)
+    clahe = cv2.createCLAHE(clipLimit=clip_limit, tileGridSize=(tile, tile))
+    return clahe.apply(green).astype(np.float32)
 
 
 def _gaussian_kernel_2d(sigma: float, radius: int) -> np.ndarray:
@@ -99,17 +80,8 @@ def _gaussian_kernel_2d(sigma: float, radius: int) -> np.ndarray:
 
 
 def _convolve2d(img: np.ndarray, kernel: np.ndarray) -> np.ndarray:
-    """Manual valid-padding 2D convolution via numpy stride tricks (CPU only)."""
-    from numpy.lib.stride_tricks import as_strided
-    kh, kw = kernel.shape
-    oh = img.shape[0] - kh + 1
-    ow = img.shape[1] - kw + 1
-    if oh <= 0 or ow <= 0:
-        return np.zeros((max(1, oh), max(1, ow)), dtype=np.float32)
-    shape = (oh, ow, kh, kw)
-    strides = img.strides + img.strides
-    patches = as_strided(img, shape=shape, strides=strides)
-    return np.einsum("ijkl,kl->ij", patches, kernel).astype(np.float32)
+    """Accelerated 2D convolution via cv2.filter2D."""
+    return cv2.filter2D(img.astype(np.float32), -1, kernel, borderType=cv2.BORDER_REFLECT)
 
 
 def _hessian_vesselness(green_eq: np.ndarray, sigmas=(1.0, 2.0, 3.0)) -> np.ndarray:
@@ -194,14 +166,10 @@ def compute_vessel_density_index(vessel_mask: np.ndarray, fov_mask: Optional[np.
 # ---------------------------------------------------------------------------
 
 def _morphological_closing(arr: np.ndarray, radius: int = 3) -> np.ndarray:
-    """
-    Approximate morphological closing using PIL MaxFilter then MinFilter.
-    Gonzalez §9.1 – morphological image processing.
-    """
-    pil = Image.fromarray(_to_uint8(arr))
-    closed = pil.filter(ImageFilter.MaxFilter(size=2 * radius + 1))
-    closed = closed.filter(ImageFilter.MinFilter(size=2 * radius + 1))
-    return np.array(closed).astype(np.float32)
+    """High-speed OpenCV morphological closing."""
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * radius + 1, 2 * radius + 1))
+    closed = cv2.morphologyEx(_to_uint8(arr), cv2.MORPH_CLOSE, kernel)
+    return closed.astype(np.float32)
 
 
 def extract_lesion_candidates(img_rgb: np.ndarray) -> Tuple[np.ndarray, int, float]:

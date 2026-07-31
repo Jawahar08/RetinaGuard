@@ -272,7 +272,7 @@ export default function OphthaFusionDashboard() {
   const workspaceRef = useRef<HTMLDivElement>(null);
   const methodRef = useRef<HTMLDivElement>(null);
 
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8001';
 
   const scrollToWorkspace = () => {
     workspaceRef.current?.scrollIntoView({ behavior: 'smooth' });
