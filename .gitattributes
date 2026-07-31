@@ -1,3 +1,2 @@
 # Git attributes configuration
-data/models/* filter=lfs diff=lfs merge=lfs -text
 *.pth filter=lfs diff=lfs merge=lfs -text
