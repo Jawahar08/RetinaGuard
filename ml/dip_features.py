@@ -20,13 +20,30 @@ All processing runs on CPU with NumPy + SciPy + Pillow (no torch needed).
 import base64
 import io
 import logging
-from typing import Optional, Tuple
+import sys
+from pathlib import Path
+from typing import Optional, Tuple, List, Any
 
-import numpy as np
-import cv2
-from PIL import Image, ImageDraw, ImageFilter
+import numpy as np  # type: ignore
+import cv2  # type: ignore
+from PIL import Image, ImageDraw, ImageFilter  # type: ignore
 
-from ml.schemas import DIPBiomarkerResult
+try:
+    from scipy.ndimage import label as ndlabel  # type: ignore
+except ImportError:
+    ndlabel = None
+
+_ROOT = Path(__file__).resolve().parent.parent
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+
+try:
+    from ml.schemas import DIPBiomarkerResult  # type: ignore
+except ImportError:
+    try:
+        from .schemas import DIPBiomarkerResult  # type: ignore
+    except ImportError:
+        from schemas import DIPBiomarkerResult  # type: ignore
 
 logger = logging.getLogger("retinal-dip")
 
@@ -191,12 +208,13 @@ def extract_lesion_candidates(img_rgb: np.ndarray) -> Tuple[np.ndarray, int, flo
     thresh = np.percentile(bth, 95)
     lesion_mask = (bth >= thresh).astype(np.uint8) * 255
 
-    # Count connected components via simple flood-fill approximation
-    from scipy.ndimage import label as ndlabel
     try:
-        labeled, n_components = ndlabel(lesion_mask > 0)
+        if ndlabel is not None:
+            labeled, n_components = ndlabel(lesion_mask > 0)
+        else:
+            n_components = int(lesion_mask.max() > 0)
     except Exception:
-        labeled, n_components = lesion_mask, int(lesion_mask.max() > 0)
+        n_components = int(lesion_mask.max() > 0)
 
     h, w = lesion_mask.shape
     area_ratio = float(np.count_nonzero(lesion_mask)) / (h * w)
@@ -260,8 +278,10 @@ def extract_exudate_candidates(img_rgb: np.ndarray) -> Tuple[np.ndarray, int, fl
     exudate_mask = ((L >= L_thresh) & (b >= b_thresh)).astype(np.uint8) * 255
 
     try:
-        from scipy.ndimage import label as ndlabel
-        labeled, n_components = ndlabel(exudate_mask > 0)
+        if ndlabel is not None:
+            labeled, n_components = ndlabel(exudate_mask > 0)
+        else:
+            n_components = int(exudate_mask.max() > 0)
     except Exception:
         n_components = int(exudate_mask.max() > 0)
 
