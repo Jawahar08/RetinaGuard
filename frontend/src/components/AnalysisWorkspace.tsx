@@ -116,7 +116,7 @@ export default function AnalysisWorkspace({
         {/* Left Column: Form & Upload */}
         <div className="editorial-card" style={{ padding: '36px' }}>
           <h2 className="font-serif-display" style={{ fontSize: '1.6rem', fontWeight: 800, marginBottom: '24px' }}>
-            Step 2: {t.step1Title}
+            {t.step1Title}
           </h2>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '32px' }}>
@@ -140,7 +140,7 @@ export default function AnalysisWorkspace({
           </div>
 
           <h2 className="font-serif-display" style={{ fontSize: '1.6rem', fontWeight: 800, marginBottom: '18px' }}>
-            Step 3: {t.step2Title}
+            {t.step2Title}
           </h2>
 
           <div
