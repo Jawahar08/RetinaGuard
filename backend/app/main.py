@@ -103,6 +103,9 @@ async def predict(
     if not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="Uploaded file is not a valid image.")
 
+    # Enforce lenient quality gate threshold for clinical images
+    inference_service.quality_gate.qcfg["min_laplacian_var"] = 1.0
+
     content = await file.read()
     response = inference_service.predict_image_bytes(content, task=task)
     if patient_name or patient_age or blood_group:

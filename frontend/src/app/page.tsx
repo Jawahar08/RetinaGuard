@@ -70,12 +70,12 @@ const TRANSLATIONS: Record<'en' | 'ph', Record<string, string>> = {
     trustLine: 'Research and screening support only. Not a medical diagnosis.',
     ctaPrimary: 'Analyze a Retinal Image',
     ctaSecondary: 'Explore the Method',
-    step1Title: '1. Select Screening Task',
+    step1Title: 'Select Screening Task',
     taskOdirTitle: 'ODIR Multi-Label Screening',
     taskOdirSub: 'Normal, DR, Glaucoma, Cataract, AMD',
     taskAptosTitle: 'APTOS DR Severity Grading',
     taskAptosSub: '5-Class DR Severity (No DR to Severe)',
-    step2Title: '2. Upload Retinal Photograph',
+    step2Title: 'Upload Retinal Photograph',
     dropzoneText: 'Upload an image. Explore the evidence.',
     dropzoneSub: 'Drag and drop fundus photo or click to browse (PNG, JPG up to 15MB)',
     mockModeLabel: 'Mock Demo Mode (Offline)',
@@ -104,12 +104,12 @@ const TRANSLATIONS: Record<'en' | 'ph', Record<string, string>> = {
     trustLine: 'Pang-pananaliksik at suporta lamang. Hindi ito pinal na diagnosis ng doktor.',
     ctaPrimary: 'Suriin ang Litrato ng Retina',
     ctaSecondary: 'Tignan ang Paraan ng AI',
-    step1Title: '1. Pumili ng Uri ng Pagsusuri',
+    step1Title: 'Pumili ng Uri ng Pagsusuri',
     taskOdirTitle: 'ODIR Pagsusuri sa Maraming Sakit',
     taskOdirSub: 'Normal, DR, Glaucoma, Cataract, AMD',
     taskAptosTitle: 'APTOS Antas ng Severity ng DR',
     taskAptosSub: '5-Antas ng Severity (Walang DR hanggang Malubha)',
-    step2Title: '2. Mag-upload ng Litrato ng Retina',
+    step2Title: 'Mag-upload ng Litrato ng Retina',
     dropzoneText: 'Mag-upload ng litrato. Tignan ang patunay.',
     dropzoneSub: 'I-drag at i-drop ang litrato o i-click para mag-browse (PNG, JPG hanggang 15MB)',
     mockModeLabel: 'Mock Demo Mode (Offline)',
@@ -272,7 +272,7 @@ export default function OphthaFusionDashboard() {
   const workspaceRef = useRef<HTMLDivElement>(null);
   const methodRef = useRef<HTMLDivElement>(null);
 
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8001';
 
   const scrollToWorkspace = () => {
     workspaceRef.current?.scrollIntoView({ behavior: 'smooth' });

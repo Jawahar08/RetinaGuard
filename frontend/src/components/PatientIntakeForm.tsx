@@ -89,7 +89,7 @@ export default function PatientIntakeForm({
           </div>
           <div>
             <h3 className="font-serif-display" style={{ fontSize: '1.4rem', fontWeight: 800, margin: 0 }}>
-              Step 1: Patient Medical Intake
+              Patient Medical Intake
             </h3>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '2px 0 0' }}>
               Basic demographic and physiological history for screening context

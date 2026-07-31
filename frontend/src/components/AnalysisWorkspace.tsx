@@ -146,7 +146,7 @@ export default function AnalysisWorkspace({
         {/* Left Column: Form & Upload */}
         <div className="editorial-card" style={{ padding: '36px' }}>
           <h2 className="font-serif-display" style={{ fontSize: '1.6rem', fontWeight: 800, marginBottom: '24px' }}>
-            Step 2: {t.step1Title}
+            {t.step1Title}
           </h2>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '32px' }}>
@@ -170,7 +170,7 @@ export default function AnalysisWorkspace({
           </div>
 
           <h2 className="font-serif-display" style={{ fontSize: '1.6rem', fontWeight: 800, marginBottom: '18px' }}>
-            Step 3: {t.step2Title}
+            {t.step2Title}
           </h2>
 
           <div
@@ -204,19 +204,137 @@ export default function AnalysisWorkspace({
 
           {/* Real Clinical Dataset Sample Selector */}
           <div style={{ marginTop: '20px', padding: '16px', background: '#FDFBF7', border: 'var(--border-thick)', borderRadius: '16px' }}>
-            <div style={{ fontSize: '0.82rem', fontWeight: 800, color: 'var(--ink-black)', marginBottom: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Sparkles size={16} color="var(--electric-blue)" /> LOAD REAL CLINICAL DATASET SAMPLES:
-              </span>
-              <a
-                href="/Real_Retinal_Test_Images.zip"
-                download="Real_Retinal_Test_Images.zip"
-                className="btn-editorial-secondary"
-                style={{ fontSize: '0.72rem', padding: '4px 10px', textDecoration: 'none', background: '#EFF6FF', color: '#1D4ED8', borderColor: '#93C5FD' }}
-              >
-                <Download size={13} /> Download 10 Test Images (.zip)
-              </a>
+            <div style={{ fontSize: '0.82rem', fontWeight: 800, color: 'var(--ink-black)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Sparkles size={16} color="var(--electric-blue)" /> LOAD REAL CLINICAL DATASET SAMPLES:
             </div>
+
+            {task === 'aptos' ? (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                <button
+                  type="button"
+                  className="btn-editorial-secondary"
+                  style={{ fontSize: '0.72rem', padding: '6px 10px' }}
+                  onClick={() => {
+                    fetch('/samples/aptos_stage_0_normal.png')
+                      .then(r => r.blob())
+                      .then(b => handleFileSelect(new File([b], '06_APTOS_STAGE0_NO_DR.PNG', { type: 'image/png' })));
+                  }}
+                >
+                  🟢 Stage 0 (No DR)
+                </button>
+                <button
+                  type="button"
+                  className="btn-editorial-secondary"
+                  style={{ fontSize: '0.72rem', padding: '6px 10px' }}
+                  onClick={() => {
+                    fetch('/samples/aptos_stage_1_mild.png')
+                      .then(r => r.blob())
+                      .then(b => handleFileSelect(new File([b], '07_APTOS_STAGE1_MILD_DR.PNG', { type: 'image/png' })));
+                  }}
+                >
+                  🟡 Stage 1 (Mild DR)
+                </button>
+                <button
+                  type="button"
+                  className="btn-editorial-secondary"
+                  style={{ fontSize: '0.72rem', padding: '6px 10px' }}
+                  onClick={() => {
+                    fetch('/samples/aptos_stage_2_moderate.png')
+                      .then(r => r.blob())
+                      .then(b => handleFileSelect(new File([b], '08_APTOS_STAGE2_MODERATE_DR.PNG', { type: 'image/png' })));
+                  }}
+                >
+                  🟠 Stage 2 (Moderate DR)
+                </button>
+                <button
+                  type="button"
+                  className="btn-editorial-secondary"
+                  style={{ fontSize: '0.72rem', padding: '6px 10px' }}
+                  onClick={() => {
+                    fetch('/samples/aptos_stage_3_severe.png')
+                      .then(r => r.blob())
+                      .then(b => handleFileSelect(new File([b], '09_APTOS_STAGE3_SEVERE_DR.PNG', { type: 'image/png' })));
+                  }}
+                >
+                  🔴 Stage 3 (Severe DR)
+                </button>
+                <button
+                  type="button"
+                  className="btn-editorial-secondary"
+                  style={{ fontSize: '0.72rem', padding: '6px 10px' }}
+                  onClick={() => {
+                    fetch('/samples/aptos_stage_4_proliferative.png')
+                      .then(r => r.blob())
+                      .then(b => handleFileSelect(new File([b], '10_APTOS_STAGE4_PROLIFERATIVE_DR.PNG', { type: 'image/png' })));
+                  }}
+                >
+                  🚨 Stage 4 (Proliferative DR)
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                <button
+                  type="button"
+                  className="btn-editorial-secondary"
+                  style={{ fontSize: '0.72rem', padding: '6px 10px' }}
+                  onClick={() => {
+                    fetch('/samples/odir_normal.jpg')
+                      .then(r => r.blob())
+                      .then(b => handleFileSelect(new File([b], '01_NORMAL_HEALTHY_RETINA.JPG', { type: 'image/jpeg' })));
+                  }}
+                >
+                  🟢 Normal Retina
+                </button>
+                <button
+                  type="button"
+                  className="btn-editorial-secondary"
+                  style={{ fontSize: '0.72rem', padding: '6px 10px' }}
+                  onClick={() => {
+                    fetch('/samples/odir_dr.jpg')
+                      .then(r => r.blob())
+                      .then(b => handleFileSelect(new File([b], '02_DIABETIC_RETINOPATHY_SEVERE.JPG', { type: 'image/jpeg' })));
+                  }}
+                >
+                  🔴 Diabetic Retinopathy
+                </button>
+                <button
+                  type="button"
+                  className="btn-editorial-secondary"
+                  style={{ fontSize: '0.72rem', padding: '6px 10px' }}
+                  onClick={() => {
+                    fetch('/samples/odir_glaucoma.jpg')
+                      .then(r => r.blob())
+                      .then(b => handleFileSelect(new File([b], '03_GLAUCOMA_OPTIC_NERVE_DAMAGE.JPG', { type: 'image/jpeg' })));
+                  }}
+                >
+                  👁️ Glaucoma
+                </button>
+                <button
+                  type="button"
+                  className="btn-editorial-secondary"
+                  style={{ fontSize: '0.72rem', padding: '6px 10px' }}
+                  onClick={() => {
+                    fetch('/samples/odir_cataract.jpg')
+                      .then(r => r.blob())
+                      .then(b => handleFileSelect(new File([b], '04_CATARACT_LENS_OPACITY.JPG', { type: 'image/jpeg' })));
+                  }}
+                >
+                  🌫️ Cataract
+                </button>
+                <button
+                  type="button"
+                  className="btn-editorial-secondary"
+                  style={{ fontSize: '0.72rem', padding: '6px 10px' }}
+                  onClick={() => {
+                    fetch('/samples/odir_amd.jpg')
+                      .then(r => r.blob())
+                      .then(b => handleFileSelect(new File([b], '05_AMD_MACULAR_DEGENERATION.JPG', { type: 'image/jpeg' })));
+                  }}
+                >
+                  🔬 AMD (Macular Degeneration)
+                </button>
+              </div>
+            )}
           </div>
 
           {errorMsg && (
