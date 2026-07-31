@@ -172,6 +172,23 @@ export default function AnalysisWorkspace({
             )}
           </div>
 
+          {/* Real Clinical Dataset Sample Selector */}
+          <div style={{ marginTop: '20px', padding: '16px', background: '#FDFBF7', border: 'var(--border-thick)', borderRadius: '16px' }}>
+            <div style={{ fontSize: '0.82rem', fontWeight: 800, color: 'var(--ink-black)', marginBottom: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Sparkles size={16} color="var(--electric-blue)" /> LOAD REAL CLINICAL DATASET SAMPLES:
+              </span>
+              <a
+                href="/Real_Retinal_Test_Images.zip"
+                download="Real_Retinal_Test_Images.zip"
+                className="btn-editorial-secondary"
+                style={{ fontSize: '0.72rem', padding: '4px 10px', textDecoration: 'none', background: '#EFF6FF', color: '#1D4ED8', borderColor: '#93C5FD' }}
+              >
+                <Download size={13} /> Download 10 Test Images (.zip)
+              </a>
+            </div>
+          </div>
+
           {errorMsg && (
             <div style={{ marginTop: '16px', padding: '12px 16px', background: '#FDF2F2', border: 'var(--border-thick)', color: 'var(--clinical-pink)', borderRadius: '14px', fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
               <AlertTriangle size={18} /> {errorMsg}

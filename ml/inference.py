@@ -89,13 +89,38 @@ class RetinalInferenceService:
         self.model_name = model_name
 
         self.models: Dict[str, Any] = {}
+        self.model_loaded_from_ckpt: Dict[str, bool] = {}
+
         for task_name, task_cfg in self.dataset_cfg["tasks"].items():
             num_classes = len(task_cfg["labels"])
             task_type = task_cfg["task_type"]
-            model = model_factory(model_name, num_classes=num_classes, task_type=task_type, pretrained=False)
-            if HAS_TORCH and hasattr(model, "eval"):
-                model.eval()
-            self.models[task_name] = model
+
+            loaded = False
+            if HAS_TORCH:
+                ckpt_dir = Path(__file__).resolve().parent.parent / "models" / "checkpoints"
+                ckpt_file = ckpt_dir / f"{task_name}_best.pth"
+                if ckpt_file.exists():
+                    try:
+                        from scripts.train import build_efficientnet_b3
+                        ckpt_num_classes = 8 if task_name == "odir" else num_classes
+                        model = build_efficientnet_b3(num_classes=ckpt_num_classes, task_type=task_type)
+                        ckpt_data = torch.load(ckpt_file, map_location="cpu")
+                        state_dict = ckpt_data.get("model_state_dict", ckpt_data)
+                        model.load_state_dict(state_dict)
+                        model.eval()
+                        self.models[task_name] = model
+                        self.model_loaded_from_ckpt[task_name] = True
+                        loaded = True
+                    except Exception as e:
+                        print(f"Failed to load checkpoint {ckpt_file}: {e}")
+                        loaded = False
+
+            if not loaded:
+                model = model_factory(model_name, num_classes=num_classes, task_type=task_type, pretrained=False)
+                if HAS_TORCH and hasattr(model, "eval"):
+                    model.eval()
+                self.models[task_name] = model
+                self.model_loaded_from_ckpt[task_name] = False
 
     def predict_image_bytes(
         self,
@@ -157,13 +182,43 @@ class RetinalInferenceService:
         # 2. Preprocessing & Model Forward Pass
         cropped_rgb, tensor_or_array = self.preprocessor.preprocess(img_rgb)
 
-        logits = compute_image_features_logits(img_rgb, num_classes=len(labels), task_type=task_type)
+        probs = None
+        if HAS_TORCH and self.model_loaded_from_ckpt.get(task_name, False):
+            try:
+                model = self.models[task_name]
+                with torch.no_grad():
+                    if isinstance(tensor_or_array, torch.Tensor):
+                        inp_tensor = tensor_or_array
+                    else:
+                        inp_tensor = torch.tensor(tensor_or_array, dtype=torch.float32)
+                    
+                    if inp_tensor.ndim == 3:
+                        inp_tensor = inp_tensor.unsqueeze(0)
+                    
+                    raw_out = model(inp_tensor)
+                    raw_logits = raw_out.cpu().numpy()[0]
+                    
+                    if len(raw_logits) >= len(labels):
+                        task_logits = raw_logits[:len(labels)]
+                    else:
+                        task_logits = raw_logits
 
-        if task_type == "multi_label":
-            probs = 1.0 / (1.0 + np.exp(-logits))
-        else:
-            exp_logits = np.exp(logits - np.max(logits))
-            probs = exp_logits / np.sum(exp_logits)
+                    if task_type == "multi_label":
+                        probs = 1.0 / (1.0 + np.exp(-task_logits))
+                    else:
+                        exp_l = np.exp(task_logits - np.max(task_logits))
+                        probs = exp_l / np.sum(exp_l)
+            except Exception as e:
+                print(f"Forward pass error: {e}")
+                probs = None
+
+        if probs is None:
+            logits = compute_image_features_logits(img_rgb, num_classes=len(labels), task_type=task_type)
+            if task_type == "multi_label":
+                probs = 1.0 / (1.0 + np.exp(-logits))
+            else:
+                exp_logits = np.exp(logits - np.max(logits))
+                probs = exp_logits / np.sum(exp_logits)
 
         class_preds = []
         for i, lbl in enumerate(labels):
@@ -177,17 +232,22 @@ class RetinalInferenceService:
 
         # Compute Shannon Entropy H(P) for uncertainty estimation
         eps = 1e-7
-        norm_probs = probs / np.sum(probs) if np.sum(probs) > 0 else probs
-        entropy = float(-np.sum(norm_probs * np.log2(norm_probs + eps)))
-        max_possible_entropy = float(np.log2(len(labels)))
-        normalized_entropy = entropy / max_possible_entropy if max_possible_entropy > 0 else 0.0
+        if task_type == "multi_label":
+            clipped_p = np.clip(probs, eps, 1.0 - eps)
+            binary_entropies = -clipped_p * np.log2(clipped_p) - (1.0 - clipped_p) * np.log2(1.0 - clipped_p)
+            normalized_entropy = float(np.mean(binary_entropies))
+        else:
+            norm_probs = probs / np.sum(probs) if np.sum(probs) > 0 else probs
+            entropy = float(-np.sum(norm_probs * np.log2(norm_probs + eps)))
+            max_possible_entropy = float(np.log2(len(labels)))
+            normalized_entropy = entropy / max_possible_entropy if max_possible_entropy > 0 else 0.0
 
         abstain = False
         abstention_reason = None
         if confidence < 0.45:
             abstain = True
             abstention_reason = f"Model confidence ({confidence:.1%}) is below human-review safety threshold (45%). Case flagged for expert clinician review."
-        elif normalized_entropy > 0.85:
+        elif normalized_entropy > 0.85 and task_type != "multi_label":
             abstain = True
             abstention_reason = f"High prediction entropy ({normalized_entropy:.2f}). Model predictions are highly uncertain; referred for expert ophthalmologist consultation."
 
