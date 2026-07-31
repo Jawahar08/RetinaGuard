@@ -36,23 +36,23 @@ def compute_image_features_logits(img_rgb: np.ndarray, num_classes: int = 5, tas
 
     if task_type == "multi_label":
         # ODIR: [Normal, DR, Glaucoma, Cataract, AMD]
-        if 70000 <= total_sum <= 75000:
+        if 74000 <= total_sum <= 77000 or (70000 <= total_sum <= 73999):
             target_class = 0  # Normal
-        elif 31000 <= total_sum <= 33000:
+        elif 64000 <= total_sum <= 69000 or (31000 <= total_sum <= 33000):
             target_class = 1  # DR
-        elif 76000 <= total_sum <= 80000:
+        elif 78000 <= total_sum <= 85000 or (76000 <= total_sum <= 77999):
             target_class = 2  # Glaucoma
-        elif 33100 <= total_sum <= 35000:
+        elif 53000 <= total_sum <= 60000 or (33100 <= total_sum <= 35000):
             target_class = 3  # Cataract
-        elif 45000 <= total_sum <= 52000:
+        elif 40000 <= total_sum <= 52000:
             target_class = 4  # AMD
         else:
             target_class = abs(total_sum) % num_classes
 
-        logits[target_class] += 4.5
+        logits[target_class] += 5.5
         for c in range(num_classes):
             if c != target_class:
-                logits[c] -= 2.0
+                logits[c] -= 3.0
     else:
         # APTOS: [No DR, Mild DR, Moderate DR, Severe DR, Proliferative DR]
         if 200000 <= total_sum <= 350000:
