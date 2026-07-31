@@ -174,18 +174,8 @@ export default function AnalysisWorkspace({
 
           {/* Real Clinical Dataset Sample Selector */}
           <div style={{ marginTop: '20px', padding: '16px', background: '#FDFBF7', border: 'var(--border-thick)', borderRadius: '16px' }}>
-            <div style={{ fontSize: '0.82rem', fontWeight: 800, color: 'var(--ink-black)', marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Sparkles size={16} color="var(--electric-blue)" /> LOAD REAL CLINICAL DATASET SAMPLES:
-              </span>
-              <a
-                href="/Real_Retinal_Test_Images.zip"
-                download="Real_Retinal_Test_Images.zip"
-                className="btn-editorial-secondary"
-                style={{ fontSize: '0.72rem', padding: '4px 10px', textDecoration: 'none', background: '#EFF6FF', color: '#1D4ED8', borderColor: '#93C5FD' }}
-              >
-                <Download size={13} /> Download 10 Test Images (.zip)
-              </a>
+            <div style={{ fontSize: '0.82rem', fontWeight: 800, color: 'var(--ink-black)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Sparkles size={16} color="var(--electric-blue)" /> LOAD REAL CLINICAL DATASET SAMPLES:
             </div>
 
             {task === 'aptos' ? (
