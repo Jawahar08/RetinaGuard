@@ -54,6 +54,13 @@ interface PredictionResponse {
   vessel_density: number;
   microaneurysms: number;
   exudate_ratio: number;
+  sub_scores?: {
+    vessel_density_risk: number;
+    lesion_risk: number;
+    exudate_risk: number;
+    ml_confidence_risk: number;
+    anatomy_risk: number;
+  };
   abstain: boolean;
   abstention_reason?: string;
   patient_info?: PatientInfo;
@@ -285,6 +292,13 @@ const generateImageSpecificPrediction = (file: File, task: 'multitask' | 'odir' 
     vessel_density: vdi,
     microaneurysms,
     exudate_ratio: exudateRatio,
+    sub_scores: {
+      vessel_density_risk: isNormal ? 15 : Math.min(100, Math.round(calculatedRisk * 1.15)),
+      lesion_risk: isNormal ? 5 : Math.min(100, Math.round(calculatedRisk * 1.47)),
+      exudate_risk: isNormal ? 0 : Math.min(100, Math.round(calculatedRisk * 1.39)),
+      ml_confidence_risk: Math.round(confidence * 100),
+      anatomy_risk: isNormal ? 0 : 15
+    },
     abstain: confidence < 0.45,
     abstention_reason: confidence < 0.45 ? 'Model confidence below 45% threshold. Case flagged for clinician review.' : undefined,
     disclaimer: trustLine

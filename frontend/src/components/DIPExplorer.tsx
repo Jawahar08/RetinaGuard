@@ -57,17 +57,18 @@ interface DIPExplorerProps {
 /* ─────────────────────────────────────────────────────────────────────────── */
 /*  Helper to generate synchronized clinical risk data from prediction        */
 /* ─────────────────────────────────────────────────────────────────────────── */
-const getSynchronizedRiskData = (pred?: any): ClinicalRiskResult => {
-  const topPred = pred?.top_prediction || 'Normal';
-  const score = pred?.risk_score !== undefined ? pred.risk_score : 12.5;
+const getSynchronizedRiskData = (pred?: any): ClinicalRiskResult | null => {
+  if (!pred) return null;
+  const topPred = pred.top_prediction || 'Normal';
+  const score = pred.risk_score !== undefined ? pred.risk_score : 12.5;
   const isNormal = score <= 20 || topPred.includes('Normal') || topPred.includes('No DR');
 
-  const grade = pred?.severity || (isNormal ? 'Grade 0: Normal Retinal Findings' : 'Grade 2: Moderate Retinopathy');
-  const level = pred?.risk_category || (isNormal ? 'Low Risk' : score <= 50 ? 'Moderate Risk' : 'High Risk');
+  const grade = pred.severity || (isNormal ? 'Grade 0: Normal Retinal Findings' : 'Grade 2: Moderate Retinopathy');
+  const level = pred.risk_category || (isNormal ? 'Low Risk' : score <= 50 ? 'Moderate Risk' : 'High Risk');
   const color = score <= 20 ? '#22c55e' : score <= 50 ? '#eab308' : '#ef4444';
 
-  const vdi = pred?.vessel_density !== undefined ? pred.vessel_density : (isNormal ? 0.162 : 0.318);
-  const maCount = pred?.microaneurysms !== undefined ? pred.microaneurysms : (isNormal ? 0 : 356);
+  const vdi = pred.vessel_density !== undefined ? pred.vessel_density : (isNormal ? 0.162 : 0.318);
+  const maCount = pred.microaneurysms !== undefined ? pred.microaneurysms : (isNormal ? 0 : 356);
 
   return {
     risk_score: score,
@@ -75,18 +76,18 @@ const getSynchronizedRiskData = (pred?: any): ClinicalRiskResult => {
     risk_level: level,
     risk_color: color,
     sub_scores: {
-      vessel_density_risk: isNormal ? 15 : Math.min(100, Math.round(score * 1.15)),
-      lesion_risk: isNormal ? 5 : Math.min(100, Math.round(score * 1.47)),
-      exudate_risk: isNormal ? 0 : Math.min(100, Math.round(score * 1.39)),
-      ml_confidence_risk: Math.round((pred?.calibrated_confidence || 0.96) * 100),
-      anatomy_risk: isNormal ? 0 : 15
+      vessel_density_risk: pred.sub_scores?.vessel_density_risk ?? (isNormal ? 15 : Math.min(100, Math.round(score * 1.15))),
+      lesion_risk: pred.sub_scores?.lesion_risk ?? (isNormal ? 5 : Math.min(100, Math.round(score * 1.47))),
+      exudate_risk: pred.sub_scores?.exudate_risk ?? (isNormal ? 0 : Math.min(100, Math.round(score * 1.39))),
+      ml_confidence_risk: Math.round((pred.calibrated_confidence || 0.96) * 100),
+      anatomy_risk: pred.sub_scores?.anatomy_risk ?? (isNormal ? 0 : 15)
     },
     interpretations: [
-      pred?.explanation || (isNormal ? `Normal vessel density index (${vdi.toFixed(3)}) — healthy retinal vascular pattern.` : `Elevated vessel density index (${vdi.toFixed(3)}) and ${maCount} microaneurysm candidates.`),
-      pred?.dip_findings || `VDI: ${vdi.toFixed(3)}, Microaneurysms: ${maCount} candidates, Optic Disc: Localized`
+      pred.explanation || (isNormal ? `Normal vessel density index (${vdi.toFixed(3)}) — healthy retinal vascular pattern.` : `Elevated vessel density index (${vdi.toFixed(3)}) and ${maCount} microaneurysm candidates.`),
+      pred.dip_findings || `VDI: ${vdi.toFixed(3)}, Microaneurysms: ${maCount} candidates, Optic Disc: Localized`
     ],
     recommendations: [
-      pred?.recommendation || (isNormal ? 'Schedule annual routine dilated eye examination.' : 'Refer to specialist ophthalmologist for evaluation within 30 days.')
+      pred.recommendation || (isNormal ? 'Schedule annual routine dilated eye examination.' : 'Refer to specialist ophthalmologist for evaluation within 30 days.')
     ]
   };
 };
@@ -175,6 +176,9 @@ export default function DIPExplorer({ previewUrl, selectedFile, prediction }: DI
       setRiskData(null);
       return;
     }
+    setDipData(null);
+    setRestorationData(null);
+    setRiskData(getSynchronizedRiskData(prediction));
     runFullAnalysis(selectedFile);
   }, [selectedFile]);
 
@@ -434,7 +438,7 @@ export default function DIPExplorer({ previewUrl, selectedFile, prediction }: DI
                         position: 'absolute', inset: 16, borderRadius: '50%', background: '#fff',
                         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                       }}>
-                        <span style={{ fontSize: 28, fontWeight: 800, color: riskData.risk_color }}>{riskData.risk_score.toFixed(0)}</span>
+                        <span style={{ fontSize: 28, fontWeight: 800, color: riskData.risk_color }}>{riskData.risk_score.toFixed(1)}</span>
                         <span style={{ fontSize: 10, color: '#64748b' }}>/ 100</span>
                       </div>
                     </div>
@@ -476,7 +480,7 @@ export default function DIPExplorer({ previewUrl, selectedFile, prediction }: DI
                   </div>
                 </>
               ) : (
-                <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 40 }}>Upload an image to compute clinical risk score</p>
+                <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 40 }}>Click 'ANALYZE RETINAL IMAGE' to execute DIP Structural Analysis & compute clinical risk score</p>
               )}
             </div>
           )}
