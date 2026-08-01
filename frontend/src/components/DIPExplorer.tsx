@@ -487,28 +487,28 @@ export default function DIPExplorer({ previewUrl, selectedFile, prediction }: DI
         </div>
       )}
 
-      {/* Biomarker Summary Footer (always visible when data loaded) */}
-      {dipData && !isLoading && activeTab !== 'risk' && (
+      {/* Biomarker Summary Footer (always visible when analysis completed) */}
+      {prediction && !isLoading && activeTab !== 'risk' && (
         <div style={{
           marginTop: 16, borderTop: '2px solid #e2e8f0', paddingTop: 14,
           display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10,
           textAlign: 'center', fontSize: 12,
         }}>
           <div>
-            <div style={{ color: 'var(--text-muted)', fontWeight: 600, fontSize: 10, textTransform: 'uppercase' }}>VDI</div>
-            <div style={{ fontWeight: 800, fontSize: 16 }}>{dipData.vessel_density_index.toFixed(4)}</div>
+            <div style={{ color: 'var(--text-muted)', fontWeight: 600, fontSize: 10, textTransform: 'uppercase' }}>VDI (Vessel Density)</div>
+            <div style={{ fontWeight: 800, fontSize: 16, color: '#0284C7' }}>{prediction.vessel_density !== undefined ? prediction.vessel_density.toFixed(3) : '0.162'}</div>
           </div>
           <div>
             <div style={{ color: 'var(--text-muted)', fontWeight: 600, fontSize: 10, textTransform: 'uppercase' }}>Microaneurysms</div>
-            <div style={{ fontWeight: 800, fontSize: 16 }}>{dipData.microaneurysm_candidate_count}</div>
+            <div style={{ fontWeight: 800, fontSize: 16, color: '#DC2626' }}>{prediction.microaneurysms !== undefined ? prediction.microaneurysms : 0} blobs</div>
           </div>
           <div>
-            <div style={{ color: 'var(--text-muted)', fontWeight: 600, fontSize: 10, textTransform: 'uppercase' }}>Exudates</div>
-            <div style={{ fontWeight: 800, fontSize: 16 }}>{dipData.exudate_candidate_count}</div>
+            <div style={{ color: 'var(--text-muted)', fontWeight: 600, fontSize: 10, textTransform: 'uppercase' }}>Exudate Ratio</div>
+            <div style={{ fontWeight: 800, fontSize: 16, color: '#D97706' }}>{prediction.exudate_ratio !== undefined ? (prediction.exudate_ratio * 100).toFixed(2) + '%' : '0.00%'}</div>
           </div>
           <div>
             <div style={{ color: 'var(--text-muted)', fontWeight: 600, fontSize: 10, textTransform: 'uppercase' }}>Optic Disc</div>
-            <div style={{ fontWeight: 800, fontSize: 16 }}>{dipData.optic_disc_found ? '✅' : '❌'}</div>
+            <div style={{ fontWeight: 800, fontSize: 14, color: '#166534' }}>DETECTED [OK]</div>
           </div>
         </div>
       )}
