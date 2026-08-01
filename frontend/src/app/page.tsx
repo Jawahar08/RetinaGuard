@@ -679,6 +679,7 @@ export default function OphthaFusionDashboard() {
       <DIPExplorer
         previewUrl={previewUrl}
         selectedFile={selectedFile}
+        prediction={prediction}
       />
 
       <ProgressionTrackerUI />
