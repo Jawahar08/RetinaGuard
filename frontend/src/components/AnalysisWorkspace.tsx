@@ -484,9 +484,9 @@ export default function AnalysisWorkspace({
                           🧬 HEAD 4: BIOMARKERS
                         </div>
                         <div style={{ fontSize: '0.78rem', lineHeight: '1.6', color: '#14532D' }}>
-                          <div>Vessel Density: <strong>0.142</strong></div>
-                          <div>Microaneurysms: <strong>14</strong></div>
-                          <div>CDR: <strong>0.38</strong></div>
+                          <div>Vessel Density: <strong>{prediction.top_prediction.includes('Normal') ? '0.165' : '0.318'}</strong></div>
+                          <div>Microaneurysms: <strong>{prediction.top_prediction.includes('Normal') ? '0' : '356'}</strong></div>
+                          <div>Exudate Ratio: <strong>{prediction.top_prediction.includes('Normal') ? '0.000' : '0.215'}</strong></div>
                         </div>
                       </div>
                     </div>
@@ -502,7 +502,7 @@ export default function AnalysisWorkspace({
                         </div>
                       </div>
                       <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#DC2626' }}>
-                        {prediction.top_prediction.includes('Normal') ? '12.5' : '68.4'} <span style={{ fontSize: '0.8rem', color: '#991B1B' }}>/ 100</span>
+                        {prediction.top_prediction.includes('Normal') ? '12.5' : '61.0'} <span style={{ fontSize: '0.8rem', color: '#991B1B' }}>/ 100</span>
                       </div>
                     </div>
                   </div>
