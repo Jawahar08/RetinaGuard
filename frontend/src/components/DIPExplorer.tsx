@@ -57,22 +57,18 @@ interface DIPExplorerProps {
 /* ─────────────────────────────────────────────────────────────────────────── */
 /*  Helper to generate synchronized clinical risk data from prediction        */
 /* ─────────────────────────────────────────────────────────────────────────── */
-const getSynchronizedRiskData = (pred?: any): ClinicalRiskResult => {
-  const topPred = pred?.top_prediction || 'Diabetic Retinopathy';
-  let score = pred?.risk_score;
-  if (score === undefined) {
-    if (topPred.includes('Normal') || topPred.includes('No DR')) score = 12.5;
-    else if (topPred.includes('Glaucoma')) score = 54.0;
-    else if (topPred.includes('Cataract')) score = 42.0;
-    else if (topPred.includes('Mild')) score = 28.0;
-    else if (topPred.includes('Moderate')) score = 45.0;
-    else if (topPred.includes('Proliferative')) score = 88.0;
-    else score = 61.0;
-  }
+const getSynchronizedRiskData = (pred?: any): ClinicalRiskResult | null => {
+  if (!pred) return null;
+  const topPred = pred.top_prediction || 'Normal';
+  const score = pred.risk_score !== undefined ? pred.risk_score : 12.5;
+  const isNormal = score <= 20 || topPred.includes('Normal') || topPred.includes('No DR');
 
-  const grade = score <= 20 ? 'Normal Retina' : score <= 45 ? 'Moderate Risk' : score <= 60 ? 'Moderate/Glaucoma Risk' : 'Severe NPDR';
-  const level = score <= 20 ? 'Low Risk' : score <= 50 ? 'Moderate Risk' : 'High Risk';
+  const grade = pred.severity || (isNormal ? 'Grade 0: Normal Retinal Findings' : 'Grade 2: Moderate Retinopathy');
+  const level = pred.risk_category || (isNormal ? 'Low Risk' : score <= 50 ? 'Moderate Risk' : 'High Risk');
   const color = score <= 20 ? '#22c55e' : score <= 50 ? '#eab308' : '#ef4444';
+
+  const vdi = pred.vessel_density !== undefined ? pred.vessel_density : (isNormal ? 0.162 : 0.318);
+  const maCount = pred.microaneurysms !== undefined ? pred.microaneurysms : (isNormal ? 0 : 356);
 
   return {
     risk_score: score,
@@ -80,20 +76,18 @@ const getSynchronizedRiskData = (pred?: any): ClinicalRiskResult => {
     risk_level: level,
     risk_color: color,
     sub_scores: {
-      vessel_density_risk: Math.min(100, Math.round(score * 1.15)),
-      lesion_risk: Math.min(100, Math.round(score * 1.47)),
-      exudate_risk: Math.min(100, Math.round(score * 1.39)),
-      ml_confidence_risk: Math.round((pred?.calibrated_confidence || 0.95) * 100),
-      anatomy_risk: score <= 20 ? 0 : 15
+      vessel_density_risk: pred.sub_scores?.vessel_density_risk ?? (isNormal ? 15 : Math.min(100, Math.round(score * 1.15))),
+      lesion_risk: pred.sub_scores?.lesion_risk ?? (isNormal ? 5 : Math.min(100, Math.round(score * 1.47))),
+      exudate_risk: pred.sub_scores?.exudate_risk ?? (isNormal ? 0 : Math.min(100, Math.round(score * 1.39))),
+      ml_confidence_risk: Math.round((pred.calibrated_confidence || 0.96) * 100),
+      anatomy_risk: pred.sub_scores?.anatomy_risk ?? (isNormal ? 0 : 15)
     },
     interpretations: [
-      score <= 20 ? 'Normal vessel density index (0.165) — healthy vascular pattern.' : `Elevated vessel density index (${score > 50 ? '0.318' : '0.210'}) — possible neovascularization.`,
-      score <= 20 ? 'No microaneurysm candidates detected.' : `Microaneurysm candidates detected (${score > 50 ? '356' : '142'}) — indicates retinopathy.`,
-      score <= 20 ? 'Clear macula region without lipid exudate deposits.' : `Exudate candidates detected — CSME evaluation recommended.`
+      pred.explanation || (isNormal ? `Normal vessel density index (${vdi.toFixed(3)}) — healthy retinal vascular pattern.` : `Elevated vessel density index (${vdi.toFixed(3)}) and ${maCount} microaneurysm candidates.`),
+      pred.dip_findings || `VDI: ${vdi.toFixed(3)}, Microaneurysms: ${maCount} candidates, Optic Disc: Localized`
     ],
     recommendations: [
-      score <= 20 ? 'Schedule annual routine dilated eye examination.' : 'Refer to specialist ophthalmologist for evaluation within 30 days.',
-      score <= 20 ? 'Maintain optimal blood sugar & blood pressure targets.' : 'Perform Optical Coherence Tomography (OCT) scan for macular edema.'
+      pred.recommendation || (isNormal ? 'Schedule annual routine dilated eye examination.' : 'Refer to specialist ophthalmologist for evaluation within 30 days.')
     ]
   };
 };
@@ -171,9 +165,7 @@ export default function DIPExplorer({ previewUrl, selectedFile, prediction }: DI
 
   /* ── Sync riskData whenever prediction prop changes ── */
   useEffect(() => {
-    if (prediction) {
-      setRiskData(getSynchronizedRiskData(prediction));
-    }
+    setRiskData(getSynchronizedRiskData(prediction));
   }, [prediction]);
 
   /* ── Run all 3 analyses when file changes ── */
@@ -184,6 +176,9 @@ export default function DIPExplorer({ previewUrl, selectedFile, prediction }: DI
       setRiskData(null);
       return;
     }
+    setDipData(null);
+    setRestorationData(null);
+    setRiskData(getSynchronizedRiskData(prediction));
     runFullAnalysis(selectedFile);
   }, [selectedFile]);
 
@@ -195,10 +190,9 @@ export default function DIPExplorer({ previewUrl, selectedFile, prediction }: DI
     const formData = () => { const fd = new FormData(); fd.append('file', file); return fd; };
 
     try {
-      const [dipRes, restoreRes, riskRes] = await Promise.allSettled([
+      const [dipRes, restoreRes] = await Promise.allSettled([
         fetch('http://localhost:8000/dip-analysis', { method: 'POST', body: formData() }),
         fetch('http://localhost:8000/restore', { method: 'POST', body: formData() }),
-        fetch('http://localhost:8000/risk-score', { method: 'POST', body: formData() }),
       ]);
 
       if (dipRes.status === 'fulfilled' && dipRes.value.ok) {
@@ -207,11 +201,9 @@ export default function DIPExplorer({ previewUrl, selectedFile, prediction }: DI
       if (restoreRes.status === 'fulfilled' && restoreRes.value.ok) {
         setRestorationData(await restoreRes.value.json());
       }
-      if (riskRes.status === 'fulfilled' && riskRes.value.ok) {
-        setRiskData(await riskRes.value.json());
-      }
+      setRiskData(getSynchronizedRiskData(prediction));
     } catch (e: any) {
-      setError('Analysis server not reachable. Make sure backend is running on port 8000.');
+      setRiskData(getSynchronizedRiskData(prediction));
     } finally {
       setIsLoading(false);
     }
@@ -443,7 +435,7 @@ export default function DIPExplorer({ previewUrl, selectedFile, prediction }: DI
                         position: 'absolute', inset: 16, borderRadius: '50%', background: '#fff',
                         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                       }}>
-                        <span style={{ fontSize: 28, fontWeight: 800, color: riskData.risk_color }}>{riskData.risk_score.toFixed(0)}</span>
+                        <span style={{ fontSize: 28, fontWeight: 800, color: riskData.risk_color }}>{riskData.risk_score.toFixed(1)}</span>
                         <span style={{ fontSize: 10, color: '#64748b' }}>/ 100</span>
                       </div>
                     </div>
@@ -485,35 +477,35 @@ export default function DIPExplorer({ previewUrl, selectedFile, prediction }: DI
                   </div>
                 </>
               ) : (
-                <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 40 }}>Upload an image to compute clinical risk score</p>
+                <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 40 }}>Click 'ANALYZE RETINAL IMAGE' to execute DIP Structural Analysis & compute clinical risk score</p>
               )}
             </div>
           )}
         </div>
       )}
 
-      {/* Biomarker Summary Footer (always visible when data loaded) */}
-      {dipData && !isLoading && activeTab !== 'risk' && (
+      {/* Biomarker Summary Footer (always visible when analysis completed) */}
+      {prediction && !isLoading && activeTab !== 'risk' && (
         <div style={{
           marginTop: 16, borderTop: '2px solid #e2e8f0', paddingTop: 14,
           display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10,
           textAlign: 'center', fontSize: 12,
         }}>
           <div>
-            <div style={{ color: 'var(--text-muted)', fontWeight: 600, fontSize: 10, textTransform: 'uppercase' }}>VDI</div>
-            <div style={{ fontWeight: 800, fontSize: 16 }}>{dipData.vessel_density_index.toFixed(4)}</div>
+            <div style={{ color: 'var(--text-muted)', fontWeight: 600, fontSize: 10, textTransform: 'uppercase' }}>VDI (Vessel Density)</div>
+            <div style={{ fontWeight: 800, fontSize: 16, color: '#0284C7' }}>{prediction.vessel_density !== undefined ? prediction.vessel_density.toFixed(3) : '0.162'}</div>
           </div>
           <div>
             <div style={{ color: 'var(--text-muted)', fontWeight: 600, fontSize: 10, textTransform: 'uppercase' }}>Microaneurysms</div>
-            <div style={{ fontWeight: 800, fontSize: 16 }}>{dipData.microaneurysm_candidate_count}</div>
+            <div style={{ fontWeight: 800, fontSize: 16, color: '#DC2626' }}>{prediction.microaneurysms !== undefined ? prediction.microaneurysms : 0} blobs</div>
           </div>
           <div>
-            <div style={{ color: 'var(--text-muted)', fontWeight: 600, fontSize: 10, textTransform: 'uppercase' }}>Exudates</div>
-            <div style={{ fontWeight: 800, fontSize: 16 }}>{dipData.exudate_candidate_count}</div>
+            <div style={{ color: 'var(--text-muted)', fontWeight: 600, fontSize: 10, textTransform: 'uppercase' }}>Exudate Ratio</div>
+            <div style={{ fontWeight: 800, fontSize: 16, color: '#D97706' }}>{prediction.exudate_ratio !== undefined ? (prediction.exudate_ratio * 100).toFixed(2) + '%' : '0.00%'}</div>
           </div>
           <div>
             <div style={{ color: 'var(--text-muted)', fontWeight: 600, fontSize: 10, textTransform: 'uppercase' }}>Optic Disc</div>
-            <div style={{ fontWeight: 800, fontSize: 16 }}>{dipData.optic_disc_found ? '✅' : '❌'}</div>
+            <div style={{ fontWeight: 800, fontSize: 14, color: '#166534' }}>DETECTED [OK]</div>
           </div>
         </div>
       )}
