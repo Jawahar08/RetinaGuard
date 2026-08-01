@@ -59,22 +59,15 @@ interface DIPExplorerProps {
 /* ─────────────────────────────────────────────────────────────────────────── */
 const getSynchronizedRiskData = (pred?: any): ClinicalRiskResult => {
   const topPred = pred?.top_prediction || 'Normal';
-  let score = pred?.risk_score;
-  
-  if (score === undefined) {
-    if (topPred.includes('Normal') || topPred.includes('No DR')) score = 12.5;
-    else if (topPred.includes('Glaucoma')) score = 54.0;
-    else if (topPred.includes('Cataract')) score = 42.0;
-    else if (topPred.includes('Mild')) score = 28.0;
-    else if (topPred.includes('Moderate')) score = 45.0;
-    else if (topPred.includes('Proliferative')) score = 88.0;
-    else score = 61.0;
-  }
-
+  const score = pred?.risk_score !== undefined ? pred.risk_score : 12.5;
   const isNormal = score <= 20 || topPred.includes('Normal') || topPred.includes('No DR');
-  const grade = isNormal ? 'Normal Retina' : score <= 45 ? 'Moderate Risk' : score <= 60 ? 'Glaucoma / Moderate Risk' : 'Severe NPDR';
-  const level = isNormal ? 'Low Risk' : score <= 50 ? 'Moderate Risk' : 'High Risk';
-  const color = isNormal ? '#22c55e' : score <= 50 ? '#eab308' : '#ef4444';
+
+  const grade = pred?.severity || (isNormal ? 'Grade 0: Normal Retinal Findings' : 'Grade 2: Moderate Retinopathy');
+  const level = pred?.risk_category || (isNormal ? 'Low Risk' : score <= 50 ? 'Moderate Risk' : 'High Risk');
+  const color = score <= 20 ? '#22c55e' : score <= 50 ? '#eab308' : '#ef4444';
+
+  const vdi = pred?.vessel_density !== undefined ? pred.vessel_density : (isNormal ? 0.162 : 0.318);
+  const maCount = pred?.microaneurysms !== undefined ? pred.microaneurysms : (isNormal ? 0 : 356);
 
   return {
     risk_score: score,
@@ -89,13 +82,11 @@ const getSynchronizedRiskData = (pred?: any): ClinicalRiskResult => {
       anatomy_risk: isNormal ? 0 : 15
     },
     interpretations: [
-      isNormal ? 'Normal vessel density index (0.165) — healthy retinal vascular pattern.' : `Elevated vessel density index (${score > 50 ? '0.318' : '0.210'}) — possible neovascularization.`,
-      isNormal ? 'No microaneurysm candidates detected.' : `Microaneurysm candidates detected (${score > 50 ? '356' : '142'}) — suggests retinopathy.`,
-      isNormal ? 'Clear macula region without lipid exudate deposits.' : `Exudate candidates detected — CSME evaluation recommended.`
+      pred?.explanation || (isNormal ? `Normal vessel density index (${vdi.toFixed(3)}) — healthy retinal vascular pattern.` : `Elevated vessel density index (${vdi.toFixed(3)}) and ${maCount} microaneurysm candidates.`),
+      pred?.dip_findings || `VDI: ${vdi.toFixed(3)}, Microaneurysms: ${maCount} candidates, Optic Disc: Localized`
     ],
     recommendations: [
-      isNormal ? 'Schedule annual routine dilated eye examination.' : 'Refer to specialist ophthalmologist for comprehensive evaluation within 30 days.',
-      isNormal ? 'Maintain optimal blood sugar & blood pressure targets.' : 'Perform Optical Coherence Tomography (OCT) scan for macular edema.'
+      pred?.recommendation || (isNormal ? 'Schedule annual routine dilated eye examination.' : 'Refer to specialist ophthalmologist for evaluation within 30 days.')
     ]
   };
 };
