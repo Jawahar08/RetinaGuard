@@ -36,6 +36,7 @@ interface PredictionResponse {
   predictions: ClassPrediction[];
   top_prediction: string;
   calibrated_confidence: number;
+  risk_score?: number;
   abstain: boolean;
   abstention_reason?: string;
   patient_info?: PatientInfo;
@@ -502,7 +503,7 @@ export default function AnalysisWorkspace({
                         </div>
                       </div>
                       <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#DC2626' }}>
-                        {prediction.top_prediction.includes('Normal') ? '12.5' : '61.0'} <span style={{ fontSize: '0.8rem', color: '#991B1B' }}>/ 100</span>
+                        {(prediction.risk_score !== undefined ? prediction.risk_score : (prediction.top_prediction.includes('Normal') ? 12.5 : 61.0)).toFixed(1)} <span style={{ fontSize: '0.8rem', color: '#991B1B' }}>/ 100</span>
                       </div>
                     </div>
                   </div>

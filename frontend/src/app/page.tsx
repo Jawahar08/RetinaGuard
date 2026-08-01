@@ -45,6 +45,7 @@ interface PredictionResponse {
   predictions: ClassPrediction[];
   top_prediction: string;
   calibrated_confidence: number;
+  risk_score?: number;
   abstain: boolean;
   abstention_reason?: string;
   patient_info?: PatientInfo;
@@ -197,6 +198,7 @@ const generateImageSpecificPrediction = (file: File, task: 'multitask' | 'odir' 
 
     const topPred = labels[primaryIdx];
     const confidence = predictions[primaryIdx].probability;
+    const calculatedRisk = topPred === 'Normal' ? 12.5 : topPred === 'Glaucoma' ? 54.0 : topPred === 'Cataract' ? 42.0 : 61.0;
 
     return {
       request_id: `retinaguard-${Math.floor(pseudoRandom(9) * 1000000)}`,
@@ -207,6 +209,7 @@ const generateImageSpecificPrediction = (file: File, task: 'multitask' | 'odir' 
       predictions: predictions,
       top_prediction: topPred,
       calibrated_confidence: confidence,
+      risk_score: calculatedRisk,
       abstain: confidence < 0.45,
       abstention_reason: confidence < 0.45 ? 'Model confidence below 45% threshold. Case flagged for clinician review.' : undefined,
       disclaimer: trustLine
@@ -228,6 +231,7 @@ const generateImageSpecificPrediction = (file: File, task: 'multitask' | 'odir' 
 
     const topPred = labels[primaryIdx];
     const confidence = predictions[primaryIdx].probability;
+    const calculatedRisk = topPred === 'No DR' ? 12.5 : topPred === 'Mild DR' ? 28.0 : topPred === 'Moderate DR' ? 45.0 : topPred === 'Severe DR' ? 61.0 : 88.0;
 
     return {
       request_id: `retinaguard-${Math.floor(pseudoRandom(9) * 1000000)}`,
@@ -238,6 +242,7 @@ const generateImageSpecificPrediction = (file: File, task: 'multitask' | 'odir' 
       predictions: predictions,
       top_prediction: topPred,
       calibrated_confidence: confidence,
+      risk_score: calculatedRisk,
       abstain: confidence < 0.45,
       abstention_reason: confidence < 0.45 ? 'Model confidence below 45% threshold. Case flagged for clinician review.' : undefined,
       disclaimer: trustLine
