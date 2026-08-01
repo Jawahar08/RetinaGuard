@@ -190,10 +190,9 @@ export default function DIPExplorer({ previewUrl, selectedFile, prediction }: DI
     const formData = () => { const fd = new FormData(); fd.append('file', file); return fd; };
 
     try {
-      const [dipRes, restoreRes, riskRes] = await Promise.allSettled([
+      const [dipRes, restoreRes] = await Promise.allSettled([
         fetch('http://localhost:8000/dip-analysis', { method: 'POST', body: formData() }),
         fetch('http://localhost:8000/restore', { method: 'POST', body: formData() }),
-        fetch('http://localhost:8000/risk-score', { method: 'POST', body: formData() }),
       ]);
 
       if (dipRes.status === 'fulfilled' && dipRes.value.ok) {
@@ -202,11 +201,9 @@ export default function DIPExplorer({ previewUrl, selectedFile, prediction }: DI
       if (restoreRes.status === 'fulfilled' && restoreRes.value.ok) {
         setRestorationData(await restoreRes.value.json());
       }
-      if (riskRes.status === 'fulfilled' && riskRes.value.ok) {
-        setRiskData(await riskRes.value.json());
-      }
+      setRiskData(getSynchronizedRiskData(prediction));
     } catch (e: any) {
-      setError('Analysis server not reachable. Make sure backend is running on port 8000.');
+      setRiskData(getSynchronizedRiskData(prediction));
     } finally {
       setIsLoading(false);
     }
