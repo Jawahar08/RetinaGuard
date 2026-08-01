@@ -7,6 +7,7 @@ export interface PatientInfoData {
   name: string;
   age: string;
   gender: string;
+  eyeScanned?: string;
   bloodGroup: string;
   diabeticStatus: string;
   hypertension: string;
@@ -119,7 +120,7 @@ export default function PatientIntakeForm({
       </div>
 
       <form onSubmit={handleSubmit}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 0.8fr 1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr 1fr 1.1fr 1fr', gap: '16px', marginBottom: '20px' }}>
           {/* Patient Name */}
           <div>
             <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '6px', color: 'var(--ink-black)' }}>
@@ -201,6 +202,34 @@ export default function PatientIntakeForm({
               <option value="Female">Female</option>
               <option value="Male">Male</option>
               <option value="Other">Other / Prefer not to say</option>
+            </select>
+          </div>
+
+          {/* Scanned Eye Laterality */}
+          <div>
+            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '6px', color: 'var(--ink-black)' }}>
+              Scanned Eye (Laterality)
+            </label>
+            <select
+              value={safeInfo.eyeScanned || 'Right Eye (OD)'}
+              onChange={(e) => {
+                setPatientInfo({ ...safeInfo, eyeScanned: e.target.value });
+                setIsSaved(false);
+              }}
+              style={{
+                width: '100%',
+                padding: '12px 14px',
+                borderRadius: '12px',
+                border: 'var(--border-thick)',
+                fontSize: '0.9rem',
+                fontWeight: 600,
+                background: '#FFFFFF',
+                outline: 'none'
+              }}
+            >
+              <option value="Right Eye (OD)">Right Eye (OD)</option>
+              <option value="Left Eye (OS)">Left Eye (OS)</option>
+              <option value="Bilateral (OU)">Bilateral (OU)</option>
             </select>
           </div>
 

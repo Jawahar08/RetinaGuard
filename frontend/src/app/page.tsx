@@ -254,6 +254,7 @@ export default function OphthaFusionDashboard() {
     name: '',
     age: '',
     gender: 'Female',
+    eyeScanned: 'Right Eye (OD)',
     bloodGroup: 'O+',
     diabeticStatus: 'Non-Diabetic',
     hypertension: 'No',
@@ -443,6 +444,7 @@ export default function OphthaFusionDashboard() {
       const nameDisp = patientInfo.name || 'Unspecified Patient';
       const ageDisp = patientInfo.age || 'N/A';
       const genderDisp = patientInfo.gender || 'N/A';
+      const eyeDisp = patientInfo.eyeScanned || 'Right Eye (OD)';
       const bgDisp = patientInfo.bloodGroup || 'N/A';
       const diabDisp = patientInfo.diabeticStatus || 'Unspecified';
       const hypDisp = patientInfo.hypertension || 'Unspecified';
@@ -454,10 +456,11 @@ export default function OphthaFusionDashboard() {
           <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:6px;">
             <div><strong>Patient Name:</strong> ${nameDisp}</div>
             <div><strong>Age / Gender:</strong> ${ageDisp} yrs (${genderDisp})</div>
+            <div><strong>Scanned Eye (Laterality):</strong> <span style="background:#0284c7; color:#fff; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:11px;">${eyeDisp}</span></div>
             <div><strong>Blood Group:</strong> <span style="background:#dc2626; color:#fff; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:11px;">${bgDisp}</span></div>
             <div><strong>Diabetes:</strong> ${diabDisp}</div>
             <div><strong>Hypertension:</strong> ${hypDisp}</div>
-            <div><strong>Visual Symptoms:</strong> ${sympDisp}</div>
+            <div style="grid-column: span 2;"><strong>Visual Symptoms:</strong> ${sympDisp}</div>
           </div>
         </div>
       `;
