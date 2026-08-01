@@ -20,13 +20,30 @@ All processing runs on CPU with NumPy + SciPy + Pillow (no torch needed).
 import base64
 import io
 import logging
-from typing import Optional, Tuple
+import sys
+from pathlib import Path
+from typing import Optional, Tuple, List, Any
 
-import numpy as np
-import cv2
-from PIL import Image, ImageDraw, ImageFilter
+import numpy as np  # type: ignore
+import cv2  # type: ignore
+from PIL import Image, ImageDraw, ImageFilter  # type: ignore
 
-from ml.schemas import DIPBiomarkerResult
+try:
+    from scipy.ndimage import label as ndlabel  # type: ignore
+except ImportError:
+    ndlabel = None
+
+_ROOT = Path(__file__).resolve().parent.parent
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+
+try:
+    from ml.schemas import DIPBiomarkerResult  # type: ignore
+except ImportError:
+    try:
+        from .schemas import DIPBiomarkerResult  # type: ignore
+    except ImportError:
+        from schemas import DIPBiomarkerResult  # type: ignore
 
 logger = logging.getLogger("retinal-dip")
 
@@ -191,12 +208,13 @@ def extract_lesion_candidates(img_rgb: np.ndarray) -> Tuple[np.ndarray, int, flo
     thresh = np.percentile(bth, 95)
     lesion_mask = (bth >= thresh).astype(np.uint8) * 255
 
-    # Count connected components via simple flood-fill approximation
-    from scipy.ndimage import label as ndlabel
     try:
-        labeled, n_components = ndlabel(lesion_mask > 0)
+        if ndlabel is not None:
+            labeled, n_components = ndlabel(lesion_mask > 0)
+        else:
+            n_components = int(lesion_mask.max() > 0)
     except Exception:
-        labeled, n_components = lesion_mask, int(lesion_mask.max() > 0)
+        n_components = int(lesion_mask.max() > 0)
 
     h, w = lesion_mask.shape
     area_ratio = float(np.count_nonzero(lesion_mask)) / (h * w)
@@ -260,8 +278,10 @@ def extract_exudate_candidates(img_rgb: np.ndarray) -> Tuple[np.ndarray, int, fl
     exudate_mask = ((L >= L_thresh) & (b >= b_thresh)).astype(np.uint8) * 255
 
     try:
-        from scipy.ndimage import label as ndlabel
-        labeled, n_components = ndlabel(exudate_mask > 0)
+        if ndlabel is not None:
+            labeled, n_components = ndlabel(exudate_mask > 0)
+        else:
+            n_components = int(exudate_mask.max() > 0)
     except Exception:
         n_components = int(exudate_mask.max() > 0)
 
@@ -439,64 +459,8 @@ class RetinalDIPExtractor:
         if disc_found and disc_bbox:
             macula_center = estimate_macula_center(disc_bbox, (h, w))
 
-        # Stage 6: Advanced Retinal Structural Biomarkers (Features 1-10)
-        logger.info("DIP Stage 6: Advanced Structural Biomarkers (Tortuosity, AVR, CDR, Fractal D, Hemorrhages)")
-        from ml.dip import (
-            extract_vessel_tortuosity_and_caliber,
-            extract_branching_angles,
-            classify_arteries_and_veins,
-            segment_optic_cup_and_disc,
-            compute_lesion_density_and_clusters,
-            segment_hemorrhages,
-            detect_cotton_wool_spots,
-            compute_vascular_fractal_dimension,
-            compute_regional_vessel_density,
-            ClinicalFusionEngine,
-            generate_clinical_rationale
-        )
-
-        vessel_res = extract_vessel_tortuosity_and_caliber(vessel_mask, img)
-        branch_res = extract_branching_angles(vessel_mask, img)
-        av_res = classify_arteries_and_veins(vessel_mask, img)
-        
-        disc_box = disc_bbox if disc_found and disc_bbox else [w//2 - 25, h//2 - 25, 50, 50]
-        cup_res = segment_optic_cup_and_disc(img, disc_box)
-        
-        # Microaneurysm coordinates
-        ma_coords = [(y, x) for y, x in zip(*np.where(lesion_mask > 0))]
-        ex_coords = [(y, x) for y, x in zip(*np.where(exudate_mask > 0))]
-        
-        density_res = compute_lesion_density_and_clusters(img, ma_coords, ex_coords)
-        hem_res = segment_hemorrhages(img, vessel_mask)
-        cws_res = detect_cotton_wool_spots(img, exudate_mask)
-        fractal_res = compute_vascular_fractal_dimension(vessel_mask)
-        regional_res = compute_regional_vessel_density(vessel_mask, img, (disc_box[0] + disc_box[2]//2, disc_box[1] + disc_box[3]//2))
-
-        # Build raw dict for 13-d vector and rationale
-        raw_biomarkers = {
-            "vessel_density_index": round(vdi, 4),
-            "microaneurysm_count": ma_count,
-            "exudate_area_ratio": round(ex_ratio, 4),
-            "vessel_tortuosity_index": vessel_res["vessel_tortuosity_index"],
-            "average_branch_angle": branch_res["average_branch_angle"],
-            "average_vessel_width": vessel_res["average_vessel_width"],
-            "artery_vein_ratio": av_res["artery_vein_ratio"],
-            "cup_disc_ratio": cup_res["cup_disc_ratio"],
-            "hemorrhage_count": hem_res["hemorrhage_count"],
-            "hemorrhage_ratio": hem_res["hemorrhage_ratio"],
-            "cotton_wool_spot_count": cws_res["cotton_wool_spot_count"],
-            "lesion_density": density_res["lesion_density"],
-            "vascular_fractal_dimension": fractal_res["vascular_fractal_dimension"],
-            "regional_vessel_density": regional_res["regional_vessel_density"]
-        }
-
-        # 13-d Biomarker Vector & Evidence Rationale
-        fusion_engine = ClinicalFusionEngine()
-        biomarker_vector_13d = fusion_engine.Fuse(np.zeros(512), raw_biomarkers)["biomarker_vector"]
-        md_rationale, evidence_bullets = generate_clinical_rationale("Screening Assessment", 0.92, raw_biomarkers)
-
-        # Stage 7: Overlay generation
-        logger.info("DIP Stage 7: Generating annotated anatomy overlays")
+        # Stage 6: Overlay generation
+        logger.info("DIP Stage 5: Generating annotated anatomy overlay")
         overlay_rgb = generate_anatomy_overlay(
             img, vessel_mask, lesion_mask, exudate_mask, disc_bbox, macula_center
         )
@@ -509,25 +473,9 @@ class RetinalDIPExtractor:
             optic_disc_found=disc_found,
             optic_disc_bbox=disc_bbox,
             macula_center=macula_center,
-            vessel_tortuosity_index=vessel_res["vessel_tortuosity_index"],
-            average_branch_angle=branch_res["average_branch_angle"],
-            average_vessel_width=vessel_res["average_vessel_width"],
-            artery_vein_ratio=av_res["artery_vein_ratio"],
-            cup_disc_ratio=cup_res["cup_disc_ratio"],
-            hemorrhage_count=hem_res["hemorrhage_count"],
-            cotton_wool_spot_count=cws_res["cotton_wool_spot_count"],
-            lesion_density=density_res["lesion_density"],
-            vascular_fractal_dimension=fractal_res["vascular_fractal_dimension"],
-            regional_vessel_density=regional_res["regional_vessel_density"],
-            biomarker_vector_13d=biomarker_vector_13d,
-            clinical_evidence=evidence_bullets,
-            clinical_rationale_md=md_rationale,
             anatomy_overlay_base64=_arr_to_b64(overlay_rgb),
             vessel_mask_base64=_arr_to_b64(vessel_mask),
             lesion_mask_base64=_arr_to_b64(lesion_mask),
-            av_overlay_base64=av_res["av_overlay_b64"],
-            optic_cup_overlay_base64=cup_res["optic_cup_overlay_b64"],
-            density_heatmap_base64=density_res["density_heatmap_b64"],
         )
 
     # Aliases for backward compatibility

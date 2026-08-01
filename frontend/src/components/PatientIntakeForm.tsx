@@ -84,8 +84,8 @@ export default function PatientIntakeForm({
     <div className="editorial-card" style={{ padding: '32px', marginBottom: '24px', background: 'linear-gradient(180deg, #FFFFFF 0%, #FAF8F5 100%)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '2px solid var(--paper-light)', paddingBottom: '16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ background: 'var(--signal-yellow)', padding: '10px', borderRadius: '14px', border: 'var(--border-thick)', boxShadow: '2px 2px 0px #000' }}>
-            <User size={22} color="var(--ink-black)" />
+          <div style={{ background: 'var(--signal-yellow)', width: '40px', height: '40px', borderRadius: '12px', border: '2px solid #000', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <User size={20} color="#000000" />
           </div>
           <div>
             <h3 className="font-serif-display" style={{ fontSize: '1.4rem', fontWeight: 800, margin: 0 }}>

@@ -13,8 +13,13 @@ from fastapi.responses import JSONResponse, HTMLResponse
 import numpy as np
 from PIL import Image
 
-from ml.schemas import HeatmapResponse, PredictionResponse, PatientInfo, DIPBiomarkerResult, RestorationResult, ImageQualityMetrics, ClinicalRiskResult, SubScores, ProgressionAnalysisResult, BiomarkerDeltas
+from ml.schemas import (
+    HeatmapResponse, PredictionResponse, PatientInfo, DIPBiomarkerResult,
+    RestorationResult, ImageQualityMetrics, ClinicalRiskResult, SubScores,
+    ProgressionAnalysisResult, BiomarkerDeltas, MultiTaskPredictionResponse
+)
 from ml.inference import RetinalInferenceService
+from ml.inference_multitask import MultiTaskInferenceService
 from ml.gradcam import generate_gradcam_overlay
 from ml.preprocessing import RetinalPreprocessor
 from ml.pdf_report import generate_html_report
@@ -28,9 +33,9 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 logger = logging.getLogger("retinal-backend")
 
 app = FastAPI(
-    title="Retinal Ensemble Disease Screening API",
-    description="FastAPI Service providing AI inference and Grad-CAM++ explainability for Retinal Fundus-Image Analysis.",
-    version="1.0.0-demo"
+    title="Retinal Multi-Task Disease Screening API",
+    description="FastAPI Service providing Multi-Task AI inference (RetinaGuard++) and Grad-CAM++ explainability for Retinal Fundus-Image Analysis.",
+    version="2.0.0-multitask"
 )
 
 # Enable CORS for all local dev ports
@@ -44,8 +49,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize Inference Service instance
+# Initialize Single-Task Inference Service instance
 inference_service = RetinalInferenceService(model_name="smoke_test")
+
+# Initialize Unified Multi-Task Inference Service instance (Contribution #1)
+multitask_inference_service = MultiTaskInferenceService(use_smoke_test=True)
 
 # Initialize DIP Extractor
 _dip_extractor = RetinalDIPExtractor(target_size=(512, 512))
@@ -127,6 +135,42 @@ async def predict(
     except Exception as e:
         logger.warning(f"DIP extraction failed (non-critical): {e}")
 
+    return response
+
+
+@app.post("/predict-multitask", response_model=MultiTaskPredictionResponse, tags=["Multi-Task Inference"])
+async def predict_multitask(
+    file: UploadFile = File(...),
+    patient_name: Optional[str] = Form(None),
+    patient_age: Optional[str] = Form(None),
+    gender: Optional[str] = Form(None),
+    blood_group: Optional[str] = Form(None),
+    diabetic_status: Optional[str] = Form(None),
+    hypertension: Optional[str] = Form(None),
+    symptoms: Optional[str] = Form(None)
+):
+    """
+    RetinaGuard++ Single-Pass Multi-Task Inference Endpoint (Research Contribution #1).
+    Simultaneously executes Multi-Disease Screening, DR ICDR Grading, Deep Quality Assessment,
+    Biomarker Regression, and Continuous Clinical Risk Score in a single forward pass.
+    """
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Uploaded file is not a valid image.")
+
+    content = await file.read()
+    patient = None
+    if patient_name or patient_age or blood_group:
+        patient = PatientInfo(
+            name=patient_name,
+            age=patient_age,
+            gender=gender,
+            blood_group=blood_group,
+            diabetic_status=diabetic_status,
+            hypertension=hypertension,
+            symptoms=symptoms
+        )
+
+    response = multitask_inference_service.predict_image_bytes(content, patient_info=patient)
     return response
 
 
