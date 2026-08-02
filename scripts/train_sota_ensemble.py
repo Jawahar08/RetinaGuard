@@ -110,13 +110,14 @@ def train_sota_aptos():
             print(f"\n⚡ Training SOTA Architecture: {m_name.upper()} (Focal Loss + Cosine LR Scheduler)...")
             model = model_factory(m_name, num_classes=num_classes, task_type="multiclass", pretrained=True).to(DEVICE)
             optimizer = torch.optim.AdamW(model.parameters(), lr=2e-4, weight_decay=1e-4)
-            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=5, eta_min=1e-6)
+            epochs = int(sys.argv[sys.argv.index("--epochs") + 1]) if "--epochs" in sys.argv else 15
+            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs, eta_min=1e-6)
 
-            epochs = 5
             for ep in range(epochs):
                 model.train()
                 t_loss = 0.0
-                for x, y, _ in train_loader:
+                ep_start = time.time()
+                for batch_idx, (x, y, _) in enumerate(train_loader, 1):
                     x, y = x.to(DEVICE), y.to(DEVICE)
                     optimizer.zero_grad()
                     out = model(x)
@@ -124,8 +125,11 @@ def train_sota_aptos():
                     loss.backward()
                     optimizer.step()
                     t_loss += loss.item() * len(y)
+                    if batch_idx % 50 == 0:
+                        print(f"    Batch {batch_idx}/{len(train_loader)} | Loss: {loss.item():.4f}")
                 scheduler.step()
-                print(f"  - Epoch {ep+1}/{epochs} | Loss: {t_loss / len(train_dataset):.4f} | LR: {scheduler.get_last_lr()[0]:.6f}")
+                ep_time = time.time() - ep_start
+                print(f"  - Epoch {ep+1}/{epochs} ({ep_time:.1f}s) | Loss: {t_loss / len(train_dataset):.4f} | LR: {scheduler.get_last_lr()[0]:.6f}")
 
             model.eval()
             preds_list = []
