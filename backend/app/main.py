@@ -53,7 +53,11 @@ app.add_middleware(
 inference_service = RetinalInferenceService(model_name="smoke_test")
 
 # Initialize Unified Multi-Task Inference Service instance (Contribution #1)
-multitask_inference_service = MultiTaskInferenceService(use_smoke_test=True)
+multitask_inference_service = MultiTaskInferenceService(
+    model_path="models/checkpoints/odir_best.pth",
+    use_smoke_test=False,
+    use_filename_calibration=False,
+)
 
 # Initialize DIP Extractor
 _dip_extractor = RetinalDIPExtractor(target_size=(512, 512))
