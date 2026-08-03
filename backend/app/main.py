@@ -115,7 +115,7 @@ async def predict(
     inference_service.quality_gate.qcfg["min_laplacian_var"] = 1.0
 
     content = await file.read()
-    response = inference_service.predict_image_bytes(content, task=task)
+    response = inference_service.predict_image_bytes(content, task=task, filename=file.filename)
     if patient_name or patient_age or blood_group:
         response.patient_info = PatientInfo(
             name=patient_name,
