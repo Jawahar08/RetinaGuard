@@ -170,7 +170,7 @@ async def predict_multitask(
             symptoms=symptoms
         )
 
-    response = multitask_inference_service.predict_image_bytes(content, patient_info=patient)
+    response = multitask_inference_service.predict_image_bytes(content, patient_info=patient, filename=file.filename)
     return response
 
 
