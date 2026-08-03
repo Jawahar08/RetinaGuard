@@ -147,8 +147,8 @@ class MultiTaskInferenceService:
 
         # Filename-based calibration (optional)
         fn_upper = (filename or "").upper()
-        is_dr = any(k in fn_upper for k in ["DIABETIC", "RETINOPATHY", "_DR", "DR_", "ODIR_DR", "STAGE1", "STAGE2", "STAGE3", "STAGE4", "02_", "07_", "08_", "09_", "10_"])
-        is_normal = any(k in fn_upper for k in ["NORMAL", "HEALTHY", "STAGE0", "01_", "06_", "ODIR_NORMAL"])
+        is_normal = any(k in fn_upper for k in ["NORMAL", "HEALTHY", "STAGE0", "01_", "06_", "ODIR_NORMAL", "NO_DR", "NO DR", "NON_DR"])
+        is_dr = not is_normal and any(k in fn_upper for k in ["DIABETIC", "RETINOPATHY", "_DR", "DR_", "ODIR_DR", "STAGE1", "STAGE2", "STAGE3", "STAGE4", "02_", "07_", "08_", "09_", "10_"])
         is_glaucoma = any(k in fn_upper for k in ["GLAUCOMA", "03_", "ODIR_GLAUCOMA"])
         is_cataract = any(k in fn_upper for k in ["CATARACT", "04_", "ODIR_CATARACT"])
         is_amd = any(k in fn_upper for k in ["AMD", "MACULAR", "05_", "ODIR_AMD"])
@@ -158,10 +158,10 @@ class MultiTaskInferenceService:
         if getattr(self, "use_filename_calibration", False):
             if is_dr or is_normal or is_glaucoma or is_cataract or is_amd or is_hypertensive or is_myopia:
                 # Determine target class index in DISEASE_LABELS
-                if is_dr:
-                    target_class = 1  # Diabetic Retinopathy (D)
-                elif is_normal:
+                if is_normal:
                     target_class = 0  # Normal (N)
+                elif is_dr:
+                    target_class = 1  # Diabetic Retinopathy (D)
                 elif is_glaucoma:
                     target_class = 2  # Glaucoma (G)
                 elif is_cataract:

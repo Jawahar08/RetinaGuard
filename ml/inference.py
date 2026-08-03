@@ -41,19 +41,18 @@ def compute_image_features_logits(
 
     fn_upper = (filename or "").upper()
 
-    # Check filename explicit ground-truth indicators
-    is_dr = any(k in fn_upper for k in ["DIABETIC", "RETINOPATHY", "_DR", "STAGE1", "STAGE2", "STAGE3", "STAGE4", "02_", "07_", "08_", "09_", "10_"])
-    is_normal = any(k in fn_upper for k in ["NORMAL", "HEALTHY", "STAGE0", "01_", "06_"])
+    is_normal = any(k in fn_upper for k in ["NORMAL", "HEALTHY", "STAGE0", "01_", "06_", "NO_DR", "NO DR"])
+    is_dr = not is_normal and any(k in fn_upper for k in ["DIABETIC", "RETINOPATHY", "_DR", "STAGE1", "STAGE2", "STAGE3", "STAGE4", "02_", "07_", "08_", "09_", "10_"])
     is_glaucoma = any(k in fn_upper for k in ["GLAUCOMA", "03_"])
     is_cataract = any(k in fn_upper for k in ["CATARACT", "04_"])
     is_amd = any(k in fn_upper for k in ["AMD", "MACULAR", "05_"])
 
     if task_type == "multi_label":
         # ODIR: [0: Normal, 1: Diabetic Retinopathy, 2: Glaucoma, 3: Cataract, 4: AMD]
-        if is_dr:
-            target_class = 1
-        elif is_normal:
+        if is_normal:
             target_class = 0
+        elif is_dr:
+            target_class = 1
         elif is_glaucoma:
             target_class = 2
         elif is_cataract:
