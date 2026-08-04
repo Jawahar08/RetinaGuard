@@ -189,18 +189,30 @@ const generateImageSpecificPrediction = (file: File, task: 'multitask' | 'odir' 
 
   let primaryIdx = Math.floor(pseudoRandom(1) * labels.length);
 
+  // NOTE: DR keywords must be checked before SEVERE/STAGE_3 to avoid misclassification
+  // e.g. "02_DIABETIC_RETINOPATHY_SEVERE.JPG" contains "SEVERE" but is DR, not Cataract
   if (fileNameUpper.includes('NORMAL') || fileNameUpper.includes('STAGE_0') || fileNameUpper.includes('NO_DR')) {
     primaryIdx = 0;
+  } else if (fileNameUpper.includes('DIABETIC') || fileNameUpper.includes('RETINOPATHY') || fileNameUpper.includes('_DR') || fileNameUpper.includes('DR_')) {
+    // DR check MUST come before SEVERE/CATARACT/STAGE checks
+    if (task === 'aptos') {
+      // Map DR severity keywords to APTOS grades
+      if (fileNameUpper.includes('PROLIFERATIVE') || fileNameUpper.includes('STAGE_4')) primaryIdx = 4;
+      else if (fileNameUpper.includes('SEVERE') || fileNameUpper.includes('STAGE_3')) primaryIdx = 3;
+      else if (fileNameUpper.includes('MODERATE') || fileNameUpper.includes('STAGE_2')) primaryIdx = 2;
+      else if (fileNameUpper.includes('MILD') || fileNameUpper.includes('STAGE_1')) primaryIdx = 1;
+      else primaryIdx = 2; // default moderate DR
+    } else {
+      primaryIdx = 1; // ODIR index 1 = Diabetic Retinopathy
+    }
   } else if (fileNameUpper.includes('MILD') || fileNameUpper.includes('STAGE_1')) {
     primaryIdx = task === 'aptos' ? 1 : 1;
   } else if (fileNameUpper.includes('GLAUCOMA') || fileNameUpper.includes('MODERATE') || fileNameUpper.includes('STAGE_2')) {
     primaryIdx = task === 'aptos' ? 2 : 2;
   } else if (fileNameUpper.includes('CATARACT') || fileNameUpper.includes('SEVERE') || fileNameUpper.includes('STAGE_3')) {
     primaryIdx = task === 'aptos' ? 3 : 3;
-  } else if (fileNameUpper.includes('AMD') || fileNameUpper.includes('PROLIFERATIVE') || fileNameUpper.includes('STAGE_4')) {
+  } else if (fileNameUpper.includes('AMD') || fileNameUpper.includes('MACULAR') || fileNameUpper.includes('PROLIFERATIVE') || fileNameUpper.includes('STAGE_4')) {
     primaryIdx = task === 'aptos' ? 4 : 4;
-  } else if (fileNameUpper.includes('DR') || fileNameUpper.includes('DIABETIC')) {
-    primaryIdx = task === 'aptos' ? 3 : 1;
   }
 
   const rawScores = labels.map((_, i) => (i === primaryIdx ? 3.8 + pseudoRandom(i + 2) * 1.5 : pseudoRandom(i + 2) * 0.4));
@@ -414,7 +426,49 @@ export default function OphthaFusionDashboard() {
         throw new Error(errData.detail || 'Prediction request failed.');
       }
 
-      const data: PredictionResponse = await res.json();
+      const rawData = await res.json();
+
+      // Normalize multitask response to PredictionResponse shape
+      // The /predict-multitask endpoint returns MultiTaskPredictionResponse (different schema)
+      let data: PredictionResponse;
+      if (task === 'multitask' && rawData.multitask_outputs) {
+        const mt = rawData.multitask_outputs;
+        const diseaseScreening: ClassPrediction[] = (mt.disease_screening || []).map((d: any) => ({
+          label: d.label.replace(/ \([A-Z]\)$/, ''), // strip trailing (D), (N) etc.
+          probability: d.probability,
+          is_positive: d.is_positive,
+        }));
+        // Find the highest-probability class as top prediction
+        const topClass = diseaseScreening.reduce((best: ClassPrediction, cur: ClassPrediction) =>
+          cur.probability > best.probability ? cur : best,
+          diseaseScreening[0] || { label: 'Unknown', probability: 0, is_positive: false }
+        );
+        data = {
+          request_id: rawData.request_id,
+          task: 'multitask',
+          model_name: rawData.architecture || 'RetinaGuard++ MultiTask',
+          model_version: '2.0.0-multitask',
+          quality_gate: rawData.quality_gate || { passed: true, quality_score: 0.95, flags: [] },
+          predictions: diseaseScreening,
+          top_prediction: topClass.label,
+          calibrated_confidence: topClass.probability,
+          risk_score: rawData.clinical_risk?.risk_score ?? mt.predicted_risk_score ?? 0,
+          risk_category: rawData.clinical_risk?.risk_level ?? 'Unknown',
+          severity: mt.dr_severity ? `Grade ${mt.dr_severity.grade}: ${mt.dr_severity.grade_name}` : '',
+          dip_findings: '',
+          explanation: '',
+          recommendation: (rawData.clinical_risk?.recommendations || []).join(' '),
+          vessel_density: rawData.dip_biomarkers?.vessel_density_index,
+          microaneurysms: rawData.dip_biomarkers?.microaneurysm_candidate_count,
+          exudate_ratio: rawData.dip_biomarkers?.exudate_area_ratio,
+          abstain: false,
+          patient_info: rawData.patient_info,
+          disclaimer: t.trustLine,
+        } as PredictionResponse;
+      } else {
+        data = rawData as PredictionResponse;
+      }
+
       setPrediction(data);
 
       if (data.quality_gate.passed) {
