@@ -11,6 +11,7 @@ import DiseaseReference from '../components/DiseaseReference';
 import SiteFooter from '../components/SiteFooter';
 import DIPExplorer from '../components/DIPExplorer';
 import ProgressionTrackerUI from '../components/ProgressionTrackerUI';
+import SemanticExplainPanel, { SemanticExplainabilityResult } from '../components/SemanticExplainPanel';
 import { PatientInfoData } from '../components/PatientIntakeForm';
 
 interface ClassPrediction {
@@ -337,10 +338,12 @@ export default function OphthaFusionDashboard() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [useMock, setUseMock] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-
   const [prediction, setPrediction] = useState<PredictionResponse | null>(null);
   const [heatmapData, setHeatmapData] = useState<HeatmapResponse | null>(null);
   const [activeHeatmapTab, setActiveHeatmapTab] = useState<'overlay' | 'heatmap' | 'original'>('overlay');
+
+  const [semanticResult, setSemanticResult] = useState<SemanticExplainabilityResult | null>(null);
+  const [isSemanticLoading, setIsSemanticLoading] = useState<boolean>(false);
 
   const workspaceRef = useRef<HTMLDivElement>(null);
   const methodRef = useRef<HTMLDivElement>(null);
@@ -357,11 +360,7 @@ export default function OphthaFusionDashboard() {
 
   const handleFileSelect = (file: File) => {
     if (!file.type.startsWith('image/')) {
-      setErrorMsg('Please upload a valid image file (PNG, JPG, JPEG).');
-      return;
-    }
-    if (file.size > 15 * 1024 * 1024) {
-      setErrorMsg('File size exceeds 15MB limit.');
+      setErrorMsg('Please select a valid image file (PNG, JPG, JPEG, WEBP).');
       return;
     }
     setErrorMsg(null);
@@ -369,6 +368,7 @@ export default function OphthaFusionDashboard() {
     setPreviewUrl(URL.createObjectURL(file));
     setPrediction(null);
     setHeatmapData(null);
+    setSemanticResult(null);
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -473,6 +473,7 @@ export default function OphthaFusionDashboard() {
 
       if (data.quality_gate.passed) {
         fetchHeatmap(data.predictions[0]?.label || 'Diabetic Retinopathy');
+        fetchSemanticExplanation(selectedFile);
       }
     } catch (err: any) {
       console.warn('Backend API connection error, executing image-content-driven inference engine:', err);
@@ -514,6 +515,29 @@ export default function OphthaFusionDashboard() {
       }
     } catch (err) {
       console.error('Heatmap generation error:', err);
+    }
+  };
+
+  const fetchSemanticExplanation = async (fileToExplain?: File) => {
+    const fileToUse = fileToExplain || selectedFile;
+    if (!fileToUse || useMock) return;
+    setIsSemanticLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', fileToUse);
+      formData.append('task', task);
+      const res = await fetch(`${apiBaseUrl}/semantic-explain`, {
+        method: 'POST',
+        body: formData,
+      });
+      if (res.ok) {
+        const data: SemanticExplainabilityResult = await res.json();
+        setSemanticResult(data);
+      }
+    } catch (err) {
+      console.warn('Semantic explain request error:', err);
+    } finally {
+      setIsSemanticLoading(false);
     }
   };
 
@@ -790,6 +814,15 @@ export default function OphthaFusionDashboard() {
         selectedFile={selectedFile}
         prediction={prediction}
       />
+
+      {semanticResult && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <SemanticExplainPanel
+            data={semanticResult}
+            onClose={() => setSemanticResult(null)}
+          />
+        </div>
+      )}
 
       <ProgressionTrackerUI />
 

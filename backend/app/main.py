@@ -16,7 +16,8 @@ from PIL import Image
 from ml.schemas import (
     HeatmapResponse, PredictionResponse, PatientInfo, DIPBiomarkerResult,
     RestorationResult, ImageQualityMetrics, ClinicalRiskResult, SubScores,
-    ProgressionAnalysisResult, BiomarkerDeltas, MultiTaskPredictionResponse
+    ProgressionAnalysisResult, BiomarkerDeltas, MultiTaskPredictionResponse,
+    SemanticExplainabilityResult
 )
 from ml.inference import RetinalInferenceService
 from ml.inference_multitask import MultiTaskInferenceService
@@ -27,6 +28,7 @@ from ml.dip_features import RetinalDIPExtractor
 from ml.image_restoration import RetinalImageRestorer
 from ml.risk_score import ClinicalRiskScorer
 from ml.progression_tracker import ProgressionTracker
+from ml.semantic_explainer import SemanticExplainer
 
 # Configure structured logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -70,6 +72,9 @@ _risk_scorer = ClinicalRiskScorer()
 
 # Initialize Progression Tracker
 _progression_tracker = ProgressionTracker(_dip_extractor, _risk_scorer)
+
+# Initialize Semantic Explainer Engine
+_semantic_explainer = SemanticExplainer(inference_service=inference_service)
 
 
 @app.middleware("http")
@@ -493,4 +498,35 @@ async def generate_report(
         dip_biomarkers=dip_dict
     )
     return HTMLResponse(content=html_content)
+
+
+@app.post("/semantic-explain", response_model=SemanticExplainabilityResult, tags=["Explainability"])
+async def semantic_explain(
+    file: UploadFile = File(...),
+    task: str = Form("odir"),
+):
+    """
+    Lesion-Level Semantic Explainability Endpoint (Research Contribution #2).
+
+    Connects Grad-CAM++ model attention to detected anatomical retinal lesions
+    (microaneurysms, hemorrhages, hard exudates) and computes a transparent
+    Lesion Grounding Score (0–100) with spatial agreement metrics.
+    """
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Invalid file type. File must be an image.")
+
+    contents = await file.read()
+    if not contents:
+        raise HTTPException(status_code=400, detail="Uploaded file is empty.")
+
+    try:
+        result = _semantic_explainer.explain(
+            image_bytes=contents,
+            task=task,
+            filename=file.filename,
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Semantic explainability pipeline error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Semantic explainability error: {str(e)}")
 

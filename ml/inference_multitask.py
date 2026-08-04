@@ -7,6 +7,7 @@ import io
 import logging
 import os
 import uuid
+from contextlib import nullcontext
 from typing import Dict, Any, Optional, Tuple
 import numpy as np
 from PIL import Image
@@ -120,7 +121,7 @@ class MultiTaskInferenceService:
             logger.info("Using NumPy fallback tensor input")
 
         # 3. Single-Pass Forward Pass through Multi-Task Model
-        with torch.no_grad() if HAS_TORCH else None:
+        with (torch.no_grad() if HAS_TORCH else nullcontext()):
             raw_out = self.model(tensor_in)
 
         logger.info("Model forward pass completed")
