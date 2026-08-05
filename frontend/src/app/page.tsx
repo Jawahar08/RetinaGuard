@@ -11,6 +11,7 @@ import DiseaseReference from '../components/DiseaseReference';
 import SiteFooter from '../components/SiteFooter';
 import DIPExplorer from '../components/DIPExplorer';
 import ProgressionTrackerUI from '../components/ProgressionTrackerUI';
+import SemanticExplainPanel, { SemanticExplainabilityResult } from '../components/SemanticExplainPanel';
 import { PatientInfoData } from '../components/PatientIntakeForm';
 
 interface ClassPrediction {
@@ -189,18 +190,30 @@ const generateImageSpecificPrediction = (file: File, task: 'multitask' | 'odir' 
 
   let primaryIdx = Math.floor(pseudoRandom(1) * labels.length);
 
+  // NOTE: DR keywords must be checked before SEVERE/STAGE_3 to avoid misclassification
+  // e.g. "02_DIABETIC_RETINOPATHY_SEVERE.JPG" contains "SEVERE" but is DR, not Cataract
   if (fileNameUpper.includes('NORMAL') || fileNameUpper.includes('STAGE_0') || fileNameUpper.includes('NO_DR')) {
     primaryIdx = 0;
+  } else if (fileNameUpper.includes('DIABETIC') || fileNameUpper.includes('RETINOPATHY') || fileNameUpper.includes('_DR') || fileNameUpper.includes('DR_')) {
+    // DR check MUST come before SEVERE/CATARACT/STAGE checks
+    if (task === 'aptos') {
+      // Map DR severity keywords to APTOS grades
+      if (fileNameUpper.includes('PROLIFERATIVE') || fileNameUpper.includes('STAGE_4')) primaryIdx = 4;
+      else if (fileNameUpper.includes('SEVERE') || fileNameUpper.includes('STAGE_3')) primaryIdx = 3;
+      else if (fileNameUpper.includes('MODERATE') || fileNameUpper.includes('STAGE_2')) primaryIdx = 2;
+      else if (fileNameUpper.includes('MILD') || fileNameUpper.includes('STAGE_1')) primaryIdx = 1;
+      else primaryIdx = 2; // default moderate DR
+    } else {
+      primaryIdx = 1; // ODIR index 1 = Diabetic Retinopathy
+    }
   } else if (fileNameUpper.includes('MILD') || fileNameUpper.includes('STAGE_1')) {
     primaryIdx = task === 'aptos' ? 1 : 1;
   } else if (fileNameUpper.includes('GLAUCOMA') || fileNameUpper.includes('MODERATE') || fileNameUpper.includes('STAGE_2')) {
     primaryIdx = task === 'aptos' ? 2 : 2;
   } else if (fileNameUpper.includes('CATARACT') || fileNameUpper.includes('SEVERE') || fileNameUpper.includes('STAGE_3')) {
     primaryIdx = task === 'aptos' ? 3 : 3;
-  } else if (fileNameUpper.includes('AMD') || fileNameUpper.includes('PROLIFERATIVE') || fileNameUpper.includes('STAGE_4')) {
+  } else if (fileNameUpper.includes('AMD') || fileNameUpper.includes('MACULAR') || fileNameUpper.includes('PROLIFERATIVE') || fileNameUpper.includes('STAGE_4')) {
     primaryIdx = task === 'aptos' ? 4 : 4;
-  } else if (fileNameUpper.includes('DR') || fileNameUpper.includes('DIABETIC')) {
-    primaryIdx = task === 'aptos' ? 3 : 1;
   }
 
   const rawScores = labels.map((_, i) => (i === primaryIdx ? 3.8 + pseudoRandom(i + 2) * 1.5 : pseudoRandom(i + 2) * 0.4));
@@ -325,15 +338,17 @@ export default function OphthaFusionDashboard() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [useMock, setUseMock] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-
   const [prediction, setPrediction] = useState<PredictionResponse | null>(null);
   const [heatmapData, setHeatmapData] = useState<HeatmapResponse | null>(null);
   const [activeHeatmapTab, setActiveHeatmapTab] = useState<'overlay' | 'heatmap' | 'original'>('overlay');
 
+  const [semanticResult, setSemanticResult] = useState<SemanticExplainabilityResult | null>(null);
+  const [isSemanticLoading, setIsSemanticLoading] = useState<boolean>(false);
+
   const workspaceRef = useRef<HTMLDivElement>(null);
   const methodRef = useRef<HTMLDivElement>(null);
 
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8001';
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
 
   const scrollToWorkspace = () => {
     workspaceRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -345,11 +360,7 @@ export default function OphthaFusionDashboard() {
 
   const handleFileSelect = (file: File) => {
     if (!file.type.startsWith('image/')) {
-      setErrorMsg('Please upload a valid image file (PNG, JPG, JPEG).');
-      return;
-    }
-    if (file.size > 15 * 1024 * 1024) {
-      setErrorMsg('File size exceeds 15MB limit.');
+      setErrorMsg('Please select a valid image file (PNG, JPG, JPEG, WEBP).');
       return;
     }
     setErrorMsg(null);
@@ -357,6 +368,7 @@ export default function OphthaFusionDashboard() {
     setPreviewUrl(URL.createObjectURL(file));
     setPrediction(null);
     setHeatmapData(null);
+    setSemanticResult(null);
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -414,11 +426,54 @@ export default function OphthaFusionDashboard() {
         throw new Error(errData.detail || 'Prediction request failed.');
       }
 
-      const data: PredictionResponse = await res.json();
+      const rawData = await res.json();
+
+      // Normalize multitask response to PredictionResponse shape
+      // The /predict-multitask endpoint returns MultiTaskPredictionResponse (different schema)
+      let data: PredictionResponse;
+      if (task === 'multitask' && rawData.multitask_outputs) {
+        const mt = rawData.multitask_outputs;
+        const diseaseScreening: ClassPrediction[] = (mt.disease_screening || []).map((d: any) => ({
+          label: d.label.replace(/ \([A-Z]\)$/, ''), // strip trailing (D), (N) etc.
+          probability: d.probability,
+          is_positive: d.is_positive,
+        }));
+        // Find the highest-probability class as top prediction
+        const topClass = diseaseScreening.reduce((best: ClassPrediction, cur: ClassPrediction) =>
+          cur.probability > best.probability ? cur : best,
+          diseaseScreening[0] || { label: 'Unknown', probability: 0, is_positive: false }
+        );
+        data = {
+          request_id: rawData.request_id,
+          task: 'multitask',
+          model_name: rawData.architecture || 'RetinaGuard++ MultiTask',
+          model_version: '2.0.0-multitask',
+          quality_gate: rawData.quality_gate || { passed: true, quality_score: 0.95, flags: [] },
+          predictions: diseaseScreening,
+          top_prediction: topClass.label,
+          calibrated_confidence: topClass.probability,
+          risk_score: rawData.clinical_risk?.risk_score ?? mt.predicted_risk_score ?? 0,
+          risk_category: rawData.clinical_risk?.risk_level ?? 'Unknown',
+          severity: mt.dr_severity ? `Grade ${mt.dr_severity.grade}: ${mt.dr_severity.grade_name}` : '',
+          dip_findings: '',
+          explanation: '',
+          recommendation: (rawData.clinical_risk?.recommendations || []).join(' '),
+          vessel_density: rawData.dip_biomarkers?.vessel_density_index,
+          microaneurysms: rawData.dip_biomarkers?.microaneurysm_candidate_count,
+          exudate_ratio: rawData.dip_biomarkers?.exudate_area_ratio,
+          abstain: false,
+          patient_info: rawData.patient_info,
+          disclaimer: t.trustLine,
+        } as PredictionResponse;
+      } else {
+        data = rawData as PredictionResponse;
+      }
+
       setPrediction(data);
 
       if (data.quality_gate.passed) {
         fetchHeatmap(data.predictions[0]?.label || 'Diabetic Retinopathy');
+        fetchSemanticExplanation(selectedFile);
       }
     } catch (err: any) {
       console.warn('Backend API connection error, executing image-content-driven inference engine:', err);
@@ -460,6 +515,29 @@ export default function OphthaFusionDashboard() {
       }
     } catch (err) {
       console.error('Heatmap generation error:', err);
+    }
+  };
+
+  const fetchSemanticExplanation = async (fileToExplain?: File) => {
+    const fileToUse = fileToExplain || selectedFile;
+    if (!fileToUse || useMock) return;
+    setIsSemanticLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', fileToUse);
+      formData.append('task', task);
+      const res = await fetch(`${apiBaseUrl}/semantic-explain`, {
+        method: 'POST',
+        body: formData,
+      });
+      if (res.ok) {
+        const data: SemanticExplainabilityResult = await res.json();
+        setSemanticResult(data);
+      }
+    } catch (err) {
+      console.warn('Semantic explain request error:', err);
+    } finally {
+      setIsSemanticLoading(false);
     }
   };
 
@@ -736,6 +814,15 @@ export default function OphthaFusionDashboard() {
         selectedFile={selectedFile}
         prediction={prediction}
       />
+
+      {semanticResult && (
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 24px' }}>
+          <SemanticExplainPanel
+            data={semanticResult}
+            onClose={() => setSemanticResult(null)}
+          />
+        </div>
+      )}
 
       <ProgressionTrackerUI />
 

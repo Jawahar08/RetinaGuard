@@ -16,7 +16,8 @@ from PIL import Image
 from ml.schemas import (
     HeatmapResponse, PredictionResponse, PatientInfo, DIPBiomarkerResult,
     RestorationResult, ImageQualityMetrics, ClinicalRiskResult, SubScores,
-    ProgressionAnalysisResult, BiomarkerDeltas, MultiTaskPredictionResponse
+    ProgressionAnalysisResult, BiomarkerDeltas, MultiTaskPredictionResponse,
+    SemanticExplainabilityResult
 )
 from ml.inference import RetinalInferenceService
 from ml.inference_multitask import MultiTaskInferenceService
@@ -27,6 +28,7 @@ from ml.dip_features import RetinalDIPExtractor
 from ml.image_restoration import RetinalImageRestorer
 from ml.risk_score import ClinicalRiskScorer
 from ml.progression_tracker import ProgressionTracker
+from ml.semantic_explainer import SemanticExplainer
 
 # Configure structured logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -53,7 +55,11 @@ app.add_middleware(
 inference_service = RetinalInferenceService(model_name="smoke_test")
 
 # Initialize Unified Multi-Task Inference Service instance (Contribution #1)
-multitask_inference_service = MultiTaskInferenceService(use_smoke_test=True)
+multitask_inference_service = MultiTaskInferenceService(
+    model_path=None,
+    use_smoke_test=True,
+    use_filename_calibration=True,
+)
 
 # Initialize DIP Extractor
 _dip_extractor = RetinalDIPExtractor(target_size=(512, 512))
@@ -66,6 +72,9 @@ _risk_scorer = ClinicalRiskScorer()
 
 # Initialize Progression Tracker
 _progression_tracker = ProgressionTracker(_dip_extractor, _risk_scorer)
+
+# Initialize Semantic Explainer Engine
+_semantic_explainer = SemanticExplainer(inference_service=inference_service)
 
 
 @app.middleware("http")
@@ -115,7 +124,7 @@ async def predict(
     inference_service.quality_gate.qcfg["min_laplacian_var"] = 1.0
 
     content = await file.read()
-    response = inference_service.predict_image_bytes(content, task=task)
+    response = inference_service.predict_image_bytes(content, task=task, filename=file.filename)
     if patient_name or patient_age or blood_group:
         response.patient_info = PatientInfo(
             name=patient_name,
@@ -170,7 +179,7 @@ async def predict_multitask(
             symptoms=symptoms
         )
 
-    response = multitask_inference_service.predict_image_bytes(content, patient_info=patient)
+    response = multitask_inference_service.predict_image_bytes(content, patient_info=patient, filename=file.filename)
     return response
 
 
@@ -489,4 +498,35 @@ async def generate_report(
         dip_biomarkers=dip_dict
     )
     return HTMLResponse(content=html_content)
+
+
+@app.post("/semantic-explain", response_model=SemanticExplainabilityResult, tags=["Explainability"])
+async def semantic_explain(
+    file: UploadFile = File(...),
+    task: str = Form("odir"),
+):
+    """
+    Lesion-Level Semantic Explainability Endpoint (Research Contribution #2).
+
+    Connects Grad-CAM++ model attention to detected anatomical retinal lesions
+    (microaneurysms, hemorrhages, hard exudates) and computes a transparent
+    Lesion Grounding Score (0–100) with spatial agreement metrics.
+    """
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Invalid file type. File must be an image.")
+
+    contents = await file.read()
+    if not contents:
+        raise HTTPException(status_code=400, detail="Uploaded file is empty.")
+
+    try:
+        result = _semantic_explainer.explain(
+            image_bytes=contents,
+            task=task,
+            filename=file.filename,
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Semantic explainability pipeline error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Semantic explainability error: {str(e)}")
 
