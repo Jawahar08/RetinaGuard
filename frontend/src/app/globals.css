@@ -92,7 +92,6 @@ body {
   background-color: var(--ink-black);
   color: #FFFFFF;
   overflow: hidden;
-  white-space: nowrap;
   padding: 10px 0;
   font-family: 'Space Grotesk', -apple-system, sans-serif;
   font-size: 0.76rem;
@@ -100,16 +99,20 @@ body {
   letter-spacing: 0.12em;
   border-bottom: var(--border-thick);
   display: flex;
+  flex-wrap: nowrap;        /* ← never wrap onto second row */
+  align-items: center;
   user-select: none;
   position: relative;
   z-index: 60;
+  height: 38px;             /* ← fixed height so it never grows */
 }
 
 .ticker-track {
-  display: flex;
+  display: inline-flex;     /* ← inline so it sits next to sibling track */
   align-items: center;
   flex-shrink: 0;
   white-space: nowrap;
+  min-width: max-content;   /* ← never shrink below text width */
   animation: ticker-scroll 75s linear infinite;
   will-change: transform;
 }
@@ -345,10 +348,6 @@ textarea:focus {
 /* ── Premium micro-interactions ───────────────────────────────────────── */
 
 /* Smooth scale on interactive element hover */
-.editorial-card {
-  transition: transform 0.22s cubic-bezier(0.22,1,0.36,1),
-              box-shadow 0.22s cubic-bezier(0.22,1,0.36,1);
-}
 .editorial-card:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-hard-lg);
