@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { Dna, AlertTriangle, CheckCircle2, XCircle, Info, Sparkles, Layers, Eye } from 'lucide-react';
 
 export interface LesionInstance {
   centroid_x: number;
@@ -93,14 +94,13 @@ export default function SemanticExplainPanel({ data, onClose }: SemanticExplainP
   const [activeTab, setActiveTab] = useState<'combined' | 'overlay' | 'heatmap' | 'original'>('combined');
 
   const grounding = data.grounding_result;
-  const score = grounding.score || 0;
-  const label = grounding.label || 'Insufficient evidence';
-  const labelColor = grounding.label_color || '#3b82f6';
-  const warnings = grounding.warnings || [];
-  const metrics = grounding.per_lesion_metrics || [];
-  const dist = grounding.attention_distribution || {};
+  const score = grounding?.score || 0;
+  const label = grounding?.label || 'Moderate Evidence';
+  const labelColor = grounding?.label_color || '#3B82F6';
+  const warnings = grounding?.warnings || [];
+  const metrics = grounding?.per_lesion_metrics || [];
+  const dist = grounding?.attention_distribution || {};
 
-  // Image source based on active tab
   const getDisplayImage = () => {
     switch (activeTab) {
       case 'combined':
@@ -117,535 +117,255 @@ export default function SemanticExplainPanel({ data, onClose }: SemanticExplainP
   };
 
   const getRegionColor = (region: string) => {
-    switch (region) {
-      case 'microaneurysm': return '#dc2626'; // Red
-      case 'hemorrhage': return '#991b1b';    // Dark Red
-      case 'hard_exudate': return '#d97706';  // Yellow/Amber
-      case 'vessel': return '#16a34a';        // Green
-      case 'optic_disc': return '#2563eb';    // Blue
-      default: return '#64748b';             // Slate
+    switch (region.toLowerCase()) {
+      case 'microaneurysm': return '#DC2626';
+      case 'hemorrhage': return '#991B1B';
+      case 'hard_exudate': return '#D97706';
+      case 'vessel': return '#16A34A';
+      case 'optic_disc': return '#2563EB';
+      default: return '#64748B';
     }
   };
 
   return (
-    <div
-      style={{
-        background: '#0f172a',
-        color: '#f8fafc',
-        border: '3px solid #1e293b',
-        borderRadius: 24,
-        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3)',
-        padding: '28px',
-        margin: '28px 0',
-        fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
-      }}
-    >
-      {/* ── Header Bar ── */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          borderBottom: '2px solid #1e293b',
-          paddingBottom: 16,
-          marginBottom: 24,
-          flexWrap: 'wrap',
-          gap: 12,
-        }}
-      >
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 24 }}>🧬</span>
-            <h2
-              style={{
-                fontSize: 20,
-                fontWeight: 800,
-                color: '#f8fafc',
-                letterSpacing: '-0.02em',
-                margin: 0,
-              }}
-            >
-              Lesion-Level Semantic Explainability
-            </h2>
-            <span
-              style={{
-                fontSize: 11,
-                fontWeight: 700,
-                padding: '4px 10px',
-                borderRadius: 9999,
-                background: '#3b0764',
-                color: '#e9d5ff',
-                border: '1px solid #7e22ce',
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em',
-              }}
-            >
-              Research Layer v1.0
-            </span>
-          </div>
-          <p style={{ fontSize: 13, color: '#94a3b8', marginTop: 4, margin: 0 }}>
-            Connecting Grad-CAM++ neural feature sensitivity to algorithmically detected anatomical retinal lesions
-          </p>
-        </div>
-
-        {onClose && (
-          <button
-            onClick={onClose}
-            style={{
-              background: '#1e293b',
-              color: '#cbd5e1',
-              border: '1px solid #334155',
-              borderRadius: 8,
-              padding: '6px 14px',
-              fontSize: 12,
-              fontWeight: 700,
-              cursor: 'pointer',
-            }}
-          >
-            ✕ Close Panel
-          </button>
-        )}
-      </div>
-
-      {/* ── Primary Summary & Score Section ── */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'minmax(280px, 320px) 1fr',
-          gap: 24,
-          marginBottom: 24,
-        }}
-      >
-        {/* Left Column: Gauge Card */}
+    <section className="container-editorial" style={{ paddingTop: '12px', paddingBottom: '36px' }}>
+      <div className="editorial-card" style={{ padding: '32px' }}>
+        
+        {/* Header Bar */}
         <div
           style={{
-            background: '#020617',
-            border: '2px solid #1e293b',
-            borderRadius: 16,
-            padding: 20,
-            textAlign: 'center',
             display: 'flex',
-            flexDirection: 'column',
+            justifyContent: 'space-between',
             alignItems: 'center',
-            justifyContent: 'center',
+            borderBottom: '1.5px solid var(--paper-light)',
+            paddingBottom: 16,
+            marginBottom: 24,
+            flexWrap: 'wrap',
+            gap: 12,
           }}
         >
-          <div
-            style={{
-              fontSize: 11,
-              fontWeight: 800,
-              textTransform: 'uppercase',
-              letterSpacing: '0.08em',
-              color: '#94a3b8',
-              marginBottom: 12,
-            }}
-          >
-            Lesion Grounding Score
-          </div>
-
-          {/* Semicircle Gauge with STRICT Inline Size Constraints */}
-          <div
-            style={{
-              position: 'relative',
-              width: 140,
-              height: 140,
-              maxWidth: 140,
-              maxHeight: 140,
-              margin: '0 auto',
-            }}
-          >
-            <svg
-              viewBox="0 0 100 100"
-              style={{ width: 140, height: 140, maxWidth: 140, maxHeight: 140, display: 'block' }}
-            >
-              <circle
-                cx="50"
-                cy="50"
-                r="42"
-                fill="none"
-                stroke="#1e293b"
-                strokeWidth="10"
-              />
-              <circle
-                cx="50"
-                cy="50"
-                r="42"
-                fill="none"
-                stroke={labelColor}
-                strokeWidth="10"
-                strokeDasharray="264"
-                strokeDashoffset={264 - (264 * Math.max(0, Math.min(100, score))) / 100}
-                strokeLinecap="round"
-                transform="rotate(-90 50 50)"
-                style={{ transition: 'stroke-dashoffset 1s ease-out' }}
-              />
-            </svg>
-            <div
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <span style={{ fontSize: 32, fontWeight: 800, color: '#ffffff', lineHeight: 1 }}>
-                {Math.round(score)}
-              </span>
-              <span style={{ fontSize: 10, color: '#94a3b8', marginTop: 2, fontWeight: 700 }}>
-                OUT OF 100
-              </span>
-            </div>
-          </div>
-
-          {/* Label Badge */}
-          <div
-            style={{
-              fontSize: 14,
-              fontWeight: 800,
-              color: labelColor,
-              marginTop: 10,
-            }}
-          >
-            {label}
-          </div>
-
-          {/* Sub-metrics */}
-          <div
-            style={{
-              marginTop: 14,
-              paddingTop: 12,
-              borderTop: '1px solid #1e293b',
-              width: '100%',
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: 8,
-              fontSize: 12,
-              textAlign: 'left',
-            }}
-          >
-            <div>
-              <span style={{ color: '#64748b', display: 'block', fontSize: 11 }}>Classifier Conf:</span>
-              <strong style={{ color: '#38bdf8' }}>{(data.prediction_confidence * 100).toFixed(1)}%</strong>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ background: '#7C3AED', width: '38px', height: '38px', borderRadius: '12px', border: 'var(--border-thick)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: 'var(--shadow-sm)' }}>
+              <Dna size={18} color="#FFFFFF" />
             </div>
             <div>
-              <span style={{ color: '#64748b', display: 'block', fontSize: 11 }}>Target Disease:</span>
-              <strong style={{ color: '#c084fc', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
-                {data.predicted_disease}
-              </strong>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <h3 className="font-serif-display" style={{ fontSize: '1.3rem', fontWeight: 800, margin: 0, lineHeight: 1.2 }}>
+                  Lesion-Level Semantic Grounding
+                </h3>
+                <span className="pill-badge" style={{ background: '#EDE9FE', color: '#6D28D9', fontSize: '0.68rem', padding: '3px 8px' }}>
+                  RESEARCH SPEC
+                </span>
+              </div>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '2px 0 0' }}>
+                Correlating Grad-CAM++ neural attention with morphologically segmented lesions
+              </p>
             </div>
           </div>
-        </div>
 
-        {/* Right Column: Warnings & Interpretation */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {/* Active Warnings */}
-          {warnings.length > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {warnings.map((w, idx) => {
-                const isHighConfLowGrounding = w.includes('HIGH_CONFIDENCE_LOW_GROUNDING');
-                const isNoLesions = w.includes('NO_LESION_CANDIDATES');
-                const isBorder = w.includes('BORDER_ATTENTION');
-
-                const bg = isHighConfLowGrounding ? '#450a0a' : isNoLesions ? '#451a03' : isBorder ? '#422006' : '#1e293b';
-                const border = isHighConfLowGrounding ? '#ef4444' : isNoLesions ? '#f97316' : isBorder ? '#eab308' : '#64748b';
-                const textColor = isHighConfLowGrounding ? '#fca5a5' : isNoLesions ? '#fed7aa' : isBorder ? '#fef08a' : '#cbd5e1';
-
-                const title = w.includes(':') ? w.split(':')[0] : w.substring(0, 50);
-                const detail = w.includes(':') ? w.substring(w.indexOf(':') + 1).trim() : w;
-
-                return (
-                  <div
-                    key={idx}
-                    style={{
-                      background: bg,
-                      borderLeft: `4px solid ${border}`,
-                      borderRadius: 8,
-                      padding: '12px 14px',
-                      color: textColor,
-                      fontSize: 12,
-                      lineHeight: 1.5,
-                    }}
-                  >
-                    <div style={{ fontWeight: 800, marginBottom: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span>⚠️</span>
-                      <span>{title}</span>
-                    </div>
-                    <div>{detail}</div>
-                  </div>
-                );
-              })}
-            </div>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="btn-editorial-secondary"
+              style={{ fontSize: '0.75rem', padding: '6px 14px' }}
+            >
+              ✕ Close Panel
+            </button>
           )}
-
-          {/* Semantic Interpretation Card */}
-          <div
-            style={{
-              background: '#020617',
-              border: '2px solid #1e293b',
-              borderRadius: 16,
-              padding: 18,
-              flex: 1,
-            }}
-          >
-            <h4
-              style={{
-                fontSize: 12,
-                fontWeight: 800,
-                textTransform: 'uppercase',
-                letterSpacing: '0.08em',
-                color: '#c084fc',
-                margin: '0 0 10px 0',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-              }}
-            >
-              <span>💬</span> Semantic Interpretation Narrative
-            </h4>
-            <p style={{ fontSize: 13, color: '#cbd5e1', lineHeight: 1.6, margin: 0 }}>
-              {grounding.semantic_interpretation}
-            </p>
-          </div>
         </div>
-      </div>
 
-      {/* ── Main Grid: Visual Viewer & Spatial Metrics ── */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'minmax(320px, 1fr) minmax(320px, 1fr)',
-          gap: 24,
-        }}
-      >
-        {/* Left Column: Interactive Visual Viewer */}
-        <div
-          style={{
-            background: '#020617',
-            border: '2px solid #1e293b',
-            borderRadius: 16,
-            padding: 18,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 14,
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
-            <h3 style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#94a3b8', margin: 0 }}>
-              Spatial Visual Grounding
-            </h3>
-            {/* Tab buttons */}
-            <div style={{ display: 'flex', gap: 4, background: '#0f172a', padding: 4, borderRadius: 8 }}>
-              {(['combined', 'overlay', 'heatmap', 'original'] as const).map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setActiveTab(t)}
-                  style={{
-                    padding: '4px 10px',
-                    borderRadius: 6,
-                    fontSize: 11,
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    border: 'none',
-                    background: activeTab === t ? '#7e22ce' : 'transparent',
-                    color: activeTab === t ? '#ffffff' : '#94a3b8',
-                    transition: 'all 0.2s ease',
-                  }}
-                >
-                  {t === 'combined' ? 'Combined' : t === 'overlay' ? 'Grad-CAM++' : t === 'heatmap' ? 'Heatmap' : 'Original'}
-                </button>
-              ))}
+        {/* Top Section: Score & Interpretation */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginBottom: '24px' }}>
+          
+          {/* Lesion Grounding Score Gauge Card */}
+          <div style={{
+            background: '#F8FAFC', border: 'var(--border-thick)',
+            borderRadius: '16px', padding: '24px 20px', textAlign: 'center',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            boxShadow: 'var(--shadow-sm)'
+          }}>
+            <div className="font-grotesk-mono" style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', marginBottom: 12 }}>
+              LESION GROUNDING SCORE
+            </div>
+
+            {/* Circular Progress Gauge */}
+            <div style={{
+              position: 'relative', width: 120, height: 120, margin: '0 auto',
+              borderRadius: '50%',
+              background: `conic-gradient(${labelColor} ${score * 3.6}deg, #E2E8F0 0deg)`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              border: '2px solid #141210', boxShadow: 'var(--shadow-sm)'
+            }}>
+              <div style={{
+                width: 90, height: 90, borderRadius: '50%', background: '#fff',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
+              }}>
+                <span className="font-serif-display" style={{ fontSize: 28, fontWeight: 900, color: labelColor }}>
+                  {score.toFixed(0)}
+                </span>
+                <span className="font-grotesk-mono" style={{ fontSize: 9, color: 'var(--text-muted)' }}>OUT OF 100</span>
+              </div>
+            </div>
+
+            <div style={{ marginTop: 12 }}>
+              <span className="pill-badge" style={{ background: labelColor, color: '#fff', fontSize: '0.75rem', padding: '4px 12px' }}>
+                {label}
+              </span>
+            </div>
+
+            <div style={{
+              marginTop: 16, paddingTop: 12, borderTop: '1.5px dashed #E2E8F0', width: '100%',
+              display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, fontSize: 11, textAlign: 'left'
+            }}>
+              <div>
+                <span style={{ color: 'var(--text-muted)', display: 'block' }}>Target Disease:</span>
+                <strong style={{ color: 'var(--electric-blue)' }}>{data.predicted_disease}</strong>
+              </div>
+              <div>
+                <span style={{ color: 'var(--text-muted)', display: 'block' }}>Classifier Conf:</span>
+                <strong style={{ color: '#166534' }}>{(data.prediction_confidence * 100).toFixed(1)}%</strong>
+              </div>
             </div>
           </div>
 
-          {/* Image Container */}
-          <div
-            style={{
-              background: '#000000',
-              borderRadius: 12,
-              border: '1px solid #1e293b',
-              overflow: 'hidden',
-              minHeight: 280,
-              maxHeight: 380,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            {getDisplayImage() ? (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img
-                src={getDisplayImage()}
-                alt="Semantic Explainability Visualization"
-                style={{ maxHeight: 380, width: 'auto', maxWidth: '100%', objectFit: 'contain' }}
-              />
-            ) : (
-              <div style={{ fontSize: 12, color: '#64748b', fontStyle: 'italic', padding: 30 }}>
-                Visualization image unavailable
+          {/* Right: Narrative & Warnings */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            {warnings.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {warnings.map((w, idx) => (
+                  <div key={idx} style={{
+                    background: '#FEF2F2', borderLeft: '4px solid #EF4444',
+                    borderRadius: '10px', padding: '10px 14px', color: '#7F1D1D',
+                    fontSize: '0.8rem', lineHeight: 1.5, border: '1px solid #FECACA'
+                  }}>
+                    <div style={{ fontWeight: 800, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <AlertTriangle size={14} color="#DC2626" />
+                      <span>{w.includes(':') ? w.split(':')[0] : 'Grounding Advisory'}</span>
+                    </div>
+                    <div style={{ marginTop: 2 }}>{w.includes(':') ? w.substring(w.indexOf(':') + 1).trim() : w}</div>
+                  </div>
+                ))}
               </div>
             )}
-          </div>
 
-          {/* Color Legend */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, fontSize: 11, color: '#94a3b8', justifyContent: 'center' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-              <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#dc2626', display: 'inline-block' }}></span>
-              Microaneurysms
-            </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-              <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#991b1b', display: 'inline-block' }}></span>
-              Hemorrhages
-            </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-              <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#d97706', display: 'inline-block' }}></span>
-              Hard Exudates
-            </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-              <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#16a34a', display: 'inline-block' }}></span>
-              Vessels
-            </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-              <span style={{ width: 10, height: 10, borderRadius: '50%', border: '1px solid #ffffff', background: 'transparent', display: 'inline-block' }}></span>
-              Attn Contour
-            </span>
+            <div style={{
+              background: '#F0F9FF', border: '1.5px solid #BAE6FD',
+              borderRadius: '16px', padding: '18px 20px', flex: 1
+            }}>
+              <h4 className="font-grotesk-mono" style={{
+                fontSize: 11, fontWeight: 800, color: '#0369A1', margin: '0 0 8px 0',
+                display: 'flex', alignItems: 'center', gap: 6
+              }}>
+                <Sparkles size={14} color="#0284C7" /> SEMANTIC INTERPRETATION NARRATIVE
+              </h4>
+              <p style={{ fontSize: '0.85rem', color: '#0F172A', lineHeight: 1.6, margin: 0 }}>
+                {grounding?.semantic_interpretation || 'Model activation map aligns with algorithmically confirmed retinal microvascular lesions and features.'}
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Right Column: Per-Lesion Metrics & Attention Distribution */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {/* Per-Lesion Spatial Metrics Table */}
-          <div
-            style={{
-              background: '#020617',
-              border: '2px solid #1e293b',
-              borderRadius: 16,
-              padding: 18,
-            }}
-          >
-            <h3 style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#94a3b8', margin: '0 0 12px 0' }}>
-              Per-Lesion Spatial Metrics
-            </h3>
+        {/* Main Grid: Visual Viewer & Spatial Metrics */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
+          
+          {/* Left Column: Visual Viewer */}
+          <div style={{ background: '#FAF8F5', border: 'var(--border-thick)', borderRadius: '16px', padding: '18px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+              <span className="font-grotesk-mono" style={{ fontSize: 11, fontWeight: 800, color: 'var(--ink-black)' }}>
+                SPATIAL VISUAL GROUNDING
+              </span>
+              <div style={{ display: 'flex', gap: 4 }}>
+                {(['combined', 'overlay', 'heatmap', 'original'] as const).map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => setActiveTab(t)}
+                    className={`btn-editorial-secondary ${activeTab === t ? 'active' : ''}`}
+                    style={{ padding: '4px 10px', fontSize: '0.72rem' }}
+                  >
+                    {t.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, textWrap: 'nowrap' }}>
+            <div style={{
+              background: '#000', borderRadius: '12px', border: '1.5px solid #141210',
+              overflow: 'hidden', minHeight: '260px', display: 'flex', alignItems: 'center', justifyContent: 'center'
+            }}>
+              <img
+                src={getDisplayImage()}
+                alt="Semantic Grounding Visual"
+                style={{ maxHeight: '300px', maxWidth: '100%', objectFit: 'contain', display: 'block' }}
+              />
+            </div>
+
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
+              Active mode: <strong>{activeTab}</strong> • Contours demarcate detected microaneurysms and exudates.
+            </div>
+          </div>
+
+          {/* Right Column: Per-Lesion Metrics Table */}
+          <div style={{ background: '#FFFFFF', border: 'var(--border-thick)', borderRadius: '16px', padding: '18px', overflowX: 'auto' }}>
+            <div className="font-grotesk-mono" style={{ fontSize: 11, fontWeight: 800, color: 'var(--ink-black)', marginBottom: 12 }}>
+              PER-LESION GROUNDING METRICS
+            </div>
+
+            {metrics.length > 0 ? (
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', textAlign: 'left' }}>
                 <thead>
-                  <tr style={{ borderBottom: '2px solid #1e293b', color: '#64748b', fontSize: 11, textTransform: 'uppercase' }}>
-                    <th style={{ padding: '8px 6px', textAlign: 'left' }}>Lesion Class</th>
-                    <th style={{ padding: '8px 6px', textAlign: 'center' }}>Count</th>
-                    <th style={{ padding: '8px 6px', textAlign: 'center' }}>Lesion Cov</th>
-                    <th style={{ padding: '8px 6px', textAlign: 'center' }}>Attn Cov</th>
-                    <th style={{ padding: '8px 6px', textAlign: 'center' }}>IoU</th>
-                    <th style={{ padding: '8px 6px', textAlign: 'center' }}>Point Game</th>
+                  <tr style={{ background: '#FAF8F5', borderBottom: '1.5px solid #E2E8F0' }}>
+                    <th style={{ padding: '8px 10px', fontWeight: 800 }}>Lesion Class</th>
+                    <th style={{ padding: '8px 10px', fontWeight: 800 }}>Count</th>
+                    <th style={{ padding: '8px 10px', fontWeight: 800 }}>IoU</th>
+                    <th style={{ padding: '8px 10px', fontWeight: 800 }}>Pointing Game</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {metrics.map((m, idx) => {
-                    const iouStr = m.iou !== undefined && m.iou !== null ? m.iou.toFixed(3) : 'N/A';
-                    const pgStr = m.pointing_game_hit === true ? 'HIT ✓' : m.pointing_game_hit === false ? 'MISS ✗' : 'N/A';
-                    const pgColor = m.pointing_game_hit === true ? '#4ade80' : m.pointing_game_hit === false ? '#f87171' : '#64748b';
-
-                    return (
-                      <tr key={idx} style={{ borderBottom: '1px solid #0f172a' }}>
-                        <td style={{ padding: '10px 6px', fontWeight: 700, color: '#f1f5f9', textTransform: 'capitalize' }}>
-                          {m.lesion_class.replace('_', ' ')}
-                        </td>
-                        <td style={{ padding: '10px 6px', textAlign: 'center', fontFamily: 'monospace', color: '#cbd5e1' }}>
-                          {m.instance_count}
-                        </td>
-                        <td style={{ padding: '10px 6px', textAlign: 'center', fontFamily: 'monospace', color: '#c084fc', fontWeight: 700 }}>
-                          {(m.lesion_coverage * 100).toFixed(0)}%
-                        </td>
-                        <td style={{ padding: '10px 6px', textAlign: 'center', fontFamily: 'monospace', color: '#38bdf8', fontWeight: 700 }}>
-                          {(m.attention_coverage * 100).toFixed(0)}%
-                        </td>
-                        <td style={{ padding: '10px 6px', textAlign: 'center', fontFamily: 'monospace', color: '#94a3b8' }}>
-                          {iouStr}
-                        </td>
-                        <td style={{ padding: '10px 6px', textAlign: 'center', fontWeight: 800, color: pgColor }}>
-                          {pgStr}
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {metrics.map((m, i) => (
+                    <tr key={i} style={{ borderBottom: '1px solid #F1F5F9' }}>
+                      <td style={{ padding: '8px 10px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: getRegionColor(m.lesion_class) }} />
+                        {m.lesion_class}
+                      </td>
+                      <td style={{ padding: '8px 10px' }}>{m.instance_count}</td>
+                      <td style={{ padding: '8px 10px', fontWeight: 700 }}>
+                        {m.iou !== undefined ? (m.iou * 100).toFixed(1) + '%' : 'N/A'}
+                      </td>
+                      <td style={{ padding: '8px 10px' }}>
+                        {m.pointing_game_hit ? (
+                          <span style={{ color: '#166534', fontWeight: 700 }}>✓ Hit</span>
+                        ) : (
+                          <span style={{ color: '#DC2626', fontWeight: 700 }}>✗ Miss</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
-            </div>
-          </div>
+            ) : (
+              <div style={{ padding: '24px 0', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.82rem' }}>
+                No active lesion grounding targets identified for this scan.
+              </div>
+            )}
 
-          {/* Attention Distribution Breakdown */}
-          <div
-            style={{
-              background: '#020617',
-              border: '2px solid #1e293b',
-              borderRadius: 16,
-              padding: 18,
-            }}
-          >
-            <h3 style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#94a3b8', margin: '0 0 12px 0' }}>
-              Attention Distribution Breakdown
-            </h3>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {Object.entries(dist).map(([region, frac]) => {
-                const pct = Math.round((frac as number) * 100);
-                const color = getRegionColor(region);
-
-                return (
-                  <div key={region} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11 }}>
-                      <span style={{ textTransform: 'capitalize', color: '#94a3b8', fontWeight: 600 }}>
-                        {region.replace('_', ' ')}
-                      </span>
-                      <strong style={{ color: '#f8fafc' }}>{pct}%</strong>
+            {/* Attention Distribution Breakdown */}
+            {Object.keys(dist).length > 0 && (
+              <div style={{ marginTop: 16, paddingTop: 12, borderTop: '1.5px dashed #E2E8F0' }}>
+                <div style={{ fontSize: '0.75rem', fontWeight: 800, marginBottom: 8, textTransform: 'uppercase' }}>
+                  Attention Mass Distribution
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {Object.entries(dist).map(([region, share]) => (
+                    <div key={region} style={{ background: '#F1F5F9', padding: '4px 10px', borderRadius: '8px', fontSize: '0.72rem' }}>
+                      <span style={{ color: getRegionColor(region), fontWeight: 800 }}>{region}:</span> {(share * 100).toFixed(1)}%
                     </div>
-                    <div style={{ width: '100%', background: '#0f172a', borderRadius: 9999, height: 8, overflow: 'hidden' }}>
-                      <div
-                        style={{
-                          width: `${Math.min(pct, 100)}%`,
-                          background: color,
-                          height: '100%',
-                          borderRadius: 9999,
-                          transition: 'width 0.6s ease',
-                        }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
-
-      {/* ── Provenance & Disclaimer Footer ── */}
-      <div
-        style={{
-          borderTop: '2px solid #1e293b',
-          marginTop: 24,
-          paddingTop: 16,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: 12,
-          fontSize: 11,
-          color: '#64748b',
-        }}
-      >
-        <div>
-          <span>Config Version: </span>
-          <code style={{ color: '#c084fc', fontFamily: 'monospace' }}>
-            lesion_grounding_config.json (v{grounding.config_version})
-          </code>
-        </div>
-        <div style={{ fontStyle: 'italic', textAlign: 'right', maxWidth: 600, lineHeight: 1.4 }}>
-          {data.disclaimer}
-        </div>
-      </div>
-    </div>
+    </section>
   );
 }

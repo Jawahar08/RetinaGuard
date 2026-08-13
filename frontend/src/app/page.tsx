@@ -816,12 +816,10 @@ export default function OphthaFusionDashboard() {
       />
 
       {semanticResult && (
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 24px' }}>
-          <SemanticExplainPanel
-            data={semanticResult}
-            onClose={() => setSemanticResult(null)}
-          />
-        </div>
+        <SemanticExplainPanel
+          data={semanticResult}
+          onClose={() => setSemanticResult(null)}
+        />
       )}
 
       <ProgressionTrackerUI />

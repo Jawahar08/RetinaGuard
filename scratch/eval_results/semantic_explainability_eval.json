@@ -1,0 +1,20 @@
+{
+  "timestamp": "2026-08-04T14:18:34.591551",
+  "reproducibility": {
+    "random_seed": 42,
+    "num_samples": 10,
+    "grounding_config_version": "1.0.0",
+    "annotations_source": "synthetic_fixtures"
+  },
+  "spatial_explainability_metrics": {
+    "mean_lesion_grounding_score": 25.65,
+    "mean_iou": 0.0583,
+    "mean_dice": 0.1101,
+    "mean_lesion_coverage": 0.0583,
+    "mean_attention_coverage": 0.9989,
+    "pointing_game_accuracy": 1.0
+  },
+  "classification_metrics": {
+    "accuracy": 0.9
+  }
+}
