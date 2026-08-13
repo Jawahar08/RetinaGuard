@@ -102,10 +102,8 @@ export default function ResearchMetrics({ t }: { t: any }) {
           </table>
         </div>
       </RevealUp>
-
-      <style>{`
-        .research-row:hover { background: rgba(49,92,245,0.04) !important; }
-      `}</style>
     </section>
   );
 }
+
+

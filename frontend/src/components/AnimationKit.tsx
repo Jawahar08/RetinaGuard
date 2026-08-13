@@ -207,84 +207,11 @@ export function ShimmerCard({ height = 120 }: { height?: number }) {
   );
 }
 
-/* ── Global animation keyframes injected once ───────────────────────────── */
+/* ── Global animation keyframes (injected in globals.css) ────────────────── */
 export function AnimationKeyframes() {
-  return (
-    <style>{`
-      @keyframes orb-drift-a {
-        0%   { transform: translate(0px,   0px) scale(1); }
-        33%  { transform: translate(40px, 30px) scale(1.06); }
-        66%  { transform: translate(-20px, 50px) scale(0.97); }
-        100% { transform: translate(30px, -20px) scale(1.03); }
-      }
-      @keyframes orb-drift-b {
-        0%   { transform: translate(0px,   0px) scale(1); }
-        50%  { transform: translate(60px, -40px) scale(1.08); }
-        100% { transform: translate(-30px, 30px) scale(0.95); }
-      }
-      @keyframes orb-drift-c {
-        0%   { transform: translate(0px,  0px) scale(1); }
-        50%  { transform: translate(-40px, 40px) scale(1.05); }
-        100% { transform: translate(20px, -30px) scale(0.97); }
-      }
-      @keyframes pulse-ring {
-        0%   { transform: scale(1); opacity: 0.6; }
-        70%  { transform: scale(2.4); opacity: 0; }
-        100% { transform: scale(2.4); opacity: 0; }
-      }
-      @keyframes shimmer {
-        0%   { background-position: -400% 0; }
-        100% { background-position: 400% 0; }
-      }
-      @keyframes float-badge {
-        0%, 100% { transform: translateY(0px) rotate(-1deg); }
-        50%       { transform: translateY(-8px) rotate(1deg); }
-      }
-      @keyframes badge-pop {
-        0%   { transform: scale(0.7) translateY(20px); opacity: 0; }
-        70%  { transform: scale(1.06) translateY(-4px); opacity: 1; }
-        100% { transform: scale(1) translateY(0px); opacity: 1; }
-      }
-      @keyframes scan-line {
-        0%   { top: 0%; opacity: 0.8; }
-        90%  { top: 100%; opacity: 0.8; }
-        100% { top: 100%; opacity: 0; }
-      }
-      @keyframes gradient-x {
-        0%, 100% { background-position: 0% 50%; }
-        50%       { background-position: 100% 50%; }
-      }
-      @keyframes hero-glow {
-        0%, 100% { box-shadow: 0 0 40px 8px rgba(255,200,61,0.18); }
-        50%       { box-shadow: 0 0 80px 20px rgba(49,92,245,0.18); }
-      }
-      @keyframes card-entrance {
-        0%   { opacity: 0; transform: scale(0.93) translateY(30px); }
-        100% { opacity: 1; transform: scale(1)   translateY(0px); }
-      }
-      @keyframes spin-slow {
-        from { transform: rotate(0deg); }
-        to   { transform: rotate(360deg); }
-      }
-      @keyframes blink-cursor {
-        0%, 100% { opacity: 1; }
-        50%       { opacity: 0; }
-      }
-      @keyframes slide-in-right {
-        0%   { opacity: 0; transform: translateX(60px); }
-        100% { opacity: 1; transform: translateX(0px); }
-      }
-      @keyframes slide-in-left {
-        0%   { opacity: 0; transform: translateX(-60px); }
-        100% { opacity: 1; transform: translateX(0px); }
-      }
-      @keyframes ripple {
-        0%   { transform: scale(0); opacity: 0.6; }
-        100% { transform: scale(4); opacity: 0; }
-      }
-    `}</style>
-  );
+  return null;
 }
+
 
 /* ── Scan-line overlay (retinal scanner effect) ─────────────────────────── */
 export function ScanLineOverlay({ active = false }: { active?: boolean }) {

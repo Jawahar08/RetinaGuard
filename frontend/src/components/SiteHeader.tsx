@@ -169,20 +169,8 @@ export default function SiteHeader({ lang, setLang, onStartScreening, onExploreM
           </div>
         </nav>
       </div>
-
-      <style>{`
-        .nav-link-animated::after {
-          content: '';
-          position: absolute;
-          bottom: -1px;
-          left: 0; right: 100%;
-          height: 2px;
-          background: var(--electric-blue);
-          transition: right 0.25s cubic-bezier(0.4,0,0.2,1);
-          border-radius: 2px;
-        }
-        .nav-link-animated:hover::after { right: 0; }
-      `}</style>
     </header>
   );
 }
+
+

@@ -214,13 +214,11 @@ function ScanPreviewCard() {
 /* ── Main HeroSection ───────────────────────────────────────────────────── */
 export default function HeroSection({ t, onStartScreening, onExploreMethod }: HeroSectionProps) {
   return (
-    <>
-      <AnimationKeyframes />
-      <section
-        id="overview"
-        className="container-editorial"
-        style={{ paddingTop: '56px', paddingBottom: '40px', position: 'relative', zIndex: 1 }}
-      >
+    <section
+      id="overview"
+      className="container-editorial"
+      style={{ paddingTop: '56px', paddingBottom: '40px', position: 'relative', zIndex: 1 }}
+    >
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'minmax(0,1fr) minmax(0,400px)',
@@ -364,6 +362,7 @@ export default function HeroSection({ t, onStartScreening, onExploreMethod }: He
           </div>
         </div>
       </section>
-    </>
   );
 }
+
+
