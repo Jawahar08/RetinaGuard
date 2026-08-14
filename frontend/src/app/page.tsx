@@ -81,92 +81,47 @@ interface HeatmapResponse {
   disclaimer: string;
 }
 
-const TRANSLATIONS: Record<'en' | 'ph', Record<string, string>> = {
-  en: {
-    heroTitleLine1: 'See the signal.',
-    heroTitleLine2: 'Understand the decision.',
-    heroSub: 'RetinaGuard analyzes retinal fundus images using an ensemble of deep-learning models and visualizes the regions influencing its prediction.',
-    trustLine: 'Research and screening support only. Not a medical diagnosis.',
-    ctaPrimary: 'Analyze a Retinal Image',
-    ctaSecondary: 'Explore the Method',
-    step1Title: 'Select Screening Task',
-    taskOdirTitle: 'ODIR Multi-Label Screening',
-    taskOdirSub: 'Normal, DR, Glaucoma, Cataract, AMD',
-    taskAptosTitle: 'APTOS DR Severity Grading',
-    taskAptosSub: '5-Class DR Severity (No DR to Severe)',
-    step2Title: 'Upload Retinal Photograph',
-    dropzoneText: 'Upload an image. Explore the evidence.',
-    dropzoneSub: 'Drag and drop fundus photo or click to browse (PNG, JPG up to 15MB)',
-    mockModeLabel: 'Mock Demo Mode (Offline)',
-    runBtn: 'Analyze Retinal Image',
-    processingBtn: 'Checking Quality & 4608d Fusion...',
-    qualityFailedTitle: 'Low-Quality Rejection — Human Review Required',
-    abstainTitle: 'Low Confidence — Flagged for Expert Review',
-    confidenceLabel: 'Calibrated Confidence',
-    downloadReportBtn: 'Download Diagnostic PDF Report',
-    heatmapTitle: 'What Influenced the Model?',
-    heatmapSub: 'Visual attention maps generated via Grad-CAM layer activation.',
-    tabBlended: 'Blended Overlay',
-    tabHeatmap: 'Heatmap Only',
-    tabOriginal: 'Original Image',
-    ensembleTitle: 'Three Models. One Interpretable View.',
-    ensembleSub: 'Multi-backbone feature concatenation combined with an out-of-fold stacking meta-classifier.',
-    researchTitle: 'SOTA Validation Metrics',
-    researchSub: 'Evaluated on 3,662 APTOS fundus images and 6,392 ODIR multi-label records.',
-    clinicalRefTitle: 'Clinical Condition Reference',
-    disclaimerGradcam: 'This visualization shows regions that influenced the model. It is not proof of a lesion, disease location, or clinical diagnosis.'
-  },
-  ph: {
-    heroTitleLine1: 'Tignan ang hudyat.',
-    heroTitleLine2: 'Unawain ang desisyon.',
-    heroSub: 'Pino-proseso ng RetinaGuard ang mga litrato ng retina gamit ang pinagsamang AI ensemble upang maipakita ang mga bahaging nakaimpluwensya sa pagsusuri.',
-    trustLine: 'Pang-pananaliksik at suporta lamang. Hindi ito pinal na diagnosis ng doktor.',
-    ctaPrimary: 'Suriin ang Litrato ng Retina',
-    ctaSecondary: 'Tignan ang Paraan ng AI',
-    step1Title: 'Pumili ng Uri ng Pagsusuri',
-    taskOdirTitle: 'ODIR Pagsusuri sa Maraming Sakit',
-    taskOdirSub: 'Normal, DR, Glaucoma, Cataract, AMD',
-    taskAptosTitle: 'APTOS Antas ng Severity ng DR',
-    taskAptosSub: '5-Antas ng Severity (Walang DR hanggang Malubha)',
-    step2Title: 'Mag-upload ng Litrato ng Retina',
-    dropzoneText: 'Mag-upload ng litrato. Tignan ang patunay.',
-    dropzoneSub: 'I-drag at i-drop ang litrato o i-click para mag-browse (PNG, JPG hanggang 15MB)',
-    mockModeLabel: 'Mock Demo Mode (Offline)',
-    runBtn: 'Simulan ang Pagsusuri',
-    processingBtn: 'Pino-proseso ang Quality Gate at 4608d Fusion...',
-    qualityFailedTitle: 'Bagsak sa Quality Check — Kinakailangan ang Doktor',
-    abstainTitle: 'Mababang Kompiyansa — Naipatala para sa Eksperto',
-    confidenceLabel: 'Kompirmadong Kompiyansa',
-    downloadReportBtn: 'I-download ang Ulat (JSON)',
-    heatmapTitle: 'Ano ang Nakaimpluwensya sa AI Model?',
-    heatmapSub: 'Grad-CAM visual attention map sa mga bahagi ng retina.',
-    tabBlended: 'Pinagsamang Overlay',
-    tabHeatmap: 'Heatmap Lamang',
-    tabOriginal: 'Orihinal na Litrato',
-    ensembleTitle: 'Tatlong Model. Isang Malinaw na Pagsusuri.',
-    ensembleSub: 'Pagsasama ng 4608d feature vectors mula sa tatlong malalakas na deep-learning backbones.',
-    researchTitle: 'Mga Resulta ng Pananaliksik (SOTA)',
-    researchSub: 'Sinubukan sa 3,662 APTOS litrato at 6,392 ODIR na mga tala.',
-    clinicalRefTitle: 'Sanggunian sa mga Sakit sa Mata',
-    disclaimerGradcam: 'Ipinapakita lamang ng visual na ito kung saang bahagi nakatutok ang AI. Hindi ito pinal na patunay ng sugat o sakit sa mata.'
-  }
+const t: Record<string, string> = {
+  heroTitleLine1: 'See the signal.',
+  heroTitleLine2: 'Understand the decision.',
+  heroSub: 'RetinaGuard analyzes retinal fundus images using an ensemble of deep-learning models and visualizes the regions influencing its prediction.',
+  trustLine: 'Research and screening support only. Not a medical diagnosis.',
+  ctaPrimary: 'Analyze a Retinal Image',
+  ctaSecondary: 'Explore the Method',
+  step1Title: 'Select Screening Task',
+  taskOdirTitle: 'ODIR Multi-Label Screening',
+  taskOdirSub: 'Normal, DR, Glaucoma, Cataract, AMD',
+  taskAptosTitle: 'APTOS DR Severity Grading',
+  taskAptosSub: '5-Class DR Severity (No DR to Severe)',
+  step2Title: 'Upload Retinal Photograph',
+  dropzoneText: 'Upload an image. Explore the evidence.',
+  dropzoneSub: 'Drag and drop fundus photo or click to browse (PNG, JPG up to 15MB)',
+  mockModeLabel: 'Mock Demo Mode (Offline)',
+  runBtn: 'Analyze Retinal Image',
+  processingBtn: 'Checking Quality & 4608d Fusion...',
+  qualityFailedTitle: 'Low-Quality Rejection — Human Review Required',
+  abstainTitle: 'Low Confidence — Flagged for Expert Review',
+  confidenceLabel: 'Calibrated Confidence',
+  downloadReportBtn: 'Download Diagnostic PDF Report',
+  heatmapTitle: 'What Influenced the Model?',
+  heatmapSub: 'Visual attention maps generated via Grad-CAM layer activation.',
+  tabBlended: 'Blended Overlay',
+  tabHeatmap: 'Heatmap Only',
+  tabOriginal: 'Original Image',
+  ensembleTitle: 'Three Models. One Interpretable View.',
+  ensembleSub: 'Multi-backbone feature concatenation combined with an out-of-fold stacking meta-classifier.',
+  researchTitle: 'SOTA Validation Metrics',
+  researchSub: 'Evaluated on 3,662 APTOS fundus images and 6,392 ODIR multi-label records.',
+  clinicalRefTitle: 'Clinical Condition Reference',
+  disclaimerGradcam: 'This visualization shows regions that influenced the model. It is not proof of a lesion, disease location, or clinical diagnosis.'
 };
 
-const DISEASE_INFO_MAP: Record<'en' | 'ph', Record<string, string>> = {
-  en: {
-    'Normal Retina': 'Retinal fundus structure demonstrates sharp optic disc margins, healthy macula, and normal vascular arcade geometry.',
-    'Diabetic Retinopathy': 'Microvascular complication causing capillary non-perfusion, microaneurysms, hard exudates, and intraretinal hemorrhages.',
-    'Glaucoma': 'Progressive optic neuropathy characterized by optic nerve head cupping and retinal nerve fiber layer thinning.',
-    'Cataract': 'Opacification of the crystalline lens causing light scatter and reduced sharpness of retinal image capture.',
-    'Age-Related Macular Degeneration': 'Degenerative disorder of the retinal pigment epithelium and macula leading to central visual field loss.'
-  },
-  ph: {
-    'Normal Retina': 'Malinaw na optic disc, malusog na macula, at maayos na daloy ng dugo sa mga ugat ng mata.',
-    'Diabetic Retinopathy': 'Komplikasyon ng diyabetes na nagdudulot ng paglitaw ng microaneurysms, pagdurugo, at exudates sa retina.',
-    'Glaucoma': 'Progresibong pinsala sa optic nerve na nagdudulot ng paglawak ng cupping at pagkasira ng bahagi ng paningin.',
-    'Cataract': 'Paglabo ng lente ng mata na humahadlang sa liwanag patungo sa retina.',
-    'Age-Related Macular Degeneration': 'Pagkasira ng macula sanhi ng edad na nagdudulot ng paglabo ng gitnang paningin.'
-  }
+const DISEASE_INFO_MAP: Record<string, string> = {
+  'Normal Retina': 'Retinal fundus structure demonstrates sharp optic disc margins, healthy macula, and normal vascular arcade geometry.',
+  'Diabetic Retinopathy': 'Microvascular complication causing capillary non-perfusion, microaneurysms, hard exudates, and intraretinal hemorrhages.',
+  'Glaucoma': 'Progressive optic neuropathy characterized by optic nerve head cupping and retinal nerve fiber layer thinning.',
+  'Cataract': 'Opacification of the crystalline lens causing light scatter and reduced sharpness of retinal image capture.',
+  'Age-Related Macular Degeneration': 'Degenerative disorder of the retinal pigment epithelium and macula leading to central visual field loss.'
 };
 
 // Calculate image-specific dynamic evidence risk score from extracted attributes
@@ -321,9 +276,6 @@ const generateImageSpecificPrediction = (file: File, task: 'multitask' | 'odir' 
 };
 
 export default function OphthaFusionDashboard() {
-  const [lang, setLang] = useState<'en' | 'ph'>('en');
-  const t = TRANSLATIONS[lang];
-
   const [task, setTask] = useState<'multitask' | 'odir' | 'aptos'>('odir');
   const [patientInfo, setPatientInfo] = useState<PatientInfoData>({
     name: '',
@@ -778,8 +730,6 @@ export default function OphthaFusionDashboard() {
 
 
       <SiteHeader
-        lang={lang}
-        setLang={setLang}
         onStartScreening={scrollToWorkspace}
         onExploreMethod={scrollToMethod}
       />
@@ -839,7 +789,7 @@ export default function OphthaFusionDashboard() {
 
       <DiseaseReference
         t={t}
-        diseaseInfoMap={DISEASE_INFO_MAP[lang]}
+        diseaseInfoMap={DISEASE_INFO_MAP}
       />
 
       <SiteFooter />

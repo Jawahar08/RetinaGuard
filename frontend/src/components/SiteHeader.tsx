@@ -5,13 +5,11 @@ import { ArrowRight, Eye } from 'lucide-react';
 import { PulseDot, RippleButton } from './AnimationKit';
 
 interface SiteHeaderProps {
-  lang: 'en' | 'ph';
-  setLang: (lang: 'en' | 'ph') => void;
   onStartScreening: () => void;
   onExploreMethod: () => void;
 }
 
-export default function SiteHeader({ lang, setLang, onStartScreening, onExploreMethod }: SiteHeaderProps) {
+export default function SiteHeader({ onStartScreening, onExploreMethod }: SiteHeaderProps) {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -125,29 +123,6 @@ export default function SiteHeader({ lang, setLang, onStartScreening, onExploreM
               </button>
             )
           )}
-
-          {/* Language Selector */}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: '4px',
-            background: 'var(--card-white)', border: 'var(--border-thick)',
-            borderRadius: 'var(--radius-pill)', padding: '3px',
-            boxShadow: 'var(--shadow-sm)',
-          }}>
-            <button
-              className={`btn-editorial-secondary ${lang === 'en' ? 'active' : ''}`}
-              onClick={() => setLang('en')}
-              style={{ padding: '3px 10px', fontSize: '0.72rem', border: 'none', boxShadow: 'none', transition: 'all 0.2s ease' }}
-            >
-              🇺🇸 EN
-            </button>
-            <button
-              className={`btn-editorial-secondary ${lang === 'ph' ? 'active' : ''}`}
-              onClick={() => setLang('ph')}
-              style={{ padding: '3px 10px', fontSize: '0.72rem', border: 'none', boxShadow: 'none', transition: 'all 0.2s ease' }}
-            >
-              🇵🇭 PH
-            </button>
-          </div>
 
           {/* Live indicator + CTA */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
