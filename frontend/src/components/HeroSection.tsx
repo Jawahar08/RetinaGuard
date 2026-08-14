@@ -78,26 +78,27 @@ function FloatingStatCard({
   );
 }
 
-/* ── Retinal scan preview card ──────────────────────────────────────────── */
+/* ── Retinal scan preview card with Real Clinical Eye Scan ───────────────── */
 function ScanPreviewCard() {
   const [scanning, setScanning] = useState(true);
   const [dotIndex, setDotIndex] = useState(0);
 
+  // Anatomical landmarks mapped accurately to aptos_stage_2_moderate.png
   const DOTS = [
-    { x: 55, y: 45, color: '#EF4444', label: 'DR', size: 10 },
-    { x: 42, y: 58, color: '#F59E0B', label: 'OD', size: 14 },
-    { x: 67, y: 52, color: '#10B981', label: 'FOV', size: 8 },
-    { x: 50, y: 35, color: '#315CF5', label: 'Vessel', size: 7 },
+    { x: 25.5, y: 49.0, color: '#F59E0B', label: 'Optic Disc (OD)', short: 'OD', size: 14 },
+    { x: 64.0, y: 45.0, color: '#EF4444', label: 'Exudates / Microaneurysms', short: 'DR Lesions', size: 12 },
+    { x: 56.0, y: 51.5, color: '#315CF5', label: 'Fovea / Macula', short: 'Macula', size: 10 },
+    { x: 37.0, y: 28.0, color: '#10B981', label: 'Superior Vascular Arcade', short: 'Vessels', size: 9 },
   ];
 
   useEffect(() => {
-    const t = setTimeout(() => setScanning(false), 2600);
+    const t = setTimeout(() => setScanning(false), 2400);
     return () => clearTimeout(t);
   }, []);
 
   useEffect(() => {
     if (scanning) return;
-    const i = setInterval(() => setDotIndex(d => (d + 1) % DOTS.length), 1200);
+    const i = setInterval(() => setDotIndex(d => (d + 1) % DOTS.length), 1600);
     return () => clearInterval(i);
   }, [scanning]);
 
@@ -107,78 +108,138 @@ function ScanPreviewCard() {
       width: '100%',
       maxWidth: 360,
       aspectRatio: '1/1',
-      background: '#0A0A0A',
+      background: '#07080B',
       borderRadius: 24,
       border: '2px solid #141210',
-      boxShadow: '6px 6px 0px #141210, 0 0 60px rgba(49,92,245,0.2)',
+      boxShadow: '6px 6px 0px #141210, 0 0 60px rgba(49,92,245,0.25)',
       overflow: 'hidden',
       animation: 'hero-glow 4s ease-in-out infinite',
     }}>
-      {/* Grid overlay */}
+      {/* Background medical grid */}
       <div style={{
         position: 'absolute', inset: 0,
-        backgroundImage: 'linear-gradient(rgba(49,92,245,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(49,92,245,0.06) 1px, transparent 1px)',
-        backgroundSize: '30px 30px',
+        backgroundImage: 'linear-gradient(rgba(49,92,245,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(49,92,245,0.08) 1px, transparent 1px)',
+        backgroundSize: '24px 24px',
+        zIndex: 1,
+        pointerEvents: 'none',
       }} />
 
-      {/* Retinal fundus placeholder */}
+      {/* Real Clinical Retinal Fundus Image Container */}
       <div style={{
-        position: 'absolute', inset: 24,
+        position: 'absolute', inset: 16,
         borderRadius: '50%',
-        background: 'radial-gradient(circle at 40% 40%, #3D1200 0%, #1A0800 40%, #060300 100%)',
-        border: '2px solid rgba(255,100,50,0.25)',
-        boxShadow: 'inset 0 0 40px rgba(180,60,20,0.4)',
+        overflow: 'hidden',
+        border: '2px solid rgba(255,200,61,0.4)',
+        boxShadow: '0 0 30px rgba(0,0,0,0.8), inset 0 0 35px rgba(0,0,0,0.85)',
+        background: '#000',
+        zIndex: 2,
       }}>
-        {/* Vessel lines */}
-        <svg viewBox="0 0 100 100" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.6 }}>
-          <path d="M50 50 Q30 30 20 20" stroke="#8B3A0F" strokeWidth="1.5" fill="none" strokeLinecap="round" />
-          <path d="M50 50 Q70 35 80 25" stroke="#8B3A0F" strokeWidth="1.5" fill="none" strokeLinecap="round" />
-          <path d="M50 50 Q40 70 30 80" stroke="#8B3A0F" strokeWidth="1.2" fill="none" strokeLinecap="round" />
-          <path d="M50 50 Q65 65 75 78" stroke="#8B3A0F" strokeWidth="1.2" fill="none" strokeLinecap="round" />
-          <path d="M50 50 Q55 30 52 10" stroke="#8B3A0F" strokeWidth="0.9" fill="none" strokeLinecap="round" />
-          <path d="M50 50 Q25 55 10 55" stroke="#8B3A0F" strokeWidth="0.8" fill="none" strokeLinecap="round" />
-          <circle cx="50" cy="50" r="4" fill="#FFC83D" opacity="0.7" />
-        </svg>
+        {/* Real Fundus Eye Image */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/samples/aptos_stage_2_moderate.png"
+          alt="Real Retinal Fundus Scan - Diabetic Retinopathy"
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            filter: 'contrast(1.08) brightness(1.02)',
+            transform: 'scale(1.04)',
+            transition: 'transform 0.5s ease',
+          }}
+        />
 
-        {/* Annotation dots */}
-        {!scanning && DOTS.map((dot, i) => (
-          <div
-            key={i}
-            style={{
-              position: 'absolute',
-              left: `${dot.x}%`, top: `${dot.y}%`,
-              transform: 'translate(-50%, -50%)',
-              opacity: dotIndex === i ? 1 : 0.3,
-              transition: 'opacity 0.4s ease',
-            }}
-          >
-            <div style={{
-              width: dot.size, height: dot.size,
-              borderRadius: '50%',
-              background: dot.color,
-              border: '1.5px solid white',
-              boxShadow: `0 0 8px ${dot.color}`,
-              animation: dotIndex === i ? 'pulse-ring 1.5s ease-out infinite' : 'none',
-            }} />
-            {dotIndex === i && (
+        {/* Subtle lens flare / vignette */}
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'radial-gradient(circle at 45% 45%, transparent 60%, rgba(0,0,0,0.7) 100%)',
+          pointerEvents: 'none',
+        }} />
+
+        {/* Anatomical Landmark Pinpoints & Overlays */}
+        {!scanning && DOTS.map((dot, i) => {
+          const isActive = dotIndex === i;
+          return (
+            <div
+              key={i}
+              style={{
+                position: 'absolute',
+                left: `${dot.x}%`,
+                top: `${dot.y}%`,
+                transform: 'translate(-50%, -50%)',
+                zIndex: isActive ? 10 : 5,
+                transition: 'all 0.3s ease',
+              }}
+            >
+              {/* Target reticle for active landmark */}
+              {isActive && (
+                <div style={{
+                  position: 'absolute',
+                  left: '50%', top: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  width: dot.size * 3.2,
+                  height: dot.size * 3.2,
+                  borderRadius: '50%',
+                  border: `1.5px dashed ${dot.color}`,
+                  animation: 'spin-slow 6s linear infinite',
+                  pointerEvents: 'none',
+                }} />
+              )}
+
+              {/* Center point */}
               <div style={{
-                position: 'absolute', top: -22, left: '50%', transform: 'translateX(-50%)',
-                background: dot.color, color: '#fff',
-                fontSize: '0.6rem', fontWeight: 800, padding: '2px 6px',
-                borderRadius: 4, whiteSpace: 'nowrap',
-                border: '1px solid rgba(255,255,255,0.3)',
-              }}>
-                {dot.label}
-              </div>
-            )}
-          </div>
-        ))}
+                width: dot.size,
+                height: dot.size,
+                borderRadius: '50%',
+                background: dot.color,
+                border: '2px solid #ffffff',
+                boxShadow: `0 0 12px ${dot.color}, 0 0 4px #000`,
+                cursor: 'pointer',
+                transform: isActive ? 'scale(1.2)' : 'scale(0.9)',
+                transition: 'transform 0.3s ease',
+              }} />
+
+              {/* Landmark Callout Tag */}
+              {isActive && (
+                <div style={{
+                  position: 'absolute',
+                  top: dot.y < 35 ? 18 : -26,
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  background: 'rgba(15, 23, 42, 0.92)',
+                  color: '#ffffff',
+                  fontSize: '0.62rem',
+                  fontWeight: 800,
+                  letterSpacing: '0.04em',
+                  padding: '3px 8px',
+                  borderRadius: 6,
+                  whiteSpace: 'nowrap',
+                  border: `1px solid ${dot.color}`,
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.6)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  animation: 'badge-pop 0.3s cubic-bezier(0.22,1,0.36,1)',
+                }}>
+                  <span style={{ width: 5, height: 5, borderRadius: '50%', background: dot.color }} />
+                  {dot.label}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
-      {/* Scanning line */}
+      {/* Crosshair HUD elements in corners */}
+      <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 4, color: 'rgba(255,255,255,0.4)', fontSize: '0.6rem', fontFamily: 'monospace' }}>
+        FOV 45° · MACULA
+      </div>
+
+      {/* Laser Scanning Line Overlay */}
       <ScanLineOverlay active={scanning} />
 
-      {/* Top-left badge */}
+      {/* Top-left status badge */}
       <div style={{
         position: 'absolute', top: 12, left: 12,
         background: 'rgba(255,200,61,0.95)',
@@ -187,22 +248,31 @@ function ScanPreviewCard() {
         fontSize: '0.65rem', fontWeight: 800, letterSpacing: '0.06em',
         color: '#141210',
         display: 'flex', alignItems: 'center', gap: 5,
+        zIndex: 4,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
       }}>
-        <PulseDot color="#141210" /> {scanning ? 'SCANNING...' : 'AI ACTIVE'}
+        <PulseDot color="#141210" /> {scanning ? 'SCANNING FUNDUS...' : 'CLINICAL EYE LIVE'}
       </div>
 
-      {/* Bottom result bar */}
+      {/* Bottom telemetry & diagnostic result bar */}
       {!scanning && (
         <div style={{
           position: 'absolute', bottom: 0, left: 0, right: 0,
-          background: 'linear-gradient(180deg, transparent, rgba(0,0,0,0.85))',
-          padding: '12px 14px 14px',
+          background: 'linear-gradient(180deg, transparent 0%, rgba(10,12,16,0.92) 25%, rgba(6,7,10,0.98) 100%)',
+          padding: '14px 16px 14px',
+          borderTop: '1px solid rgba(255,255,255,0.08)',
           animation: 'slide-in-left 0.5s ease',
+          zIndex: 4,
         }}>
-          <div style={{ color: '#10B981', fontWeight: 800, fontSize: '0.78rem', letterSpacing: '0.06em' }}>
-            ✓ ANALYSIS COMPLETE — DR Grade 2 Detected
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ color: '#10B981', fontWeight: 800, fontSize: '0.78rem', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span>✓</span> ANALYSIS COMPLETE — DR Grade 2
+            </div>
+            <span style={{ fontSize: '0.6rem', color: '#FFC83D', fontWeight: 700, background: 'rgba(255,200,61,0.15)', padding: '1px 6px', borderRadius: 4, border: '1px solid rgba(255,200,61,0.3)' }}>
+              APTOS 2019
+            </span>
           </div>
-          <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.65rem', marginTop: 2 }}>
+          <div style={{ color: 'rgba(255,255,255,0.65)', fontSize: '0.65rem', marginTop: 3 }}>
             Confidence: 98.2% · Risk: Moderate · VDI: 0.318
           </div>
         </div>
