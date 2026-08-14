@@ -13,7 +13,7 @@ import DIPExplorer from '../components/DIPExplorer';
 import ProgressionTrackerUI from '../components/ProgressionTrackerUI';
 import SemanticExplainPanel, { SemanticExplainabilityResult } from '../components/SemanticExplainPanel';
 import { PatientInfoData } from '../components/PatientIntakeForm';
-import { FloatingOrbs } from '../components/AnimationKit';
+import { FloatingOrbs, EyeCursorFollower } from '../components/AnimationKit';
 
 
 interface ClassPrediction {
@@ -725,6 +725,7 @@ export default function OphthaFusionDashboard() {
 
   return (
     <div style={{ background: 'var(--bg-paper)', color: 'var(--ink-black)', minHeight: '100vh', position: 'relative' }}>
+      <EyeCursorFollower />
       <FloatingOrbs />
       <TickerBar />
 

@@ -359,3 +359,103 @@ export function RippleButton({
     </button>
   );
 }
+
+/* ── Interactive Eye Cursor Follower ────────────────────────────────────── */
+export function EyeCursorFollower() {
+  const [pos, setPos] = useState({ x: -100, y: -100 });
+  const [hovering, setHovering] = useState(false);
+  const [clicking, setClicking] = useState(false);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    // Only run on desktop devices with hover support
+    if (typeof window === 'undefined' || window.matchMedia('(hover: none)').matches) {
+      return;
+    }
+
+    const handleMouseMove = (e: MouseEvent) => {
+      setPos({ x: e.clientX, y: e.clientY });
+      if (!visible) setVisible(true);
+
+      const target = e.target as HTMLElement | null;
+      if (target) {
+        const isInteractive = Boolean(
+          target.closest('button, a, input, select, textarea, [role="button"], .btn-editorial-primary, .btn-editorial-secondary, .dropzone-editorial, .pill-badge, [data-interactive="true"]')
+        );
+        setHovering(isInteractive);
+      }
+    };
+
+    const handleMouseDown = () => setClicking(true);
+    const handleMouseUp = () => setClicking(false);
+    const handleMouseLeave = () => setVisible(false);
+    const handleMouseEnter = () => setVisible(true);
+
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    window.addEventListener('mousedown', handleMouseDown);
+    window.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('mouseleave', handleMouseLeave);
+    document.addEventListener('mouseenter', handleMouseEnter);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mousedown', handleMouseDown);
+      window.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('mouseleave', handleMouseLeave);
+      document.removeEventListener('mouseenter', handleMouseEnter);
+    };
+  }, [visible]);
+
+  if (!visible) return null;
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        left: pos.x,
+        top: pos.y,
+        pointerEvents: 'none',
+        zIndex: 99999,
+        transform: `translate(-50%, -50%) scale(${clicking ? 0.85 : hovering ? 1.35 : 1})`,
+        transition: 'transform 0.15s cubic-bezier(0.2, 0, 0, 1), opacity 0.2s ease',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: 38,
+        height: 38,
+      }}
+    >
+      {/* Outer Pulse/Target Ring */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: hovering ? 0 : 4,
+          borderRadius: '50%',
+          border: hovering ? '2px solid #FFC83D' : '1.5px dashed rgba(49, 92, 245, 0.4)',
+          background: hovering ? 'rgba(255, 200, 61, 0.22)' : 'rgba(49, 92, 245, 0.08)',
+          boxShadow: hovering ? '0 0 14px rgba(255, 200, 61, 0.6)' : 'none',
+          animation: hovering ? 'spin-slow 4s linear infinite' : 'none',
+          transition: 'all 0.2s ease',
+        }}
+      />
+
+      {/* Eye Emoji Symbol */}
+      <span
+        role="img"
+        aria-label="Eye Cursor"
+        style={{
+          fontSize: hovering ? '20px' : '17px',
+          lineHeight: 1,
+          userSelect: 'none',
+          filter: hovering
+            ? 'drop-shadow(0 0 8px rgba(255, 200, 61, 0.9))'
+            : 'drop-shadow(0 2px 4px rgba(0,0,0,0.25))',
+          transform: clicking ? 'scale(0.9) rotate(-10deg)' : 'scale(1)',
+          transition: 'font-size 0.2s ease, filter 0.2s ease, transform 0.15s ease',
+        }}
+      >
+        👁️
+      </span>
+    </div>
+  );
+}

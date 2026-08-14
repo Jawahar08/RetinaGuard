@@ -387,7 +387,7 @@ export default function AnalysisWorkspace({
               {isLoading ? (
                 <> <RefreshCw size={16} className="animate-spin" /> {t.processingBtn} </>
               ) : (
-                <> <Sparkles size={16} /> {t.runBtn} </>
+                <> <Sparkles size={16} /> {t.runBtn} 👁️ </>
               )}
             </button>
           </div>

@@ -35,13 +35,16 @@ function Typewriter({ text }: { text: string }) {
     <span>
       {displayed}
       <span style={{
-        display: 'inline-block', width: '3px', height: '0.85em',
-        background: done ? 'transparent' : 'var(--electric-blue)',
-        verticalAlign: 'middle', marginLeft: 2,
-        animation: done ? 'none' : 'blink-cursor 0.8s step-end infinite',
-        borderRadius: 2,
-        transition: 'background 0.3s',
-      }} />
+        display: 'inline-block',
+        fontSize: '0.85em',
+        verticalAlign: 'middle',
+        marginLeft: 4,
+        animation: done ? 'none' : 'blink-cursor 0.9s step-end infinite',
+        userSelect: 'none',
+        filter: 'drop-shadow(0 0 6px rgba(49, 92, 245, 0.4))',
+      }}>
+        👁️
+      </span>
     </span>
   );
 }
@@ -357,7 +360,7 @@ export default function HeroSection({ t, onStartScreening, onExploreMethod }: He
                 onClick={onStartScreening}
                 style={{ padding: '14px 28px', fontSize: '0.9rem' }}
               >
-                {t.ctaPrimary} <ArrowRight size={16} />
+                {t.ctaPrimary} 👁️ <ArrowRight size={16} />
               </RippleButton>
               <RippleButton
                 className="btn-editorial-secondary"

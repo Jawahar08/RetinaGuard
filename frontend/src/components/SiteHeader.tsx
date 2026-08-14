@@ -139,7 +139,7 @@ export default function SiteHeader({ onStartScreening, onExploreMethod }: SiteHe
               onClick={onStartScreening}
               style={{ padding: '8px 18px', fontSize: '0.78rem' }}
             >
-              START SCREENING <ArrowRight size={14} />
+              START SCREENING 👁️ <ArrowRight size={14} />
             </RippleButton>
           </div>
         </nav>
