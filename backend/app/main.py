@@ -6,7 +6,8 @@ import io
 import logging
 import time
 import uuid
-from typing import Optional
+import datetime
+from typing import Optional, Any, List, Dict
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, HTMLResponse
@@ -529,4 +530,135 @@ async def semantic_explain(
     except Exception as e:
         logger.error(f"Semantic explainability pipeline error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Semantic explainability error: {str(e)}")
+
+
+# ══════════════════════════════════════════════════════════════════════════════════
+# CLINICAL RECORDS ARCHIVE & DATABASE STORAGE ENDPOINTS (Supabase + SQLite Backup)
+# ══════════════════════════════════════════════════════════════════════════════════
+
+from pydantic import BaseModel, Field
+from backend.app.db import db_manager
+
+
+class DoctorNotesUpdate(BaseModel):
+    doctor_notes: str
+    clinical_status: Optional[str] = None
+
+
+class ClinicalRecordPayload(BaseModel):
+    id: Optional[str] = None
+    patient_id: Optional[str] = None
+    patient_name: Optional[str] = "Anonymous Patient"
+    patient_age: Optional[str] = "N/A"
+    patient_gender: Optional[str] = "N/A"
+    scanned_eye: Optional[str] = "Right Eye (OD)"
+    blood_group: Optional[str] = "N/A"
+    diabetic_status: Optional[str] = "Unspecified"
+    hypertension: Optional[str] = "Unspecified"
+    symptoms: Optional[str] = "None reported"
+    task: Optional[str] = "multitask"
+    model_name: Optional[str] = "RetinaGuard++ MultiTask"
+    model_version: Optional[str] = "2.0.0"
+    top_prediction: str
+    confidence: float
+    risk_score: float
+    risk_level: Optional[str] = "Low Risk"
+    severity: Optional[str] = ""
+    quality_score: Optional[float] = 1.0
+    quality_passed: Optional[int] = 1
+    vessel_density: Optional[float] = 0.14
+    microaneurysms: Optional[int] = 0
+    exudate_ratio: Optional[float] = 0.0
+    predictions_json: Optional[Any] = None
+    sub_scores_json: Optional[Any] = None
+    dip_biomarkers_json: Optional[Any] = None
+    doctor_notes: Optional[str] = ""
+    clinical_status: Optional[str] = "Completed"
+    thumbnail_base64: Optional[str] = ""
+    heatmap_overlay_base64: Optional[str] = ""
+    recommendation: Optional[str] = ""
+    created_at: Optional[str] = None
+
+
+@app.get("/api/database/status", tags=["Clinical Records Database"])
+def get_db_status():
+    """Returns the operational status of Primary (Supabase) and Secondary (SQLite) databases."""
+    return db_manager.get_database_status()
+
+
+@app.get("/api/records", tags=["Clinical Records Database"])
+def get_clinical_records(
+    query: Optional[str] = None,
+    disease: Optional[str] = None,
+    risk_level: Optional[str] = None,
+    eye: Optional[str] = None,
+    sort_by: str = "newest",
+    limit: int = 100
+):
+    """Search and retrieve past clinical checks and patient diagnoses."""
+    records = db_manager.get_all_records(
+        query=query,
+        disease=disease,
+        risk_level=risk_level,
+        eye=eye,
+        sort_by=sort_by,
+        limit=limit
+    )
+    return {"records": records, "count": len(records)}
+
+
+@app.post("/api/records", tags=["Clinical Records Database"])
+def save_clinical_record(payload: ClinicalRecordPayload):
+    """Save a new patient screening record into primary database and SQLite backup."""
+    rec_dict = payload.model_dump()
+    if not rec_dict.get("id"):
+        rec_dict["id"] = f"REC-{datetime.datetime.now().strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
+    if not rec_dict.get("patient_id"):
+        rec_dict["patient_id"] = f"P-{uuid.uuid4().hex[:5].upper()}"
+    
+    saved = db_manager.save_record(rec_dict)
+    return {"status": "success", "record": saved}
+
+
+@app.get("/api/records/{record_id}", tags=["Clinical Records Database"])
+def get_clinical_record_detail(record_id: str):
+    """Retrieve full details of a specific clinical record."""
+    record = db_manager.get_record_by_id(record_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="Clinical record not found")
+    return record
+
+
+@app.put("/api/records/{record_id}/notes", tags=["Clinical Records Database"])
+def update_record_notes(record_id: str, body: DoctorNotesUpdate):
+    """Update doctor's clinical notes, observations, or follow-up status."""
+    record = db_manager.update_doctor_notes(
+        record_id=record_id,
+        doctor_notes=body.doctor_notes,
+        clinical_status=body.clinical_status
+    )
+    if not record:
+        raise HTTPException(status_code=404, detail="Clinical record not found")
+    return {"status": "success", "record": record}
+
+
+@app.delete("/api/records/{record_id}", tags=["Clinical Records Database"])
+def delete_clinical_record(record_id: str):
+    """Delete a clinical record from the database."""
+    success = db_manager.delete_record(record_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Clinical record not found")
+    return {"status": "success", "deleted_id": record_id}
+
+
+@app.get("/api/records/export", tags=["Clinical Records Database"])
+def export_clinical_records():
+    """Export all stored clinical records in JSON format."""
+    records = db_manager.get_all_records(limit=1000)
+    return {
+        "export_date": datetime.datetime.now().isoformat(),
+        "total_records": len(records),
+        "records": records
+    }
+
 

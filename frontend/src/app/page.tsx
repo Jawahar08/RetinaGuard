@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import TickerBar from '../components/TickerBar';
 import SiteHeader from '../components/SiteHeader';
 import HeroSection from '../components/HeroSection';
@@ -12,6 +12,12 @@ import SiteFooter from '../components/SiteFooter';
 import DIPExplorer from '../components/DIPExplorer';
 import ProgressionTrackerUI from '../components/ProgressionTrackerUI';
 import SemanticExplainPanel, { SemanticExplainabilityResult } from '../components/SemanticExplainPanel';
+import ClinicalRecordsArchive from '../components/ClinicalRecordsArchive';
+import {
+  saveClinicalRecordToDatabase,
+  ClinicalRecord,
+  fetchClinicalRecords
+} from '../services/clinicalRecordsStorage';
 import { PatientInfoData } from '../components/PatientIntakeForm';
 import { FloatingOrbs, EyeCursorFollower } from '../components/AnimationKit';
 
@@ -299,10 +305,24 @@ export default function OphthaFusionDashboard() {
   const [semanticResult, setSemanticResult] = useState<SemanticExplainabilityResult | null>(null);
   const [isSemanticLoading, setIsSemanticLoading] = useState<boolean>(false);
 
+  // Clinical Records & Archive state
+  const [recordsCount, setRecordsCount] = useState<number>(4);
+  const [archiveRefreshTrigger, setArchiveRefreshTrigger] = useState<number>(0);
+  const [isSavedToArchive, setIsSavedToArchive] = useState<boolean>(false);
+
   const workspaceRef = useRef<HTMLDivElement>(null);
   const methodRef = useRef<HTMLDivElement>(null);
 
   const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+
+  useEffect(() => {
+    // Load initial records count from database
+    fetchClinicalRecords().then(recs => {
+      if (recs && recs.length > 0) {
+        setRecordsCount(recs.length);
+      }
+    }).catch(() => {});
+  }, [archiveRefreshTrigger]);
 
   const scrollToWorkspace = () => {
     workspaceRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -323,6 +343,7 @@ export default function OphthaFusionDashboard() {
     setPrediction(null);
     setHeatmapData(null);
     setSemanticResult(null);
+    setIsSavedToArchive(false);
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -330,6 +351,147 @@ export default function OphthaFusionDashboard() {
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       handleFileSelect(e.dataTransfer.files[0]);
     }
+  };
+
+  const handleSaveCurrentToArchive = async () => {
+    if (!prediction) return;
+    try {
+      const newRec: Partial<ClinicalRecord> = {
+        patient_name: patientInfo.name || 'Anonymous Patient',
+        patient_age: patientInfo.age || 'N/A',
+        patient_gender: patientInfo.gender || 'N/A',
+        scanned_eye: patientInfo.eyeScanned || 'Right Eye (OD)',
+        blood_group: patientInfo.bloodGroup || 'N/A',
+        diabetic_status: patientInfo.diabeticStatus || 'Unspecified',
+        hypertension: patientInfo.hypertension || 'Unspecified',
+        symptoms: patientInfo.symptoms.join(', ') || 'None reported',
+        task: task,
+        model_name: prediction.model_name || 'RetinaGuard++ MultiTask',
+        model_version: prediction.model_version || '2.0.0',
+        top_prediction: prediction.top_prediction,
+        confidence: prediction.calibrated_confidence,
+        risk_score: prediction.risk_score,
+        risk_level: prediction.risk_category || (prediction.risk_score > 70 ? 'Critical Risk' : prediction.risk_score > 50 ? 'High Risk' : prediction.risk_score > 25 ? 'Elevated Risk' : 'Low Risk'),
+        severity: prediction.severity || '',
+        quality_score: prediction.quality_gate?.quality_score ?? 0.95,
+        quality_passed: prediction.quality_gate?.passed ? 1 : 0,
+        vessel_density: prediction.vessel_density ?? 0.14,
+        microaneurysms: prediction.microaneurysms ?? 0,
+        exudate_ratio: prediction.exudate_ratio ?? 0.0,
+        predictions_json: prediction.predictions || [],
+        sub_scores_json: prediction.sub_scores || {},
+        thumbnail_base64: previewUrl || '',
+        heatmap_overlay_base64: heatmapData?.overlay_base64 || '',
+        recommendation: prediction.recommendation || '',
+        clinical_status: 'Completed'
+      };
+
+      await saveClinicalRecordToDatabase(newRec);
+      setIsSavedToArchive(true);
+      setArchiveRefreshTrigger(prev => prev + 1);
+    } catch (e) {
+      console.error('Error saving record to database:', e);
+    }
+  };
+
+  const handleLoadRecordIntoWorkspace = (record: ClinicalRecord) => {
+    // Populate patient intake
+    setPatientInfo({
+      name: record.patient_name || '',
+      age: record.patient_age || '',
+      gender: record.patient_gender || 'Female',
+      eyeScanned: record.scanned_eye || 'Right Eye (OD)',
+      bloodGroup: record.blood_group || 'O+',
+      diabeticStatus: record.diabetic_status || 'Non-Diabetic',
+      hypertension: record.hypertension || 'No',
+      symptoms: record.symptoms ? record.symptoms.split(', ') : ['None']
+    });
+
+    setTask(record.task || 'multitask');
+
+    // Set preview URL
+    if (record.thumbnail_base64) {
+      setPreviewUrl(record.thumbnail_base64);
+    } else {
+      // Pick matching sample image
+      const pred = record.top_prediction.toLowerCase();
+      if (pred.includes('glaucoma')) {
+        setPreviewUrl('/samples/odir_glaucoma.jpg');
+      } else if (pred.includes('cataract')) {
+        setPreviewUrl('/samples/odir_cataract.jpg');
+      } else if (pred.includes('amd')) {
+        setPreviewUrl('/samples/odir_amd.jpg');
+      } else if (pred.includes('severe') || pred.includes('proliferative')) {
+        setPreviewUrl('/samples/aptos_stage_3_severe.png');
+      } else if (pred.includes('moderate')) {
+        setPreviewUrl('/samples/aptos_stage_2_moderate.png');
+      } else if (pred.includes('mild')) {
+        setPreviewUrl('/samples/aptos_stage_1_mild.png');
+      } else {
+        setPreviewUrl('/samples/aptos_stage_0_normal.png');
+      }
+    }
+
+    // Populate prediction
+    const reconstructedPrediction: PredictionResponse = {
+      request_id: record.id,
+      task: record.task || 'multitask',
+      model_name: record.model_name || 'RetinaGuard++ MultiTask',
+      model_version: record.model_version || '2.0.0',
+      quality_gate: {
+        passed: record.quality_passed !== 0,
+        quality_score: record.quality_score ?? 0.95,
+        flags: []
+      },
+      predictions: record.predictions_json && record.predictions_json.length > 0 ? record.predictions_json : [
+        { label: record.top_prediction, probability: record.confidence, is_positive: !record.top_prediction.toLowerCase().includes('normal') && !record.top_prediction.toLowerCase().includes('no dr') }
+      ],
+      top_prediction: record.top_prediction,
+      calibrated_confidence: record.confidence,
+      risk_score: record.risk_score,
+      risk_category: record.risk_level,
+      severity: record.severity || '',
+      dip_findings: `Vessel density: ${((record.vessel_density ?? 0.14) * 100).toFixed(1)}%, Microaneurysms: ${record.microaneurysms ?? 0}`,
+      explanation: record.doctor_notes || '',
+      recommendation: record.recommendation || '',
+      vessel_density: record.vessel_density ?? 0.14,
+      microaneurysms: record.microaneurysms ?? 0,
+      exudate_ratio: record.exudate_ratio ?? 0.0,
+      sub_scores: record.sub_scores_json,
+      abstain: false,
+      patient_info: {
+        name: record.patient_name,
+        age: record.patient_age,
+        gender: record.patient_gender,
+        blood_group: record.blood_group,
+        diabetic_status: record.diabetic_status,
+        hypertension: record.hypertension,
+        symptoms: record.symptoms
+      },
+      disclaimer: t.trustLine
+    };
+
+    setPrediction(reconstructedPrediction);
+    setIsSavedToArchive(true);
+
+    // Scroll to workspace
+    scrollToWorkspace();
+  };
+
+  const handleSendRecordToProgression = (record: ClinicalRecord) => {
+    // Scroll smoothly to progression section
+    const progEl = document.getElementById('progression');
+    if (progEl) {
+      progEl.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const handleGenerateReportFromRecord = (record: ClinicalRecord) => {
+    // Load and trigger report
+    handleLoadRecordIntoWorkspace(record);
+    setTimeout(() => {
+      downloadReport();
+    }, 400);
   };
 
   const runPrediction = async () => {
@@ -733,6 +895,7 @@ export default function OphthaFusionDashboard() {
       <SiteHeader
         onStartScreening={scrollToWorkspace}
         onExploreMethod={scrollToMethod}
+        recordsCount={recordsCount}
       />
 
       <HeroSection
@@ -762,6 +925,12 @@ export default function OphthaFusionDashboard() {
         runPrediction={runPrediction}
         downloadReport={downloadReport}
         workspaceRef={workspaceRef}
+        onSaveToArchive={handleSaveCurrentToArchive}
+        onOpenArchive={() => {
+          const el = document.getElementById('past-records');
+          if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }}
+        isSavedToArchive={isSavedToArchive}
       />
 
       <DIPExplorer
@@ -776,6 +945,14 @@ export default function OphthaFusionDashboard() {
           onClose={() => setSemanticResult(null)}
         />
       )}
+
+      {/* Clinical Records & Past Diagnostics Data Storage Space */}
+      <ClinicalRecordsArchive
+        onLoadIntoWorkspace={handleLoadRecordIntoWorkspace}
+        onSendToProgression={handleSendRecordToProgression}
+        onGenerateReport={handleGenerateReportFromRecord}
+        refreshTrigger={archiveRefreshTrigger}
+      />
 
       <ProgressionTrackerUI />
 

@@ -83,6 +83,9 @@ interface AnalysisWorkspaceProps {
   runPrediction: () => void;
   downloadReport: () => void;
   workspaceRef: React.RefObject<HTMLDivElement> | any;
+  onSaveToArchive?: () => void;
+  onOpenArchive?: () => void;
+  isSavedToArchive?: boolean;
 }
 
 export default function AnalysisWorkspace({
@@ -105,7 +108,10 @@ export default function AnalysisWorkspace({
   handleDrop,
   runPrediction,
   downloadReport,
-  workspaceRef
+  workspaceRef,
+  onSaveToArchive,
+  onOpenArchive,
+  isSavedToArchive
 }: AnalysisWorkspaceProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -544,7 +550,53 @@ export default function AnalysisWorkspace({
                   </div>
                 )}
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', marginTop: '20px', paddingTop: '16px', borderTop: '1px solid rgba(20,18,16,0.1)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    {onSaveToArchive && (
+                      <button
+                        type="button"
+                        className="btn-editorial-primary"
+                        onClick={onSaveToArchive}
+                        style={{
+                          fontSize: '0.78rem',
+                          padding: '8px 14px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          background: isSavedToArchive ? '#166534' : 'var(--ink-black)'
+                        }}
+                      >
+                        {isSavedToArchive ? (
+                          <>
+                            <CheckCircle2 size={14} color="#fff" /> Saved to Patient Archive
+                          </>
+                        ) : (
+                          <>
+                            <Layers size={14} /> Save to Patient Archive 💾
+                          </>
+                        )}
+                      </button>
+                    )}
+
+                    {onOpenArchive && (
+                      <button
+                        type="button"
+                        onClick={onOpenArchive}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: '#0369A1',
+                          fontWeight: 700,
+                          fontSize: '0.78rem',
+                          cursor: 'pointer',
+                          textDecoration: 'underline'
+                        }}
+                      >
+                        View Past Patient Checks →
+                      </button>
+                    )}
+                  </div>
+
                   <button className="btn-editorial-secondary" onClick={downloadReport}>
                     <Download size={15} /> {t.downloadReportBtn}
                   </button>

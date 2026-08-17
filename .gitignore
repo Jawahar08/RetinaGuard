@@ -59,7 +59,8 @@ Thumbs.db
 work/
 outputs/
 data/raw/
-data/processed/
-PAPILA/
 artifacts/
+*.db
+data/*.db
+
 

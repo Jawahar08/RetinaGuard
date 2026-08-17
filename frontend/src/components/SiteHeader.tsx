@@ -7,9 +7,10 @@ import { PulseDot, RippleButton } from './AnimationKit';
 interface SiteHeaderProps {
   onStartScreening: () => void;
   onExploreMethod: () => void;
+  recordsCount?: number;
 }
 
-export default function SiteHeader({ onStartScreening, onExploreMethod }: SiteHeaderProps) {
+export default function SiteHeader({ onStartScreening, onExploreMethod, recordsCount }: SiteHeaderProps) {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -83,12 +84,17 @@ export default function SiteHeader({ onStartScreening, onExploreMethod }: SiteHe
         </div>
 
         {/* Nav */}
-        <nav style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
+        <nav style={{ display: 'flex', alignItems: 'center', gap: '18px', flexWrap: 'wrap' }}>
           {[
             { label: 'Overview', href: '#overview' },
             { label: 'Screening', onClick: onStartScreening },
             { label: 'DIP Biomarkers', href: '#dip-explorer' },
             { label: 'Progression', href: '#progression' },
+            {
+              label: 'Past Records 🗂️',
+              href: '#past-records',
+              badge: typeof recordsCount === 'number' ? recordsCount : undefined
+            },
             { label: 'Research', href: '#research' },
           ].map((item, i) =>
             item.href ? (
@@ -102,20 +108,40 @@ export default function SiteHeader({ onStartScreening, onExploreMethod }: SiteHe
                   fontSize: '0.85rem',
                   position: 'relative',
                   paddingBottom: '2px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '5px'
                 }}
                 className="nav-link-animated"
               >
                 {item.label}
+                {typeof item.badge === 'number' && (
+                  <span style={{
+                    fontSize: '0.65rem',
+                    fontWeight: 800,
+                    background: '#E2E8F0',
+                    color: 'var(--ink-black)',
+                    padding: '1px 6px',
+                    borderRadius: '10px',
+                    border: '1px solid rgba(20,18,16,0.15)'
+                  }}>
+                    {item.badge}
+                  </span>
+                )}
               </a>
             ) : (
               <button
                 key={i}
                 onClick={item.onClick}
                 style={{
-                  background: 'none', border: 'none',
-                  color: 'var(--ink-black)', cursor: 'pointer',
-                  fontWeight: 700, fontSize: '0.85rem',
-                  position: 'relative', paddingBottom: '2px',
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--ink-black)',
+                  cursor: 'pointer',
+                  fontWeight: 700,
+                  fontSize: '0.85rem',
+                  position: 'relative',
+                  paddingBottom: '2px',
                 }}
                 className="nav-link-animated"
               >
