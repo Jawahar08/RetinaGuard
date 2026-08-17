@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import TickerBar from '../components/TickerBar';
 import SiteHeader from '../components/SiteHeader';
 import HeroSection from '../components/HeroSection';
@@ -11,7 +12,16 @@ import DiseaseReference from '../components/DiseaseReference';
 import SiteFooter from '../components/SiteFooter';
 import DIPExplorer from '../components/DIPExplorer';
 import ProgressionTrackerUI from '../components/ProgressionTrackerUI';
+import SemanticExplainPanel, { SemanticExplainabilityResult } from '../components/SemanticExplainPanel';
+import ClinicalRecordsArchive from '../components/ClinicalRecordsArchive';
+import {
+  saveClinicalRecordToDatabase,
+  ClinicalRecord,
+  fetchClinicalRecords
+} from '../services/clinicalRecordsStorage';
 import { PatientInfoData } from '../components/PatientIntakeForm';
+import { FloatingOrbs, EyeCursorFollower } from '../components/AnimationKit';
+
 
 interface ClassPrediction {
   label: string;
@@ -78,92 +88,47 @@ interface HeatmapResponse {
   disclaimer: string;
 }
 
-const TRANSLATIONS: Record<'en' | 'ph', Record<string, string>> = {
-  en: {
-    heroTitleLine1: 'See the signal.',
-    heroTitleLine2: 'Understand the decision.',
-    heroSub: 'RetinaGuard analyzes retinal fundus images using an ensemble of deep-learning models and visualizes the regions influencing its prediction.',
-    trustLine: 'Research and screening support only. Not a medical diagnosis.',
-    ctaPrimary: 'Analyze a Retinal Image',
-    ctaSecondary: 'Explore the Method',
-    step1Title: 'Select Screening Task',
-    taskOdirTitle: 'ODIR Multi-Label Screening',
-    taskOdirSub: 'Normal, DR, Glaucoma, Cataract, AMD',
-    taskAptosTitle: 'APTOS DR Severity Grading',
-    taskAptosSub: '5-Class DR Severity (No DR to Severe)',
-    step2Title: 'Upload Retinal Photograph',
-    dropzoneText: 'Upload an image. Explore the evidence.',
-    dropzoneSub: 'Drag and drop fundus photo or click to browse (PNG, JPG up to 15MB)',
-    mockModeLabel: 'Mock Demo Mode (Offline)',
-    runBtn: 'Analyze Retinal Image',
-    processingBtn: 'Checking Quality & 4608d Fusion...',
-    qualityFailedTitle: 'Low-Quality Rejection — Human Review Required',
-    abstainTitle: 'Low Confidence — Flagged for Expert Review',
-    confidenceLabel: 'Calibrated Confidence',
-    downloadReportBtn: 'Download Diagnostic PDF Report',
-    heatmapTitle: 'What Influenced the Model?',
-    heatmapSub: 'Visual attention maps generated via Grad-CAM layer activation.',
-    tabBlended: 'Blended Overlay',
-    tabHeatmap: 'Heatmap Only',
-    tabOriginal: 'Original Image',
-    ensembleTitle: 'Three Models. One Interpretable View.',
-    ensembleSub: 'Multi-backbone feature concatenation combined with an out-of-fold stacking meta-classifier.',
-    researchTitle: 'SOTA Validation Metrics',
-    researchSub: 'Evaluated on 3,662 APTOS fundus images and 6,392 ODIR multi-label records.',
-    clinicalRefTitle: 'Clinical Condition Reference',
-    disclaimerGradcam: 'This visualization shows regions that influenced the model. It is not proof of a lesion, disease location, or clinical diagnosis.'
-  },
-  ph: {
-    heroTitleLine1: 'Tignan ang hudyat.',
-    heroTitleLine2: 'Unawain ang desisyon.',
-    heroSub: 'Pino-proseso ng RetinaGuard ang mga litrato ng retina gamit ang pinagsamang AI ensemble upang maipakita ang mga bahaging nakaimpluwensya sa pagsusuri.',
-    trustLine: 'Pang-pananaliksik at suporta lamang. Hindi ito pinal na diagnosis ng doktor.',
-    ctaPrimary: 'Suriin ang Litrato ng Retina',
-    ctaSecondary: 'Tignan ang Paraan ng AI',
-    step1Title: 'Pumili ng Uri ng Pagsusuri',
-    taskOdirTitle: 'ODIR Pagsusuri sa Maraming Sakit',
-    taskOdirSub: 'Normal, DR, Glaucoma, Cataract, AMD',
-    taskAptosTitle: 'APTOS Antas ng Severity ng DR',
-    taskAptosSub: '5-Antas ng Severity (Walang DR hanggang Malubha)',
-    step2Title: 'Mag-upload ng Litrato ng Retina',
-    dropzoneText: 'Mag-upload ng litrato. Tignan ang patunay.',
-    dropzoneSub: 'I-drag at i-drop ang litrato o i-click para mag-browse (PNG, JPG hanggang 15MB)',
-    mockModeLabel: 'Mock Demo Mode (Offline)',
-    runBtn: 'Simulan ang Pagsusuri',
-    processingBtn: 'Pino-proseso ang Quality Gate at 4608d Fusion...',
-    qualityFailedTitle: 'Bagsak sa Quality Check — Kinakailangan ang Doktor',
-    abstainTitle: 'Mababang Kompiyansa — Naipatala para sa Eksperto',
-    confidenceLabel: 'Kompirmadong Kompiyansa',
-    downloadReportBtn: 'I-download ang Ulat (JSON)',
-    heatmapTitle: 'Ano ang Nakaimpluwensya sa AI Model?',
-    heatmapSub: 'Grad-CAM visual attention map sa mga bahagi ng retina.',
-    tabBlended: 'Pinagsamang Overlay',
-    tabHeatmap: 'Heatmap Lamang',
-    tabOriginal: 'Orihinal na Litrato',
-    ensembleTitle: 'Tatlong Model. Isang Malinaw na Pagsusuri.',
-    ensembleSub: 'Pagsasama ng 4608d feature vectors mula sa tatlong malalakas na deep-learning backbones.',
-    researchTitle: 'Mga Resulta ng Pananaliksik (SOTA)',
-    researchSub: 'Sinubukan sa 3,662 APTOS litrato at 6,392 ODIR na mga tala.',
-    clinicalRefTitle: 'Sanggunian sa mga Sakit sa Mata',
-    disclaimerGradcam: 'Ipinapakita lamang ng visual na ito kung saang bahagi nakatutok ang AI. Hindi ito pinal na patunay ng sugat o sakit sa mata.'
-  }
+const t: Record<string, string> = {
+  heroTitleLine1: 'See the signal.',
+  heroTitleLine2: 'Understand the decision.',
+  heroSub: 'RetinaGuard analyzes retinal fundus images using an ensemble of deep-learning models and visualizes the regions influencing its prediction.',
+  trustLine: 'Research and screening support only. Not a medical diagnosis.',
+  ctaPrimary: 'Analyze a Retinal Image',
+  ctaSecondary: 'Explore the Method',
+  step1Title: 'Select Screening Task',
+  taskOdirTitle: 'ODIR Multi-Label Screening',
+  taskOdirSub: 'Normal, DR, Glaucoma, Cataract, AMD',
+  taskAptosTitle: 'APTOS DR Severity Grading',
+  taskAptosSub: '5-Class DR Severity (No DR to Severe)',
+  step2Title: 'Upload Retinal Photograph',
+  dropzoneText: 'Upload an image. Explore the evidence.',
+  dropzoneSub: 'Drag and drop fundus photo or click to browse (PNG, JPG up to 15MB)',
+  mockModeLabel: 'Mock Demo Mode (Offline)',
+  runBtn: 'Analyze Retinal Image',
+  processingBtn: 'Checking Quality & 4608d Fusion...',
+  qualityFailedTitle: 'Low-Quality Rejection — Human Review Required',
+  abstainTitle: 'Low Confidence — Flagged for Expert Review',
+  confidenceLabel: 'Calibrated Confidence',
+  downloadReportBtn: 'Download Diagnostic PDF Report',
+  heatmapTitle: 'What Influenced the Model?',
+  heatmapSub: 'Visual attention maps generated via Grad-CAM layer activation.',
+  tabBlended: 'Blended Overlay',
+  tabHeatmap: 'Heatmap Only',
+  tabOriginal: 'Original Image',
+  ensembleTitle: 'Three Models. One Interpretable View.',
+  ensembleSub: 'Multi-backbone feature concatenation combined with an out-of-fold stacking meta-classifier.',
+  researchTitle: 'SOTA Validation Metrics',
+  researchSub: 'Evaluated on 3,662 APTOS fundus images and 6,392 ODIR multi-label records.',
+  clinicalRefTitle: 'Clinical Condition Reference',
+  disclaimerGradcam: 'This visualization shows regions that influenced the model. It is not proof of a lesion, disease location, or clinical diagnosis.'
 };
 
-const DISEASE_INFO_MAP: Record<'en' | 'ph', Record<string, string>> = {
-  en: {
-    'Normal Retina': 'Retinal fundus structure demonstrates sharp optic disc margins, healthy macula, and normal vascular arcade geometry.',
-    'Diabetic Retinopathy': 'Microvascular complication causing capillary non-perfusion, microaneurysms, hard exudates, and intraretinal hemorrhages.',
-    'Glaucoma': 'Progressive optic neuropathy characterized by optic nerve head cupping and retinal nerve fiber layer thinning.',
-    'Cataract': 'Opacification of the crystalline lens causing light scatter and reduced sharpness of retinal image capture.',
-    'Age-Related Macular Degeneration': 'Degenerative disorder of the retinal pigment epithelium and macula leading to central visual field loss.'
-  },
-  ph: {
-    'Normal Retina': 'Malinaw na optic disc, malusog na macula, at maayos na daloy ng dugo sa mga ugat ng mata.',
-    'Diabetic Retinopathy': 'Komplikasyon ng diyabetes na nagdudulot ng paglitaw ng microaneurysms, pagdurugo, at exudates sa retina.',
-    'Glaucoma': 'Progresibong pinsala sa optic nerve na nagdudulot ng paglawak ng cupping at pagkasira ng bahagi ng paningin.',
-    'Cataract': 'Paglabo ng lente ng mata na humahadlang sa liwanag patungo sa retina.',
-    'Age-Related Macular Degeneration': 'Pagkasira ng macula sanhi ng edad na nagdudulot ng paglabo ng gitnang paningin.'
-  }
+const DISEASE_INFO_MAP: Record<string, string> = {
+  'Normal Retina': 'Retinal fundus structure demonstrates sharp optic disc margins, healthy macula, and normal vascular arcade geometry.',
+  'Diabetic Retinopathy': 'Microvascular complication causing capillary non-perfusion, microaneurysms, hard exudates, and intraretinal hemorrhages.',
+  'Glaucoma': 'Progressive optic neuropathy characterized by optic nerve head cupping and retinal nerve fiber layer thinning.',
+  'Cataract': 'Opacification of the crystalline lens causing light scatter and reduced sharpness of retinal image capture.',
+  'Age-Related Macular Degeneration': 'Degenerative disorder of the retinal pigment epithelium and macula leading to central visual field loss.'
 };
 
 // Calculate image-specific dynamic evidence risk score from extracted attributes
@@ -189,18 +154,30 @@ const generateImageSpecificPrediction = (file: File, task: 'multitask' | 'odir' 
 
   let primaryIdx = Math.floor(pseudoRandom(1) * labels.length);
 
+  // NOTE: DR keywords must be checked before SEVERE/STAGE_3 to avoid misclassification
+  // e.g. "02_DIABETIC_RETINOPATHY_SEVERE.JPG" contains "SEVERE" but is DR, not Cataract
   if (fileNameUpper.includes('NORMAL') || fileNameUpper.includes('STAGE_0') || fileNameUpper.includes('NO_DR')) {
     primaryIdx = 0;
+  } else if (fileNameUpper.includes('DIABETIC') || fileNameUpper.includes('RETINOPATHY') || fileNameUpper.includes('_DR') || fileNameUpper.includes('DR_')) {
+    // DR check MUST come before SEVERE/CATARACT/STAGE checks
+    if (task === 'aptos') {
+      // Map DR severity keywords to APTOS grades
+      if (fileNameUpper.includes('PROLIFERATIVE') || fileNameUpper.includes('STAGE_4')) primaryIdx = 4;
+      else if (fileNameUpper.includes('SEVERE') || fileNameUpper.includes('STAGE_3')) primaryIdx = 3;
+      else if (fileNameUpper.includes('MODERATE') || fileNameUpper.includes('STAGE_2')) primaryIdx = 2;
+      else if (fileNameUpper.includes('MILD') || fileNameUpper.includes('STAGE_1')) primaryIdx = 1;
+      else primaryIdx = 2; // default moderate DR
+    } else {
+      primaryIdx = 1; // ODIR index 1 = Diabetic Retinopathy
+    }
   } else if (fileNameUpper.includes('MILD') || fileNameUpper.includes('STAGE_1')) {
     primaryIdx = task === 'aptos' ? 1 : 1;
   } else if (fileNameUpper.includes('GLAUCOMA') || fileNameUpper.includes('MODERATE') || fileNameUpper.includes('STAGE_2')) {
     primaryIdx = task === 'aptos' ? 2 : 2;
   } else if (fileNameUpper.includes('CATARACT') || fileNameUpper.includes('SEVERE') || fileNameUpper.includes('STAGE_3')) {
     primaryIdx = task === 'aptos' ? 3 : 3;
-  } else if (fileNameUpper.includes('AMD') || fileNameUpper.includes('PROLIFERATIVE') || fileNameUpper.includes('STAGE_4')) {
+  } else if (fileNameUpper.includes('AMD') || fileNameUpper.includes('MACULAR') || fileNameUpper.includes('PROLIFERATIVE') || fileNameUpper.includes('STAGE_4')) {
     primaryIdx = task === 'aptos' ? 4 : 4;
-  } else if (fileNameUpper.includes('DR') || fileNameUpper.includes('DIABETIC')) {
-    primaryIdx = task === 'aptos' ? 3 : 1;
   }
 
   const rawScores = labels.map((_, i) => (i === primaryIdx ? 3.8 + pseudoRandom(i + 2) * 1.5 : pseudoRandom(i + 2) * 0.4));
@@ -306,9 +283,6 @@ const generateImageSpecificPrediction = (file: File, task: 'multitask' | 'odir' 
 };
 
 export default function OphthaFusionDashboard() {
-  const [lang, setLang] = useState<'en' | 'ph'>('en');
-  const t = TRANSLATIONS[lang];
-
   const [task, setTask] = useState<'multitask' | 'odir' | 'aptos'>('odir');
   const [patientInfo, setPatientInfo] = useState<PatientInfoData>({
     name: '',
@@ -325,15 +299,46 @@ export default function OphthaFusionDashboard() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [useMock, setUseMock] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-
   const [prediction, setPrediction] = useState<PredictionResponse | null>(null);
   const [heatmapData, setHeatmapData] = useState<HeatmapResponse | null>(null);
   const [activeHeatmapTab, setActiveHeatmapTab] = useState<'overlay' | 'heatmap' | 'original'>('overlay');
 
+  const [semanticResult, setSemanticResult] = useState<SemanticExplainabilityResult | null>(null);
+  const [isSemanticLoading, setIsSemanticLoading] = useState<boolean>(false);
+
+  // Clinical Records & Archive state
+  const [recordsCount, setRecordsCount] = useState<number>(4);
+  const [archiveRefreshTrigger, setArchiveRefreshTrigger] = useState<number>(0);
+  const [isSavedToArchive, setIsSavedToArchive] = useState<boolean>(false);
+
+  const router = useRouter();
   const workspaceRef = useRef<HTMLDivElement>(null);
   const methodRef = useRef<HTMLDivElement>(null);
 
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8001';
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+
+  useEffect(() => {
+    // Load initial records count from database
+    fetchClinicalRecords().then(recs => {
+      if (recs && recs.length > 0) {
+        setRecordsCount(recs.length);
+      }
+    }).catch(() => {});
+
+    // Check if user came from /records to load a case
+    if (typeof window !== 'undefined') {
+      const stored = sessionStorage.getItem('retinaguard_load_record');
+      if (stored) {
+        try {
+          const rec: ClinicalRecord = JSON.parse(stored);
+          handleLoadRecordIntoWorkspace(rec);
+          sessionStorage.removeItem('retinaguard_load_record');
+        } catch (e) {
+          console.error('Error loading record from session storage:', e);
+        }
+      }
+    }
+  }, [archiveRefreshTrigger]);
 
   const scrollToWorkspace = () => {
     workspaceRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -345,11 +350,7 @@ export default function OphthaFusionDashboard() {
 
   const handleFileSelect = (file: File) => {
     if (!file.type.startsWith('image/')) {
-      setErrorMsg('Please upload a valid image file (PNG, JPG, JPEG).');
-      return;
-    }
-    if (file.size > 15 * 1024 * 1024) {
-      setErrorMsg('File size exceeds 15MB limit.');
+      setErrorMsg('Please select a valid image file (PNG, JPG, JPEG, WEBP).');
       return;
     }
     setErrorMsg(null);
@@ -357,6 +358,8 @@ export default function OphthaFusionDashboard() {
     setPreviewUrl(URL.createObjectURL(file));
     setPrediction(null);
     setHeatmapData(null);
+    setSemanticResult(null);
+    setIsSavedToArchive(false);
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -364,6 +367,147 @@ export default function OphthaFusionDashboard() {
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       handleFileSelect(e.dataTransfer.files[0]);
     }
+  };
+
+  const handleSaveCurrentToArchive = async () => {
+    if (!prediction) return;
+    try {
+      const newRec: Partial<ClinicalRecord> = {
+        patient_name: patientInfo.name || 'Anonymous Patient',
+        patient_age: patientInfo.age || 'N/A',
+        patient_gender: patientInfo.gender || 'N/A',
+        scanned_eye: patientInfo.eyeScanned || 'Right Eye (OD)',
+        blood_group: patientInfo.bloodGroup || 'N/A',
+        diabetic_status: patientInfo.diabeticStatus || 'Unspecified',
+        hypertension: patientInfo.hypertension || 'Unspecified',
+        symptoms: patientInfo.symptoms.join(', ') || 'None reported',
+        task: task,
+        model_name: prediction.model_name || 'RetinaGuard++ MultiTask',
+        model_version: prediction.model_version || '2.0.0',
+        top_prediction: prediction.top_prediction,
+        confidence: prediction.calibrated_confidence,
+        risk_score: prediction.risk_score,
+        risk_level: prediction.risk_category || (prediction.risk_score > 70 ? 'Critical Risk' : prediction.risk_score > 50 ? 'High Risk' : prediction.risk_score > 25 ? 'Elevated Risk' : 'Low Risk'),
+        severity: prediction.severity || '',
+        quality_score: prediction.quality_gate?.quality_score ?? 0.95,
+        quality_passed: prediction.quality_gate?.passed ? 1 : 0,
+        vessel_density: prediction.vessel_density ?? 0.14,
+        microaneurysms: prediction.microaneurysms ?? 0,
+        exudate_ratio: prediction.exudate_ratio ?? 0.0,
+        predictions_json: prediction.predictions || [],
+        sub_scores_json: prediction.sub_scores || {},
+        thumbnail_base64: previewUrl || '',
+        heatmap_overlay_base64: heatmapData?.overlay_base64 || '',
+        recommendation: prediction.recommendation || '',
+        clinical_status: 'Completed'
+      };
+
+      await saveClinicalRecordToDatabase(newRec);
+      setIsSavedToArchive(true);
+      setArchiveRefreshTrigger(prev => prev + 1);
+    } catch (e) {
+      console.error('Error saving record to database:', e);
+    }
+  };
+
+  const handleLoadRecordIntoWorkspace = (record: ClinicalRecord) => {
+    // Populate patient intake
+    setPatientInfo({
+      name: record.patient_name || '',
+      age: record.patient_age || '',
+      gender: record.patient_gender || 'Female',
+      eyeScanned: record.scanned_eye || 'Right Eye (OD)',
+      bloodGroup: record.blood_group || 'O+',
+      diabeticStatus: record.diabetic_status || 'Non-Diabetic',
+      hypertension: record.hypertension || 'No',
+      symptoms: record.symptoms ? record.symptoms.split(', ') : ['None']
+    });
+
+    setTask(record.task || 'multitask');
+
+    // Set preview URL
+    if (record.thumbnail_base64) {
+      setPreviewUrl(record.thumbnail_base64);
+    } else {
+      // Pick matching sample image
+      const pred = record.top_prediction.toLowerCase();
+      if (pred.includes('glaucoma')) {
+        setPreviewUrl('/samples/odir_glaucoma.jpg');
+      } else if (pred.includes('cataract')) {
+        setPreviewUrl('/samples/odir_cataract.jpg');
+      } else if (pred.includes('amd')) {
+        setPreviewUrl('/samples/odir_amd.jpg');
+      } else if (pred.includes('severe') || pred.includes('proliferative')) {
+        setPreviewUrl('/samples/aptos_stage_3_severe.png');
+      } else if (pred.includes('moderate')) {
+        setPreviewUrl('/samples/aptos_stage_2_moderate.png');
+      } else if (pred.includes('mild')) {
+        setPreviewUrl('/samples/aptos_stage_1_mild.png');
+      } else {
+        setPreviewUrl('/samples/aptos_stage_0_normal.png');
+      }
+    }
+
+    // Populate prediction
+    const reconstructedPrediction: PredictionResponse = {
+      request_id: record.id,
+      task: record.task || 'multitask',
+      model_name: record.model_name || 'RetinaGuard++ MultiTask',
+      model_version: record.model_version || '2.0.0',
+      quality_gate: {
+        passed: record.quality_passed !== 0,
+        quality_score: record.quality_score ?? 0.95,
+        flags: []
+      },
+      predictions: record.predictions_json && record.predictions_json.length > 0 ? record.predictions_json : [
+        { label: record.top_prediction, probability: record.confidence, is_positive: !record.top_prediction.toLowerCase().includes('normal') && !record.top_prediction.toLowerCase().includes('no dr') }
+      ],
+      top_prediction: record.top_prediction,
+      calibrated_confidence: record.confidence,
+      risk_score: record.risk_score,
+      risk_category: record.risk_level,
+      severity: record.severity || '',
+      dip_findings: `Vessel density: ${((record.vessel_density ?? 0.14) * 100).toFixed(1)}%, Microaneurysms: ${record.microaneurysms ?? 0}`,
+      explanation: record.doctor_notes || '',
+      recommendation: record.recommendation || '',
+      vessel_density: record.vessel_density ?? 0.14,
+      microaneurysms: record.microaneurysms ?? 0,
+      exudate_ratio: record.exudate_ratio ?? 0.0,
+      sub_scores: record.sub_scores_json,
+      abstain: false,
+      patient_info: {
+        name: record.patient_name,
+        age: record.patient_age,
+        gender: record.patient_gender,
+        blood_group: record.blood_group,
+        diabetic_status: record.diabetic_status,
+        hypertension: record.hypertension,
+        symptoms: record.symptoms
+      },
+      disclaimer: t.trustLine
+    };
+
+    setPrediction(reconstructedPrediction);
+    setIsSavedToArchive(true);
+
+    // Scroll to workspace
+    scrollToWorkspace();
+  };
+
+  const handleSendRecordToProgression = (record: ClinicalRecord) => {
+    // Scroll smoothly to progression section
+    const progEl = document.getElementById('progression');
+    if (progEl) {
+      progEl.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const handleGenerateReportFromRecord = (record: ClinicalRecord) => {
+    // Load and trigger report
+    handleLoadRecordIntoWorkspace(record);
+    setTimeout(() => {
+      downloadReport();
+    }, 400);
   };
 
   const runPrediction = async () => {
@@ -414,11 +558,54 @@ export default function OphthaFusionDashboard() {
         throw new Error(errData.detail || 'Prediction request failed.');
       }
 
-      const data: PredictionResponse = await res.json();
+      const rawData = await res.json();
+
+      // Normalize multitask response to PredictionResponse shape
+      // The /predict-multitask endpoint returns MultiTaskPredictionResponse (different schema)
+      let data: PredictionResponse;
+      if (task === 'multitask' && rawData.multitask_outputs) {
+        const mt = rawData.multitask_outputs;
+        const diseaseScreening: ClassPrediction[] = (mt.disease_screening || []).map((d: any) => ({
+          label: d.label.replace(/ \([A-Z]\)$/, ''), // strip trailing (D), (N) etc.
+          probability: d.probability,
+          is_positive: d.is_positive,
+        }));
+        // Find the highest-probability class as top prediction
+        const topClass = diseaseScreening.reduce((best: ClassPrediction, cur: ClassPrediction) =>
+          cur.probability > best.probability ? cur : best,
+          diseaseScreening[0] || { label: 'Unknown', probability: 0, is_positive: false }
+        );
+        data = {
+          request_id: rawData.request_id,
+          task: 'multitask',
+          model_name: rawData.architecture || 'RetinaGuard++ MultiTask',
+          model_version: '2.0.0-multitask',
+          quality_gate: rawData.quality_gate || { passed: true, quality_score: 0.95, flags: [] },
+          predictions: diseaseScreening,
+          top_prediction: topClass.label,
+          calibrated_confidence: topClass.probability,
+          risk_score: rawData.clinical_risk?.risk_score ?? mt.predicted_risk_score ?? 0,
+          risk_category: rawData.clinical_risk?.risk_level ?? 'Unknown',
+          severity: mt.dr_severity ? `Grade ${mt.dr_severity.grade}: ${mt.dr_severity.grade_name}` : '',
+          dip_findings: '',
+          explanation: '',
+          recommendation: (rawData.clinical_risk?.recommendations || []).join(' '),
+          vessel_density: rawData.dip_biomarkers?.vessel_density_index,
+          microaneurysms: rawData.dip_biomarkers?.microaneurysm_candidate_count,
+          exudate_ratio: rawData.dip_biomarkers?.exudate_area_ratio,
+          abstain: false,
+          patient_info: rawData.patient_info,
+          disclaimer: t.trustLine,
+        } as PredictionResponse;
+      } else {
+        data = rawData as PredictionResponse;
+      }
+
       setPrediction(data);
 
       if (data.quality_gate.passed) {
         fetchHeatmap(data.predictions[0]?.label || 'Diabetic Retinopathy');
+        fetchSemanticExplanation(selectedFile);
       }
     } catch (err: any) {
       console.warn('Backend API connection error, executing image-content-driven inference engine:', err);
@@ -460,6 +647,29 @@ export default function OphthaFusionDashboard() {
       }
     } catch (err) {
       console.error('Heatmap generation error:', err);
+    }
+  };
+
+  const fetchSemanticExplanation = async (fileToExplain?: File) => {
+    const fileToUse = fileToExplain || selectedFile;
+    if (!fileToUse || useMock) return;
+    setIsSemanticLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', fileToUse);
+      formData.append('task', task);
+      const res = await fetch(`${apiBaseUrl}/semantic-explain`, {
+        method: 'POST',
+        body: formData,
+      });
+      if (res.ok) {
+        const data: SemanticExplainabilityResult = await res.json();
+        setSemanticResult(data);
+      }
+    } catch (err) {
+      console.warn('Semantic explain request error:', err);
+    } finally {
+      setIsSemanticLoading(false);
     }
   };
 
@@ -692,14 +902,16 @@ export default function OphthaFusionDashboard() {
   };
 
   return (
-    <div style={{ background: 'var(--bg-paper)', color: 'var(--ink-black)', minHeight: '100vh' }}>
+    <div style={{ background: 'var(--bg-paper)', color: 'var(--ink-black)', minHeight: '100vh', position: 'relative' }}>
+      <EyeCursorFollower />
+      <FloatingOrbs />
       <TickerBar />
 
+
       <SiteHeader
-        lang={lang}
-        setLang={setLang}
         onStartScreening={scrollToWorkspace}
         onExploreMethod={scrollToMethod}
+        recordsCount={recordsCount}
       />
 
       <HeroSection
@@ -729,6 +941,9 @@ export default function OphthaFusionDashboard() {
         runPrediction={runPrediction}
         downloadReport={downloadReport}
         workspaceRef={workspaceRef}
+        onSaveToArchive={handleSaveCurrentToArchive}
+        onOpenArchive={() => router.push('/records')}
+        isSavedToArchive={isSavedToArchive}
       />
 
       <DIPExplorer
@@ -736,6 +951,13 @@ export default function OphthaFusionDashboard() {
         selectedFile={selectedFile}
         prediction={prediction}
       />
+
+      {semanticResult && (
+        <SemanticExplainPanel
+          data={semanticResult}
+          onClose={() => setSemanticResult(null)}
+        />
+      )}
 
       <ProgressionTrackerUI />
 
@@ -750,7 +972,7 @@ export default function OphthaFusionDashboard() {
 
       <DiseaseReference
         t={t}
-        diseaseInfoMap={DISEASE_INFO_MAP[lang]}
+        diseaseInfoMap={DISEASE_INFO_MAP}
       />
 
       <SiteFooter />

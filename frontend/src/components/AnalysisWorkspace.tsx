@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef } from 'react';
-import { Eye, Activity, AlertTriangle, RefreshCw, Sparkles, Download, UserCheck } from 'lucide-react';
+import { Eye, Activity, AlertTriangle, RefreshCw, Sparkles, Download, UserCheck, CheckCircle2, Shield, Layers } from 'lucide-react';
 import PatientIntakeForm, { PatientInfoData } from './PatientIntakeForm';
 
 interface ClassPrediction {
@@ -83,6 +83,9 @@ interface AnalysisWorkspaceProps {
   runPrediction: () => void;
   downloadReport: () => void;
   workspaceRef: React.RefObject<HTMLDivElement> | any;
+  onSaveToArchive?: () => void;
+  onOpenArchive?: () => void;
+  isSavedToArchive?: boolean;
 }
 
 export default function AnalysisWorkspace({
@@ -105,11 +108,15 @@ export default function AnalysisWorkspace({
   handleDrop,
   runPrediction,
   downloadReport,
-  workspaceRef
+  workspaceRef,
+  onSaveToArchive,
+  onOpenArchive,
+  isSavedToArchive
 }: AnalysisWorkspaceProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+
   return (
-    <section id="analyze" ref={workspaceRef} style={{ maxWidth: '1360px', margin: '0 auto', padding: '32px 32px 64px' }}>
+    <section id="analyze" ref={workspaceRef} className="container-editorial" style={{ paddingTop: '16px', paddingBottom: '48px' }}>
       
       {/* Patient Medical Intake Form */}
       <PatientIntakeForm
@@ -119,33 +126,38 @@ export default function AnalysisWorkspace({
         onComplete={() => {}}
       />
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.15fr', gap: '40px', alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1.15fr)', gap: '32px', alignItems: 'start' }}>
         
         {/* Left Column: Form & Upload */}
-        <div className="editorial-card" style={{ padding: '36px' }}>
-          <h2 className="font-serif-display" style={{ fontSize: '1.6rem', fontWeight: 800, marginBottom: '24px' }}>
-            {t.step1Title}
-          </h2>
+        <div className="editorial-card" style={{ padding: '32px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px' }}>
+            <h2 className="font-serif-display" style={{ fontSize: '1.4rem', fontWeight: 800, margin: 0 }}>
+              {t.step1Title}
+            </h2>
+            <span className="pill-badge pill-badge-yellow" style={{ fontSize: '0.7rem' }}>
+              STEP 1 OF 2
+            </span>
+          </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '32px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '28px' }}>
             <button
               type="button"
               className={`btn-editorial-secondary ${task === 'odir' ? 'active' : ''}`}
               onClick={() => setTask('odir')}
-              style={{ padding: '16px 12px', flexDirection: 'column', alignItems: 'flex-start', borderRadius: '18px' }}
+              style={{ padding: '14px 10px', flexDirection: 'column', alignItems: 'flex-start', borderRadius: '16px', textAlign: 'left' }}
             >
-              <div style={{ fontWeight: 700, fontSize: '0.88rem' }}>{t.taskOdirTitle}</div>
-              <div style={{ fontSize: '0.72rem', opacity: 0.8, marginTop: '4px' }}>{t.taskOdirSub}</div>
+              <div style={{ fontWeight: 800, fontSize: '0.82rem' }}>ODIR Multi-Label</div>
+              <div style={{ fontSize: '0.68rem', opacity: 0.8, marginTop: '2px' }}>8-Class Screening</div>
             </button>
 
             <button
               type="button"
               className={`btn-editorial-secondary ${task === 'aptos' ? 'active' : ''}`}
               onClick={() => setTask('aptos')}
-              style={{ padding: '16px 12px', flexDirection: 'column', alignItems: 'flex-start', borderRadius: '18px' }}
+              style={{ padding: '14px 10px', flexDirection: 'column', alignItems: 'flex-start', borderRadius: '16px', textAlign: 'left' }}
             >
-              <div style={{ fontWeight: 700, fontSize: '0.88rem' }}>{t.taskAptosTitle}</div>
-              <div style={{ fontSize: '0.72rem', opacity: 0.8, marginTop: '4px' }}>{t.taskAptosSub}</div>
+              <div style={{ fontWeight: 800, fontSize: '0.82rem' }}>APTOS Severity</div>
+              <div style={{ fontSize: '0.68rem', opacity: 0.8, marginTop: '2px' }}>5-Grade DR Scale</div>
             </button>
 
             <button
@@ -153,28 +165,34 @@ export default function AnalysisWorkspace({
               className={`btn-editorial-secondary ${task === 'multitask' ? 'active' : ''}`}
               onClick={() => setTask('multitask')}
               style={{
-                padding: '16px 12px',
+                padding: '14px 10px',
                 flexDirection: 'column',
                 alignItems: 'flex-start',
-                borderRadius: '18px',
+                borderRadius: '16px',
+                textAlign: 'left',
                 border: task === 'multitask' ? '2px solid #2563EB' : 'var(--border-thick)',
                 background: task === 'multitask' ? '#0F172A' : '#FFFFFF',
                 color: task === 'multitask' ? '#FFFFFF' : 'var(--ink-black)',
               }}
             >
-              <div style={{ fontWeight: 800, fontSize: '0.88rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <Sparkles size={14} color={task === 'multitask' ? '#60A5FA' : 'var(--electric-blue)'} />
-                Multi-Task (5-in-1)
+              <div style={{ fontWeight: 800, fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <Sparkles size={12} color={task === 'multitask' ? '#60A5FA' : 'var(--electric-blue)'} />
+                Multi-Task 5-in-1
               </div>
-              <div style={{ fontSize: '0.72rem', opacity: 0.85, marginTop: '4px', textAlign: 'left' }}>
-                ODIR + APTOS + Biomarkers
+              <div style={{ fontSize: '0.68rem', opacity: 0.85, marginTop: '2px' }}>
+                Full Diagnostics
               </div>
             </button>
           </div>
 
-          <h2 className="font-serif-display" style={{ fontSize: '1.6rem', fontWeight: 800, marginBottom: '18px' }}>
-            {t.step2Title}
-          </h2>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+            <h2 className="font-serif-display" style={{ fontSize: '1.4rem', fontWeight: 800, margin: 0 }}>
+              {t.step2Title}
+            </h2>
+            <span className="pill-badge pill-badge-blue" style={{ fontSize: '0.7rem' }}>
+              STEP 2 OF 2
+            </span>
+          </div>
 
           <div
             className="dropzone-editorial"
@@ -192,23 +210,37 @@ export default function AnalysisWorkspace({
 
             {previewUrl ? (
               <div>
-                <img src={previewUrl} alt="Retinal Preview" style={{ maxHeight: '220px', borderRadius: '16px', margin: '0 auto 14px', border: 'var(--border-thick)', boxShadow: 'var(--shadow-hard)' }} />
-                <p className="font-grotesk-mono" style={{ fontSize: '0.85rem', fontWeight: 700 }}>{selectedFile?.name}</p>
-                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{((selectedFile?.size || 0) / 1024 / 1024).toFixed(2)} MB</p>
+                <img
+                  src={previewUrl}
+                  alt="Retinal Preview"
+                  style={{
+                    maxHeight: '200px',
+                    maxWidth: '100%',
+                    borderRadius: '14px',
+                    margin: '0 auto 12px',
+                    border: 'var(--border-thick)',
+                    boxShadow: 'var(--shadow-sm)',
+                    objectFit: 'contain'
+                  }}
+                />
+                <p className="font-grotesk-mono" style={{ fontSize: '0.82rem', fontWeight: 700 }}>{selectedFile?.name}</p>
+                <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                  {((selectedFile?.size || 0) / 1024 / 1024).toFixed(2)} MB • Ready for AI screening
+                </p>
               </div>
             ) : (
               <div>
-                <Eye size={48} color="var(--ink-black)" style={{ marginBottom: '16px' }} />
-                <p className="font-serif-display" style={{ fontSize: '1.25rem', fontWeight: 700 }}>{t.dropzoneText}</p>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '8px' }}>{t.dropzoneSub}</p>
+                <Eye size={42} color="var(--ink-black)" style={{ marginBottom: '12px' }} />
+                <p className="font-serif-display" style={{ fontSize: '1.15rem', fontWeight: 700 }}>{t.dropzoneText}</p>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '6px' }}>{t.dropzoneSub}</p>
               </div>
             )}
           </div>
 
           {/* Real Clinical Dataset Sample Selector */}
-          <div style={{ marginTop: '20px', padding: '16px', background: '#FDFBF7', border: 'var(--border-thick)', borderRadius: '16px' }}>
-            <div style={{ fontSize: '0.82rem', fontWeight: 800, color: 'var(--ink-black)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Sparkles size={16} color="var(--electric-blue)" /> LOAD REAL CLINICAL DATASET SAMPLES:
+          <div style={{ marginTop: '20px', padding: '14px 16px', background: '#FAF8F5', border: 'var(--border-thick)', borderRadius: '16px' }}>
+            <div style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--ink-black)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Sparkles size={14} color="var(--electric-blue)" /> LOAD CLINICAL DATASET SAMPLES:
             </div>
 
             {task === 'aptos' ? (
@@ -216,7 +248,7 @@ export default function AnalysisWorkspace({
                 <button
                   type="button"
                   className="btn-editorial-secondary"
-                  style={{ fontSize: '0.72rem', padding: '6px 10px' }}
+                  style={{ fontSize: '0.7rem', padding: '5px 10px' }}
                   onClick={() => {
                     fetch('/samples/aptos_stage_0_normal.png')
                       .then(r => r.blob())
@@ -228,7 +260,7 @@ export default function AnalysisWorkspace({
                 <button
                   type="button"
                   className="btn-editorial-secondary"
-                  style={{ fontSize: '0.72rem', padding: '6px 10px' }}
+                  style={{ fontSize: '0.7rem', padding: '5px 10px' }}
                   onClick={() => {
                     fetch('/samples/aptos_stage_1_mild.png')
                       .then(r => r.blob())
@@ -240,7 +272,7 @@ export default function AnalysisWorkspace({
                 <button
                   type="button"
                   className="btn-editorial-secondary"
-                  style={{ fontSize: '0.72rem', padding: '6px 10px' }}
+                  style={{ fontSize: '0.7rem', padding: '5px 10px' }}
                   onClick={() => {
                     fetch('/samples/aptos_stage_2_moderate.png')
                       .then(r => r.blob())
@@ -252,7 +284,7 @@ export default function AnalysisWorkspace({
                 <button
                   type="button"
                   className="btn-editorial-secondary"
-                  style={{ fontSize: '0.72rem', padding: '6px 10px' }}
+                  style={{ fontSize: '0.7rem', padding: '5px 10px' }}
                   onClick={() => {
                     fetch('/samples/aptos_stage_3_severe.png')
                       .then(r => r.blob())
@@ -264,7 +296,7 @@ export default function AnalysisWorkspace({
                 <button
                   type="button"
                   className="btn-editorial-secondary"
-                  style={{ fontSize: '0.72rem', padding: '6px 10px' }}
+                  style={{ fontSize: '0.7rem', padding: '5px 10px' }}
                   onClick={() => {
                     fetch('/samples/aptos_stage_4_proliferative.png')
                       .then(r => r.blob())
@@ -279,7 +311,7 @@ export default function AnalysisWorkspace({
                 <button
                   type="button"
                   className="btn-editorial-secondary"
-                  style={{ fontSize: '0.72rem', padding: '6px 10px' }}
+                  style={{ fontSize: '0.7rem', padding: '5px 10px' }}
                   onClick={() => {
                     fetch('/samples/odir_normal.jpg')
                       .then(r => r.blob())
@@ -291,7 +323,7 @@ export default function AnalysisWorkspace({
                 <button
                   type="button"
                   className="btn-editorial-secondary"
-                  style={{ fontSize: '0.72rem', padding: '6px 10px' }}
+                  style={{ fontSize: '0.7rem', padding: '5px 10px' }}
                   onClick={() => {
                     fetch('/samples/odir_dr.jpg')
                       .then(r => r.blob())
@@ -303,7 +335,7 @@ export default function AnalysisWorkspace({
                 <button
                   type="button"
                   className="btn-editorial-secondary"
-                  style={{ fontSize: '0.72rem', padding: '6px 10px' }}
+                  style={{ fontSize: '0.7rem', padding: '5px 10px' }}
                   onClick={() => {
                     fetch('/samples/odir_glaucoma.jpg')
                       .then(r => r.blob())
@@ -315,7 +347,7 @@ export default function AnalysisWorkspace({
                 <button
                   type="button"
                   className="btn-editorial-secondary"
-                  style={{ fontSize: '0.72rem', padding: '6px 10px' }}
+                  style={{ fontSize: '0.7rem', padding: '5px 10px' }}
                   onClick={() => {
                     fetch('/samples/odir_cataract.jpg')
                       .then(r => r.blob())
@@ -327,27 +359,27 @@ export default function AnalysisWorkspace({
                 <button
                   type="button"
                   className="btn-editorial-secondary"
-                  style={{ fontSize: '0.72rem', padding: '6px 10px' }}
+                  style={{ fontSize: '0.7rem', padding: '5px 10px' }}
                   onClick={() => {
                     fetch('/samples/odir_amd.jpg')
                       .then(r => r.blob())
                       .then(b => handleFileSelect(new File([b], '05_AMD_MACULAR_DEGENERATION.JPG', { type: 'image/jpeg' })));
                   }}
                 >
-                  🔬 AMD (Macular Degeneration)
+                  🔬 AMD Macular
                 </button>
               </div>
             )}
           </div>
 
           {errorMsg && (
-            <div style={{ marginTop: '16px', padding: '12px 16px', background: '#FDF2F2', border: 'var(--border-thick)', color: 'var(--clinical-pink)', borderRadius: '14px', fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <AlertTriangle size={18} /> {errorMsg}
+            <div style={{ marginTop: '16px', padding: '12px 14px', background: '#FDF2F2', border: 'var(--border-thick)', color: 'var(--clinical-pink)', borderRadius: '12px', fontSize: '0.82rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <AlertTriangle size={16} /> {errorMsg}
             </div>
           )}
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '24px' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '24px', flexWrap: 'wrap', gap: '12px' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600 }}>
               <input type="checkbox" checked={useMock} onChange={(e) => setUseMock(e.target.checked)} />
               {t.mockModeLabel}
             </label>
@@ -356,97 +388,98 @@ export default function AnalysisWorkspace({
               className="btn-editorial-primary"
               onClick={runPrediction}
               disabled={!selectedFile || isLoading}
+              style={{ minWidth: '220px' }}
             >
               {isLoading ? (
-                <> <RefreshCw size={18} className="animate-spin" /> {t.processingBtn} </>
+                <> <RefreshCw size={16} className="animate-spin" /> {t.processingBtn} </>
               ) : (
-                <> <Sparkles size={18} /> {t.runBtn} </>
+                <> <Sparkles size={16} /> {t.runBtn} 👁️ </>
               )}
             </button>
           </div>
         </div>
 
         {/* Right Column: Results & Heatmap */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           {!prediction ? (
-            <div className="editorial-card" style={{ padding: '64px 32px', textAlign: 'center', backgroundColor: '#FAF7F2' }}>
-              <Activity size={56} color="var(--text-muted)" style={{ opacity: 0.3, marginBottom: '20px' }} />
-              <h3 className="font-serif-display" style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--ink-black)' }}>
-                Awaiting Image Submission
+            <div className="editorial-card" style={{ padding: '56px 32px', textAlign: 'center', backgroundColor: '#FAF8F5' }}>
+              <Activity size={52} color="var(--text-muted)" style={{ opacity: 0.35, marginBottom: '16px' }} />
+              <h3 className="font-serif-display" style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--ink-black)' }}>
+                Awaiting Retinal Image Submission
               </h3>
-              <p style={{ color: 'var(--text-muted)', marginTop: '8px', fontSize: '0.95rem', maxWidth: '420px', margin: '8px auto 0' }}>
-                Complete patient intake, select a screening task, upload a retinal fundus photograph, and run analysis to view 4608d ensemble predictions and Grad-CAM visual heatmaps.
+              <p style={{ color: 'var(--text-muted)', marginTop: '8px', fontSize: '0.88rem', maxWidth: '420px', margin: '8px auto 0', lineHeight: 1.6 }}>
+                Select a screening task, upload or select a clinical fundus photo, and execute analysis to view 4608d ensemble predictions, structural DIP biomarkers, and Grad-CAM visual heatmaps.
               </p>
             </div>
           ) : (
             <>
               {!prediction.quality_gate.passed ? (
-                <div className="editorial-card" style={{ padding: '24px', backgroundColor: '#FFF4F4', borderColor: 'var(--clinical-pink)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--clinical-pink)' }}>
-                    <AlertTriangle size={24} />
-                    <h3 className="font-serif-display" style={{ fontWeight: 800, fontSize: '1.25rem' }}>{t.qualityFailedTitle}</h3>
+                <div className="editorial-card" style={{ padding: '20px', backgroundColor: '#FFF4F4', borderColor: 'var(--clinical-pink)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--clinical-pink)' }}>
+                    <AlertTriangle size={22} />
+                    <h3 className="font-serif-display" style={{ fontWeight: 800, fontSize: '1.15rem' }}>{t.qualityFailedTitle}</h3>
                   </div>
-                  <p style={{ marginTop: '8px', fontSize: '0.9rem' }}>{prediction.quality_gate.rejection_reason}</p>
+                  <p style={{ marginTop: '6px', fontSize: '0.85rem' }}>{prediction.quality_gate.rejection_reason}</p>
                 </div>
               ) : prediction.abstain ? (
-                <div className="editorial-card" style={{ padding: '24px', backgroundColor: '#FFF9E6', borderColor: 'var(--signal-yellow)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--ink-black)' }}>
-                    <AlertTriangle size={24} />
-                    <h3 className="font-serif-display" style={{ fontWeight: 800, fontSize: '1.25rem' }}>{t.abstainTitle}</h3>
+                <div className="editorial-card" style={{ padding: '20px', backgroundColor: '#FFF9E6', borderColor: 'var(--signal-yellow)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--ink-black)' }}>
+                    <AlertTriangle size={22} />
+                    <h3 className="font-serif-display" style={{ fontWeight: 800, fontSize: '1.15rem' }}>{t.abstainTitle}</h3>
                   </div>
-                  <p style={{ marginTop: '8px', fontSize: '0.9rem' }}>{prediction.abstention_reason}</p>
+                  <p style={{ marginTop: '6px', fontSize: '0.85rem' }}>{prediction.abstention_reason}</p>
                 </div>
               ) : null}
 
-              <div className="editorial-card" style={{ padding: '36px' }}>
+              <div className="editorial-card" style={{ padding: '32px' }}>
                 {/* Patient Summary Badge */}
                 {patientInfo.name && (
-                  <div style={{ background: '#F0F9FF', border: 'var(--border-thick)', borderRadius: '16px', padding: '14px 18px', marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ background: '#F0F9FF', border: 'var(--border-thick)', borderRadius: '14px', padding: '12px 16px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <UserCheck size={20} color="#0284C7" />
+                      <UserCheck size={18} color="#0284C7" />
                       <div>
-                        <div style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--ink-black)' }}>
-                          {patientInfo.name} <span style={{ fontSize: '0.78rem', opacity: 0.7 }}>({patientInfo.age} yrs, {patientInfo.gender})</span>
+                        <div style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--ink-black)' }}>
+                          {patientInfo.name} <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>({patientInfo.age} yrs, {patientInfo.gender})</span>
                         </div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                          Blood Group: <strong style={{ color: '#DC2626' }}>{patientInfo.bloodGroup}</strong> | Diabetes: <strong>{patientInfo.diabeticStatus}</strong> | High BP: <strong>{patientInfo.hypertension}</strong>
+                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                          Laterality: <strong>{patientInfo.eyeScanned || 'Right Eye'}</strong> | Blood Group: <strong style={{ color: '#DC2626' }}>{patientInfo.bloodGroup}</strong> | Diabetes: <strong>{patientInfo.diabeticStatus}</strong>
                         </div>
                       </div>
                     </div>
-                    <span className="pill-badge" style={{ background: '#E0F2FE', color: '#0369A1' }}>LINKED RECORD</span>
+                    <span className="pill-badge" style={{ background: '#E0F2FE', color: '#0369A1', fontSize: '0.68rem', padding: '4px 10px' }}>LINKED RECORD</span>
                   </div>
                 )}
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px', flexWrap: 'wrap', gap: '16px' }}>
                   <div>
-                    <span className="pill-badge pill-badge-yellow" style={{ marginBottom: '12px' }}>
-                      {task === 'multitask' ? '⚡ MULTI-TASK PIPELINE PASSED' : 'QUALITY GATE PASSED'}
+                    <span className="pill-badge pill-badge-yellow" style={{ marginBottom: '10px', fontSize: '0.7rem' }}>
+                      {task === 'multitask' ? '⚡ 5-IN-1 MULTI-TASK PIPELINE' : 'QUALITY GATE PASSED'}
                     </span>
-                    <h2 className="font-serif-display" style={{ fontSize: '2rem', fontWeight: 800, lineHeight: 1.1 }}>
+                    <h2 className="font-serif-display" style={{ fontSize: '1.8rem', fontWeight: 800, lineHeight: 1.1 }}>
                       {prediction.top_prediction}
                     </h2>
-                    <p className="font-grotesk-mono" style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '6px' }}>
-                      MODEL: {task === 'multitask' ? 'RetinaGuard++ Shared-Backbone Multi-Task Net' : `${prediction.model_name} (v${prediction.model_version})`}
+                    <p className="font-grotesk-mono" style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                      MODEL: {task === 'multitask' ? 'RetinaGuard++ Shared-Backbone Multi-Task Net' : `${prediction.model_name}`}
                     </p>
                   </div>
 
-                  <div style={{ textAlign: 'right', background: 'var(--signal-yellow)', padding: '16px 24px', border: 'var(--border-thick)', borderRadius: '20px', boxShadow: 'var(--shadow-hard)' }}>
-                    <div className="font-grotesk-mono" style={{ fontSize: '0.7rem', fontWeight: 700 }}>{t.confidenceLabel}</div>
-                    <div className="font-serif-display" style={{ fontSize: '2.2rem', fontWeight: 900 }}>
+                  <div style={{ textAlign: 'right', background: 'var(--signal-yellow)', padding: '12px 20px', border: 'var(--border-thick)', borderRadius: '16px', boxShadow: 'var(--shadow-sm)' }}>
+                    <div className="font-grotesk-mono" style={{ fontSize: '0.68rem', fontWeight: 700 }}>{t.confidenceLabel}</div>
+                    <div className="font-serif-display" style={{ fontSize: '1.8rem', fontWeight: 900 }}>
                       {(prediction.calibrated_confidence * 100).toFixed(1)}%
                     </div>
                   </div>
                 </div>
 
-                {/* Task Head 1 & 2: Multi-Disease Screening + DR Severity */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', margin: '24px 0 28px' }}>
-                  <div style={{ fontSize: '0.82rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--electric-blue)' }}>
-                    {task === 'multitask' ? 'HEAD 1: MULTI-DISEASE SCREENING (8-CLASS)' : 'PREDICTED PROBABILITIES'}
+                {/* Task Head 1: Probability Distribution */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', margin: '20px 0 24px' }}>
+                  <div style={{ fontSize: '0.78rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--electric-blue)' }}>
+                    {task === 'multitask' ? 'HEAD 1: MULTI-DISEASE SCREENING PROBABILITIES' : 'PREDICTED PROBABILITIES'}
                   </div>
 
                   {prediction.predictions.map((p) => (
                     <div key={p.label}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', fontWeight: p.is_positive ? 700 : 500 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: p.is_positive ? 700 : 500 }}>
                         <span>{p.label} {p.is_positive ? '✓' : ''}</span>
                         <span>{(p.probability * 100).toFixed(1)}%</span>
                       </div>
@@ -457,42 +490,42 @@ export default function AnalysisWorkspace({
                   ))}
                 </div>
 
-                {/* Additional Multi-Task Heads (2, 3, 4, 5) if Multi-Task is selected */}
+                {/* Additional Multi-Task Heads if Multi-Task is selected */}
                 {task === 'multitask' && (
-                  <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '2px dashed #E2E8F0', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  <div style={{ marginTop: '20px', paddingTop: '18px', borderTop: '2px dashed #E2E8F0', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     {/* Head 2: DR ICDR Severity */}
-                    <div style={{ background: '#F8FAFC', padding: '16px', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
-                      <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#1E293B', marginBottom: '8px' }}>
+                    <div style={{ background: '#F8FAFC', padding: '14px', borderRadius: '14px', border: '1.5px solid #E2E8F0' }}>
+                      <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#1E293B', marginBottom: '6px' }}>
                         📊 HEAD 2: DR ICDR SEVERITY GRADING
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '1rem', fontWeight: 800, color: '#DC2626' }}>
+                        <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#DC2626' }}>
                           {prediction.top_prediction.includes('DR') || prediction.top_prediction.includes('Diabetic') ? 'Grade 3: Severe NPDR' : 'Grade 0: No DR'}
                         </span>
-                        <span style={{ fontSize: '0.75rem', fontWeight: 700, background: '#FEE2E2', color: '#991B1B', padding: '4px 10px', borderRadius: '999px' }}>
+                        <span style={{ fontSize: '0.7rem', fontWeight: 700, background: '#FEE2E2', color: '#991B1B', padding: '3px 8px', borderRadius: '999px' }}>
                           ICDR Standard
                         </span>
                       </div>
                     </div>
 
                     {/* Head 3 & 4: Deep Quality + Biomarker Regression */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                      <div style={{ background: '#EFF6FF', padding: '14px', borderRadius: '14px' }}>
-                        <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#1D4ED8', marginBottom: '6px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '10px' }}>
+                      <div style={{ background: '#EFF6FF', padding: '12px', borderRadius: '12px' }}>
+                        <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#1D4ED8', marginBottom: '4px' }}>
                           🛡️ HEAD 3: DEEP QUALITY
                         </div>
-                        <div style={{ fontSize: '0.78rem', lineHeight: '1.6', color: '#1E3A8A' }}>
+                        <div style={{ fontSize: '0.75rem', lineHeight: '1.5', color: '#1E3A8A' }}>
                           <div>Sharpness: <strong>94%</strong></div>
                           <div>Exposure: <strong>92%</strong></div>
                           <div>Focus: <strong>96%</strong></div>
                         </div>
                       </div>
 
-                      <div style={{ background: '#F0FDF4', padding: '14px', borderRadius: '14px' }}>
-                        <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#15803D', marginBottom: '6px' }}>
+                      <div style={{ background: '#F0FDF4', padding: '12px', borderRadius: '12px' }}>
+                        <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#15803D', marginBottom: '4px' }}>
                           🧬 HEAD 4: BIOMARKERS
                         </div>
-                        <div style={{ fontSize: '0.78rem', lineHeight: '1.6', color: '#14532D' }}>
+                        <div style={{ fontSize: '0.75rem', lineHeight: '1.5', color: '#14532D' }}>
                           <div>Vessel Density: <strong>{prediction.vessel_density !== undefined ? prediction.vessel_density.toFixed(3) : (prediction.top_prediction.includes('Normal') ? '0.162' : '0.318')}</strong></div>
                           <div>Microaneurysms: <strong>{prediction.microaneurysms !== undefined ? prediction.microaneurysms : (prediction.top_prediction.includes('Normal') ? 0 : 356)}</strong></div>
                           <div>Exudate Ratio: <strong>{prediction.exudate_ratio !== undefined ? (prediction.exudate_ratio * 100).toFixed(2) + '%' : (prediction.top_prediction.includes('Normal') ? '0.00%' : '0.21%')}</strong></div>
@@ -501,72 +534,102 @@ export default function AnalysisWorkspace({
                     </div>
 
                     {/* Head 5: Continuous Clinical Risk Score */}
-                    <div style={{ background: '#FEF2F2', padding: '16px', borderRadius: '16px', border: '1px solid #FCA5A5', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ background: '#FEF2F2', padding: '14px', borderRadius: '14px', border: '1.5px solid #FCA5A5', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
-                        <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#991B1B' }}>
+                        <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#991B1B' }}>
                           🎯 HEAD 5: CONTINUOUS RISK SCORE
                         </div>
-                        <div style={{ fontSize: '0.75rem', color: '#7F1D1D', marginTop: '2px' }}>
-                          Evidence-Based Image-Specific Severity Index
+                        <div style={{ fontSize: '0.72rem', color: '#7F1D1D', marginTop: '2px' }}>
+                          Severity Index (0–100 Scale)
                         </div>
                       </div>
-                      <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#DC2626' }}>
-                        {prediction.risk_score !== undefined ? prediction.risk_score.toFixed(1) : '12.5'} <span style={{ fontSize: '0.8rem', color: '#991B1B' }}>/ 100</span>
-                      </div>
-                    </div>
-
-                    {/* Structured Screening & DIP Report Block */}
-                    <div style={{ background: '#FFFFFF', border: '2px solid #0284C7', borderRadius: '16px', padding: '20px', marginTop: '10px' }}>
-                      <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0369A1', borderBottom: '2px solid #E0F2FE', paddingBottom: '8px', marginBottom: '14px' }}>
-                        📑 SYNCHRONIZED DIP & CLINICAL SCREENING REPORT
-                      </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '8px', fontSize: '0.82rem', lineHeight: '1.6', color: '#0F172A' }}>
-                        <div><strong>Condition:</strong> <span style={{ color: '#0284C7', fontWeight: 800 }}>{prediction.top_prediction}</span></div>
-                        <div><strong>Risk Score:</strong> <span style={{ color: '#DC2626', fontWeight: 800 }}>{prediction.risk_score.toFixed(1)} / 100</span></div>
-                        <div><strong>Risk Category:</strong> <span style={{ background: prediction.risk_score > 50 ? '#FEE2E2' : '#DCFCE7', color: prediction.risk_score > 50 ? '#991B1B' : '#166534', padding: '2px 8px', borderRadius: '4px', fontWeight: 800 }}>{prediction.risk_category || (prediction.risk_score > 50 ? 'High Risk' : 'Low Risk')}</span></div>
-                        <div><strong>Severity:</strong> {prediction.severity || 'Grade 0: Normal Retinal Findings'}</div>
-                        <div><strong>Confidence:</strong> {(prediction.calibrated_confidence * 100).toFixed(1)}%</div>
-                        <div><strong>DIP Findings:</strong> {prediction.dip_findings || `VDI: ${prediction.vessel_density || 0.162}, Microaneurysms: ${prediction.microaneurysms || 0}, Exudates: ${prediction.exudate_ratio || 0}`}</div>
-                        <div><strong>Explanation:</strong> {prediction.explanation || 'DIP structural analysis confirms image attributes and neural feature grounding.'}</div>
-                        <div><strong>Recommendation:</strong> {prediction.recommendation || 'Maintain routine screening.'}</div>
+                      <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#DC2626' }}>
+                        {prediction.risk_score !== undefined ? prediction.risk_score.toFixed(1) : '12.5'} <span style={{ fontSize: '0.75rem', color: '#991B1B' }}>/ 100</span>
                       </div>
                     </div>
                   </div>
                 )}
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', marginTop: '20px', paddingTop: '16px', borderTop: '1px solid rgba(20,18,16,0.1)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    {onSaveToArchive && (
+                      <button
+                        type="button"
+                        className="btn-editorial-primary"
+                        onClick={onSaveToArchive}
+                        style={{
+                          fontSize: '0.78rem',
+                          padding: '8px 14px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          background: isSavedToArchive ? '#166534' : 'var(--ink-black)'
+                        }}
+                      >
+                        {isSavedToArchive ? (
+                          <>
+                            <CheckCircle2 size={14} color="#fff" /> Saved to Patient Archive
+                          </>
+                        ) : (
+                          <>
+                            <Layers size={14} /> Save to Patient Archive 💾
+                          </>
+                        )}
+                      </button>
+                    )}
+
+                    {onOpenArchive && (
+                      <button
+                        type="button"
+                        onClick={onOpenArchive}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: '#0369A1',
+                          fontWeight: 700,
+                          fontSize: '0.78rem',
+                          cursor: 'pointer',
+                          textDecoration: 'underline'
+                        }}
+                      >
+                        View Past Patient Checks →
+                      </button>
+                    )}
+                  </div>
+
                   <button className="btn-editorial-secondary" onClick={downloadReport}>
-                    <Download size={16} /> {t.downloadReportBtn}
+                    <Download size={15} /> {t.downloadReportBtn}
                   </button>
                 </div>
               </div>
 
+              {/* Heatmap Visual Attention Map Card */}
               {heatmapData && (
-                <div className="editorial-card" style={{ padding: '36px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <div className="editorial-card" style={{ padding: '28px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
                     <div>
-                      <span className="font-grotesk-mono" style={{ fontSize: '0.75rem', color: 'var(--electric-blue)', fontWeight: 700 }}>
-                        MODEL ATTENTION / GRAD-CAM
+                      <span className="font-grotesk-mono" style={{ fontSize: '0.72rem', color: 'var(--electric-blue)', fontWeight: 700 }}>
+                        MODEL ATTENTION / GRAD-CAM++
                       </span>
-                      <h3 className="font-serif-display" style={{ fontSize: '1.4rem', fontWeight: 800, marginTop: '4px' }}>
+                      <h3 className="font-serif-display" style={{ fontSize: '1.3rem', fontWeight: 800, marginTop: '2px' }}>
                         {t.heatmapTitle}
                       </h3>
                     </div>
 
                     <div style={{ display: 'flex', gap: '6px' }}>
-                      <button className={`btn-editorial-secondary ${activeHeatmapTab === 'overlay' ? 'active' : ''}`} onClick={() => setActiveHeatmapTab('overlay')}>
+                      <button className={`btn-editorial-secondary ${activeHeatmapTab === 'overlay' ? 'active' : ''}`} onClick={() => setActiveHeatmapTab('overlay')} style={{ padding: '6px 12px', fontSize: '0.75rem' }}>
                         {t.tabBlended}
                       </button>
-                      <button className={`btn-editorial-secondary ${activeHeatmapTab === 'heatmap' ? 'active' : ''}`} onClick={() => setActiveHeatmapTab('heatmap')}>
+                      <button className={`btn-editorial-secondary ${activeHeatmapTab === 'heatmap' ? 'active' : ''}`} onClick={() => setActiveHeatmapTab('heatmap')} style={{ padding: '6px 12px', fontSize: '0.75rem' }}>
                         {t.tabHeatmap}
                       </button>
-                      <button className={`btn-editorial-secondary ${activeHeatmapTab === 'original' ? 'active' : ''}`} onClick={() => setActiveHeatmapTab('original')}>
+                      <button className={`btn-editorial-secondary ${activeHeatmapTab === 'original' ? 'active' : ''}`} onClick={() => setActiveHeatmapTab('original')} style={{ padding: '6px 12px', fontSize: '0.75rem' }}>
                         {t.tabOriginal}
                       </button>
                     </div>
                   </div>
 
-                  <div style={{ border: 'var(--border-thick)', borderRadius: '20px', overflow: 'hidden', boxShadow: 'var(--shadow-hard)', backgroundColor: '#000000' }}>
+                  <div style={{ border: 'var(--border-thick)', borderRadius: '16px', overflow: 'hidden', boxShadow: 'var(--shadow-sm)', backgroundColor: '#000000', maxHeight: '380px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <img
                       src={
                         activeHeatmapTab === 'overlay'
@@ -576,11 +639,11 @@ export default function AnalysisWorkspace({
                           : heatmapData.original_image_base64
                       }
                       alt="Grad-CAM Model Attention"
-                      style={{ width: '100%', height: 'auto', display: 'block' }}
+                      style={{ width: '100%', maxHeight: '380px', objectFit: 'contain', display: 'block' }}
                     />
                   </div>
 
-                  <div style={{ marginTop: '16px', padding: '14px 18px', background: '#FAF7F2', border: 'var(--border-thick)', borderRadius: '14px', fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                  <div style={{ marginTop: '14px', padding: '12px 14px', background: '#FAF8F5', border: 'var(--border-thick)', borderRadius: '12px', fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
                     <strong>Clinical Notice:</strong> {t.disclaimerGradcam}
                   </div>
                 </div>
