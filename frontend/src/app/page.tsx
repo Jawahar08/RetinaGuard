@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import TickerBar from '../components/TickerBar';
 import SiteHeader from '../components/SiteHeader';
 import HeroSection from '../components/HeroSection';
@@ -310,6 +311,7 @@ export default function OphthaFusionDashboard() {
   const [archiveRefreshTrigger, setArchiveRefreshTrigger] = useState<number>(0);
   const [isSavedToArchive, setIsSavedToArchive] = useState<boolean>(false);
 
+  const router = useRouter();
   const workspaceRef = useRef<HTMLDivElement>(null);
   const methodRef = useRef<HTMLDivElement>(null);
 
@@ -322,6 +324,20 @@ export default function OphthaFusionDashboard() {
         setRecordsCount(recs.length);
       }
     }).catch(() => {});
+
+    // Check if user came from /records to load a case
+    if (typeof window !== 'undefined') {
+      const stored = sessionStorage.getItem('retinaguard_load_record');
+      if (stored) {
+        try {
+          const rec: ClinicalRecord = JSON.parse(stored);
+          handleLoadRecordIntoWorkspace(rec);
+          sessionStorage.removeItem('retinaguard_load_record');
+        } catch (e) {
+          console.error('Error loading record from session storage:', e);
+        }
+      }
+    }
   }, [archiveRefreshTrigger]);
 
   const scrollToWorkspace = () => {
@@ -926,10 +942,7 @@ export default function OphthaFusionDashboard() {
         downloadReport={downloadReport}
         workspaceRef={workspaceRef}
         onSaveToArchive={handleSaveCurrentToArchive}
-        onOpenArchive={() => {
-          const el = document.getElementById('past-records');
-          if (el) el.scrollIntoView({ behavior: 'smooth' });
-        }}
+        onOpenArchive={() => router.push('/records')}
         isSavedToArchive={isSavedToArchive}
       />
 
@@ -945,14 +958,6 @@ export default function OphthaFusionDashboard() {
           onClose={() => setSemanticResult(null)}
         />
       )}
-
-      {/* Clinical Records & Past Diagnostics Data Storage Space */}
-      <ClinicalRecordsArchive
-        onLoadIntoWorkspace={handleLoadRecordIntoWorkspace}
-        onSendToProgression={handleSendRecordToProgression}
-        onGenerateReport={handleGenerateReportFromRecord}
-        refreshTrigger={archiveRefreshTrigger}
-      />
 
       <ProgressionTrackerUI />
 

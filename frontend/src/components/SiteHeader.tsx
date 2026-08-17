@@ -92,7 +92,7 @@ export default function SiteHeader({ onStartScreening, onExploreMethod, recordsC
             { label: 'Progression', href: '#progression' },
             {
               label: 'Past Records 🗂️',
-              href: '#past-records',
+              href: '/records',
               badge: typeof recordsCount === 'number' ? recordsCount : undefined
             },
             { label: 'Research', href: '#research' },
