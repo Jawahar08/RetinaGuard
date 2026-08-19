@@ -39,6 +39,7 @@ import {
   deleteRecordFromDatabase,
   exportRecordsToCSV,
   saveClinicalRecordToDatabase,
+  clearAllClinicalRecords,
   BENCHMARK_SEED_RECORDS
 } from '../services/clinicalRecordsStorage';
 
@@ -88,10 +89,10 @@ export default function ClinicalRecordsArchive({
         })
       ]);
       setDbStatus(statusData);
-      setRecords(recordsData.length > 0 ? recordsData : BENCHMARK_SEED_RECORDS);
+      setRecords(recordsData || []);
     } catch (e) {
       console.error('Error loading clinical archive records:', e);
-      setRecords(BENCHMARK_SEED_RECORDS);
+      setRecords([]);
     } finally {
       setIsLoading(false);
     }
@@ -137,6 +138,20 @@ export default function ClinicalRecordsArchive({
       setRecords(prev => prev.filter(r => r.id !== id));
     } catch (e) {
       console.error('Error deleting record:', e);
+    }
+  };
+
+  const handleClearAll = async () => {
+    if (!window.confirm('Are you sure you want to clear ALL past clinical records from the database? This action cannot be undone.')) return;
+    try {
+      await clearAllClinicalRecords();
+      setSelectedRecord(null);
+      setRecords([]);
+      if (dbStatus) {
+        setDbStatus({ ...dbStatus, total_records_count: 0 });
+      }
+    } catch (e) {
+      console.error('Error clearing records:', e);
     }
   };
 
@@ -529,6 +544,29 @@ export default function ClinicalRecordsArchive({
                 <Database size={14} /> Backup
               </button>
 
+              {/* Clear All Records */}
+              {records.length > 0 && (
+                <button
+                  onClick={handleClearAll}
+                  title="Clear all stored patient records"
+                  style={{
+                    padding: '7px 12px',
+                    background: '#FEF2F2',
+                    color: '#991B1B',
+                    border: '1.5px solid #FCA5A5',
+                    borderRadius: 'var(--radius-editorial)',
+                    fontSize: '0.78rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '5px'
+                  }}
+                >
+                  <Trash2 size={14} color="#DC2626" /> Clear All
+                </button>
+              )}
+
               {/* Refresh */}
               <button
                 onClick={loadData}
@@ -560,13 +598,50 @@ export default function ClinicalRecordsArchive({
             border: 'var(--border-thick)',
             borderRadius: 'var(--radius-card)',
             padding: '60px 20px',
-            textAlign: 'center'
+            textAlign: 'center',
+            boxShadow: 'var(--shadow-sm)'
           }}>
-            <Database size={40} color="var(--text-muted)" style={{ margin: '0 auto 12px' }} />
-            <h3 style={{ fontSize: '1.2rem', fontWeight: 800 }}>No Clinical Records Matched</h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', marginTop: '6px' }}>
-              Try adjusting your search query or filter criteria.
+            <div style={{
+              width: '56px',
+              height: '56px',
+              borderRadius: '50%',
+              background: '#F1F5F9',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 16px',
+              border: '1.5px solid rgba(20,18,16,0.1)'
+            }}>
+              <Database size={28} color="var(--text-muted)" />
+            </div>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--ink-black)' }}>
+              {searchQuery || selectedDisease !== 'all' || selectedRisk !== 'all' || selectedEye !== 'all'
+                ? 'No Clinical Records Matched'
+                : 'No Patient Records in History Yet'}
+            </h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '6px', maxWidth: '480px', margin: '6px auto 20px' }}>
+              {searchQuery || selectedDisease !== 'all' || selectedRisk !== 'all' || selectedEye !== 'all'
+                ? 'Try adjusting your search terms or filter criteria.'
+                : 'All sample data has been cleared. Upload or test a retinal fundus scan above to automatically save and track real screening records here.'}
             </p>
+            <a
+              href="/#workspace"
+              style={{
+                textDecoration: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '10px 20px',
+                background: 'var(--ink-black)',
+                color: '#fff',
+                fontWeight: 700,
+                fontSize: '0.85rem',
+                borderRadius: 'var(--radius-editorial)',
+                boxShadow: 'var(--shadow-sm)'
+              }}
+            >
+              <Eye size={16} color="var(--signal-yellow)" /> Start New Screening Scan
+            </a>
           </div>
         ) : viewMode === 'grid' ? (
           /* CARD GRID VIEW */

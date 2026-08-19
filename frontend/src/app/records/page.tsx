@@ -35,8 +35,6 @@ export default function RecordsPage() {
 
   return (
     <div style={{ background: 'var(--bg-paper)', color: 'var(--ink-black)', minHeight: '100vh', position: 'relative' }}>
-      <EyeCursorFollower />
-      <FloatingOrbs />
       <TickerBar />
 
       {/* Standalone Records Page Header */}

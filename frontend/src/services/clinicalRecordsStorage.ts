@@ -86,215 +86,8 @@ export interface DatabaseStatus {
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
 const LOCAL_STORAGE_KEY = 'retinaguard_clinical_records_cache_v1';
 
-// Seed sample patient records for standalone offline guarantee
-export const BENCHMARK_SEED_RECORDS: ClinicalRecord[] = [
-  {
-    id: 'REC-20260817-101',
-    patient_id: 'P-40192',
-    patient_name: 'Maria Elena Santos',
-    patient_age: '58',
-    patient_gender: 'Female',
-    scanned_eye: 'Right Eye (OD)',
-    blood_group: 'O+',
-    diabetic_status: 'Type 2 (Poorly Controlled)',
-    hypertension: 'Stage 2 Hypertension',
-    symptoms: 'Blurry vision, floaters, reduced night vision',
-    task: 'multitask',
-    model_name: 'RetinaGuard++ MultiTask Fusion',
-    model_version: '2.0.0',
-    top_prediction: 'Diabetic Retinopathy',
-    confidence: 0.942,
-    risk_score: 78.5,
-    risk_level: 'Critical Risk',
-    severity: 'Grade 3: Severe NPDR',
-    quality_score: 0.94,
-    quality_passed: 1,
-    vessel_density: 0.082,
-    microaneurysms: 24,
-    exudate_ratio: 0.048,
-    predictions_json: [
-      { label: 'Diabetic Retinopathy', probability: 0.942, is_positive: true },
-      { label: 'Hypertensive Retinopathy', probability: 0.680, is_positive: true },
-      { label: 'Glaucoma', probability: 0.045, is_positive: false },
-      { label: 'Cataract', probability: 0.012, is_positive: false },
-      { label: 'Normal', probability: 0.008, is_positive: false }
-    ],
-    sub_scores_json: {
-      vessel_density_risk: 22.5,
-      lesion_risk: 28.0,
-      exudate_risk: 15.0,
-      ml_confidence_risk: 13.0
-    },
-    dip_biomarkers_json: {
-      vessel_density_index: 0.082,
-      microaneurysm_candidate_count: 24,
-      exudate_candidate_count: 9,
-      exudate_area_ratio: 0.048,
-      cup_to_disc_ratio: 0.44,
-      optic_disc_found: true
-    },
-    doctor_notes: 'Urgent retinal specialist referral sent. Advised OCT macula scan and Anti-VEGF assessment. Strict glycemic and BP control advised.',
-    clinical_status: 'Urgent Referral',
-    thumbnail_base64: '/samples/aptos_stage_3_severe.png',
-    heatmap_overlay_base64: '',
-    recommendation: 'Urgent ophthalmology referral within 2 weeks. Comprehensive dilated fundus exam and fluorescein angiography recommended.',
-    created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
-    updated_at: new Date(Date.now() - 2 * 86400000).toISOString()
-  },
-  {
-    id: 'REC-20260816-102',
-    patient_id: 'P-38821',
-    patient_name: 'David K. Chen',
-    patient_age: '64',
-    patient_gender: 'Male',
-    scanned_eye: 'Left Eye (OS)',
-    blood_group: 'B+',
-    diabetic_status: 'Non-Diabetic',
-    hypertension: 'Stage 1 Hypertension',
-    symptoms: 'Gradual loss of peripheral vision, mild eye ache',
-    task: 'odir',
-    model_name: '4608-d Feature Fusion Ensemble',
-    model_version: '1.0.0',
-    top_prediction: 'Glaucoma',
-    confidence: 0.895,
-    risk_score: 62.0,
-    risk_level: 'High Risk',
-    severity: 'Optic Nerve Cupping (CDR 0.76)',
-    quality_score: 0.91,
-    quality_passed: 1,
-    vessel_density: 0.138,
-    microaneurysms: 1,
-    exudate_ratio: 0.002,
-    predictions_json: [
-      { label: 'Glaucoma', probability: 0.895, is_positive: true },
-      { label: 'Normal', probability: 0.082, is_positive: false },
-      { label: 'Cataract', probability: 0.035, is_positive: false },
-      { label: 'Diabetic Retinopathy', probability: 0.011, is_positive: false }
-    ],
-    sub_scores_json: {
-      vessel_density_risk: 8.0,
-      lesion_risk: 4.0,
-      anatomy_risk: 35.0,
-      ml_confidence_risk: 15.0
-    },
-    dip_biomarkers_json: {
-      vessel_density_index: 0.138,
-      microaneurysm_candidate_count: 1,
-      exudate_candidate_count: 0,
-      exudate_area_ratio: 0.002,
-      cup_to_disc_ratio: 0.76,
-      optic_disc_found: true
-    },
-    doctor_notes: 'Visual field test (Humphrey 24-2) and pachymetry ordered. Intraocular pressure IOP measured 24 mmHg OS. Initiated Latanoprost 0.005% QHS.',
-    clinical_status: 'Under Treatment',
-    thumbnail_base64: '/samples/odir_glaucoma.jpg',
-    heatmap_overlay_base64: '',
-    recommendation: 'Gonioscopy and OCT RNFL evaluation. Follow-up visual field testing in 3 months.',
-    created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
-    updated_at: new Date(Date.now() - 5 * 86400000).toISOString()
-  },
-  {
-    id: 'REC-20260814-103',
-    patient_id: 'P-29901',
-    patient_name: 'Eleanor Vance',
-    patient_age: '42',
-    patient_gender: 'Female',
-    scanned_eye: 'Right Eye (OD)',
-    blood_group: 'A-',
-    diabetic_status: 'Non-Diabetic',
-    hypertension: 'Normotensive',
-    symptoms: 'None (Routine Executive Screening)',
-    task: 'aptos',
-    model_name: 'DenseNet121 + ResNet50 Classifier',
-    model_version: '1.0.0',
-    top_prediction: 'No DR (Normal)',
-    confidence: 0.988,
-    risk_score: 6.2,
-    risk_level: 'Low Risk',
-    severity: 'Grade 0: Normal Retina',
-    quality_score: 0.96,
-    quality_passed: 1,
-    vessel_density: 0.162,
-    microaneurysms: 0,
-    exudate_ratio: 0.0,
-    predictions_json: [
-      { label: 'No DR', probability: 0.988, is_positive: false },
-      { label: 'Mild DR', probability: 0.009, is_positive: false },
-      { label: 'Moderate DR', probability: 0.002, is_positive: false }
-    ],
-    sub_scores_json: {
-      vessel_density_risk: 2.0,
-      lesion_risk: 0.0,
-      ml_confidence_risk: 4.2
-    },
-    dip_biomarkers_json: {
-      vessel_density_index: 0.162,
-      microaneurysm_candidate_count: 0,
-      exudate_candidate_count: 0,
-      exudate_area_ratio: 0.0,
-      cup_to_disc_ratio: 0.32,
-      optic_disc_found: true
-    },
-    doctor_notes: 'Completely normal retinal fundus. Sharp disc margins, clear macula, healthy vascular geometry. Routine annual re-check advised.',
-    clinical_status: 'Completed (Clear)',
-    thumbnail_base64: '/samples/aptos_stage_0_normal.png',
-    heatmap_overlay_base64: '',
-    recommendation: 'Annual routine preventative eye examination recommended.',
-    created_at: new Date(Date.now() - 9 * 86400000).toISOString(),
-    updated_at: new Date(Date.now() - 9 * 86400000).toISOString()
-  },
-  {
-    id: 'REC-20260810-104',
-    patient_id: 'P-18450',
-    patient_name: 'Robert S. Taylor',
-    patient_age: '52',
-    patient_gender: 'Male',
-    scanned_eye: 'Left Eye (OS)',
-    blood_group: 'A+',
-    diabetic_status: 'Type 2 (Controlled)',
-    hypertension: 'Stage 1 Hypertension',
-    symptoms: 'Mild strain during reading, occasional glare',
-    task: 'aptos',
-    model_name: 'RetinaGuard++ MultiTask',
-    model_version: '2.0.0',
-    top_prediction: 'Diabetic Retinopathy',
-    confidence: 0.812,
-    risk_score: 38.4,
-    risk_level: 'Elevated Risk',
-    severity: 'Grade 2: Moderate NPDR',
-    quality_score: 0.89,
-    quality_passed: 1,
-    vessel_density: 0.124,
-    microaneurysms: 8,
-    exudate_ratio: 0.015,
-    predictions_json: [
-      { label: 'Moderate DR', probability: 0.812, is_positive: true },
-      { label: 'Mild DR', probability: 0.145, is_positive: false },
-      { label: 'No DR', probability: 0.035, is_positive: false }
-    ],
-    sub_scores_json: {
-      vessel_density_risk: 12.0,
-      lesion_risk: 16.0,
-      exudate_risk: 5.4,
-      ml_confidence_risk: 5.0
-    },
-    dip_biomarkers_json: {
-      vessel_density_index: 0.124,
-      microaneurysm_candidate_count: 8,
-      exudate_candidate_count: 3,
-      exudate_area_ratio: 0.015,
-      cup_to_disc_ratio: 0.38,
-      optic_disc_found: true
-    },
-    doctor_notes: 'Early microvascular signs noted in paramacular area. Scheduled 3-month follow up with dilated examination.',
-    clinical_status: 'Follow-up Scheduled',
-    thumbnail_base64: '/samples/aptos_stage_2_moderate.png',
-    heatmap_overlay_base64: '',
-    recommendation: 'Follow-up screening in 3 to 6 months. Maintain HbA1c < 7.0%.',
-    created_at: new Date(Date.now() - 14 * 86400000).toISOString(),
-    updated_at: new Date(Date.now() - 14 * 86400000).toISOString()
-  }
-];
+/// Seed sample patient records (initialized empty for clean user testing)
+export const BENCHMARK_SEED_RECORDS: ClinicalRecord[] = [];
 
 export async function fetchDatabaseStatus(): Promise<DatabaseStatus> {
   try {
@@ -316,7 +109,7 @@ export async function fetchDatabaseStatus(): Promise<DatabaseStatus> {
 }
 
 function getLocalCacheRecords(): ClinicalRecord[] {
-  if (typeof window === 'undefined') return BENCHMARK_SEED_RECORDS;
+  if (typeof window === 'undefined') return [];
   try {
     const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
     if (raw) {
@@ -325,7 +118,7 @@ function getLocalCacheRecords(): ClinicalRecord[] {
   } catch (e) {
     console.error('Error reading localStorage cache:', e);
   }
-  return BENCHMARK_SEED_RECORDS;
+  return [];
 }
 
 function saveLocalCacheRecords(records: ClinicalRecord[]) {
@@ -513,6 +306,27 @@ export async function deleteRecordFromDatabase(id: string): Promise<boolean> {
   const local = getLocalCacheRecords().filter(r => r.id !== id);
   saveLocalCacheRecords(local);
   return true;
+}
+
+export async function clearAllClinicalRecords(): Promise<boolean> {
+  // 1. Clear local storage cache
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.removeItem(LOCAL_STORAGE_KEY);
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify([]));
+    } catch (e) {
+      console.error('Error clearing localStorage:', e);
+    }
+  }
+
+  // 2. Clear backend database
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/records`, { method: 'DELETE' });
+    return res.ok;
+  } catch (e) {
+    console.warn('Backend clear all records failed:', e);
+    return false;
+  }
 }
 
 export function exportRecordsToCSV(records: ClinicalRecord[]): string {

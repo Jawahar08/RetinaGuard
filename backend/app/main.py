@@ -642,6 +642,13 @@ def update_record_notes(record_id: str, body: DoctorNotesUpdate):
     return {"status": "success", "record": record}
 
 
+@app.delete("/api/records", tags=["Clinical Records Database"])
+def clear_all_clinical_records():
+    """Purge all clinical records from the database."""
+    count = db_manager.clear_all_records()
+    return {"status": "success", "cleared_count": count}
+
+
 @app.delete("/api/records/{record_id}", tags=["Clinical Records Database"])
 def delete_clinical_record(record_id: str):
     """Delete a clinical record from the database."""

@@ -307,7 +307,7 @@ export default function OphthaFusionDashboard() {
   const [isSemanticLoading, setIsSemanticLoading] = useState<boolean>(false);
 
   // Clinical Records & Archive state
-  const [recordsCount, setRecordsCount] = useState<number>(4);
+  const [recordsCount, setRecordsCount] = useState<number>(0);
   const [archiveRefreshTrigger, setArchiveRefreshTrigger] = useState<number>(0);
   const [isSavedToArchive, setIsSavedToArchive] = useState<boolean>(false);
 
@@ -320,10 +320,10 @@ export default function OphthaFusionDashboard() {
   useEffect(() => {
     // Load initial records count from database
     fetchClinicalRecords().then(recs => {
-      if (recs && recs.length > 0) {
-        setRecordsCount(recs.length);
-      }
-    }).catch(() => {});
+      setRecordsCount(recs ? recs.length : 0);
+    }).catch(() => {
+      setRecordsCount(0);
+    });
 
     // Check if user came from /records to load a case
     if (typeof window !== 'undefined') {
@@ -903,10 +903,7 @@ export default function OphthaFusionDashboard() {
 
   return (
     <div style={{ background: 'var(--bg-paper)', color: 'var(--ink-black)', minHeight: '100vh', position: 'relative' }}>
-      <EyeCursorFollower />
-      <FloatingOrbs />
       <TickerBar />
-
 
       <SiteHeader
         onStartScreening={scrollToWorkspace}

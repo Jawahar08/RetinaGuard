@@ -223,9 +223,11 @@ export default function AnalysisWorkspace({
                     objectFit: 'contain'
                   }}
                 />
-                <p className="font-grotesk-mono" style={{ fontSize: '0.82rem', fontWeight: 700 }}>{selectedFile?.name}</p>
-                <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                  {((selectedFile?.size || 0) / 1024 / 1024).toFixed(2)} MB • Ready for AI screening
+                <p className="font-grotesk-mono" style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--ink-black)' }}>
+                  {selectedFile?.name || (previewUrl ? previewUrl.split('/').pop()?.replace(/\.(jpg|png|jpeg)$/i, '').replace(/_/g, ' ').toUpperCase() : 'RETINAL FUNDUS SCAN')}
+                </p>
+                <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px', fontWeight: 600 }}>
+                  {selectedFile ? `${((selectedFile.size || 0) / 1024 / 1024).toFixed(2)} MB • Ready for AI screening` : 'Clinical Examination Scan • Loaded from Archive'}
                 </p>
               </div>
             ) : (
@@ -555,24 +557,34 @@ export default function AnalysisWorkspace({
                     {onSaveToArchive && (
                       <button
                         type="button"
-                        className="btn-editorial-primary"
                         onClick={onSaveToArchive}
                         style={{
-                          fontSize: '0.78rem',
-                          padding: '8px 14px',
+                          fontSize: '0.8rem',
+                          fontWeight: 800,
+                          padding: '9px 16px',
                           display: 'inline-flex',
                           alignItems: 'center',
-                          gap: '6px',
-                          background: isSavedToArchive ? '#166534' : 'var(--ink-black)'
+                          gap: '8px',
+                          background: isSavedToArchive ? '#166534' : '#141210',
+                          color: '#FFFFFF',
+                          border: '2px solid #141210',
+                          borderRadius: 'var(--radius-pill)',
+                          cursor: 'pointer',
+                          boxShadow: 'var(--shadow-sm)',
+                          transition: 'all 0.2s ease',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.04em'
                         }}
                       >
                         {isSavedToArchive ? (
                           <>
-                            <CheckCircle2 size={14} color="#fff" /> Saved to Patient Archive
+                            <CheckCircle2 size={16} color="#FFFFFF" />
+                            <span style={{ color: '#FFFFFF' }}>Saved to Patient Archive</span>
                           </>
                         ) : (
                           <>
-                            <Layers size={14} /> Save to Patient Archive 💾
+                            <Layers size={16} color="#FFC83D" />
+                            <span style={{ color: '#FFFFFF' }}>Save to Patient Archive 💾</span>
                           </>
                         )}
                       </button>

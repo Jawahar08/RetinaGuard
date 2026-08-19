@@ -77,15 +77,6 @@ def init_sqlite_db():
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_top_pred ON clinical_records (top_prediction);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_risk_score ON clinical_records (risk_score);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_created_at ON clinical_records (created_at);")
-    conn.commit()
-
-    # Seed benchmark clinical records if empty
-    cursor.execute("SELECT COUNT(*) as count FROM clinical_records;")
-    row = cursor.fetchone()
-    if row["count"] == 0:
-        seed_benchmark_records(cursor)
-        conn.commit()
-
     conn.close()
     logger.info(f"SQLite database initialized at {SQLITE_DB_PATH}")
 
@@ -557,6 +548,28 @@ class ClinicalDatabaseManager:
                 logger.warning(f"Supabase delete error: {e}")
 
         return affected > 0
+
+    def clear_all_records(self) -> int:
+        """Purge all clinical records from the database."""
+        conn = get_sqlite_connection()
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM clinical_records;")
+        affected = cursor.rowcount
+        conn.commit()
+        conn.close()
+
+        if self.has_supabase:
+            try:
+                headers = {
+                    "apikey": self.supabase_key,
+                    "Authorization": f"Bearer {self.supabase_key}"
+                }
+                url = f"{self.supabase_url}/rest/v1/clinical_records"
+                httpx.delete(url, headers=headers, timeout=3.0)
+            except Exception as e:
+                logger.warning(f"Supabase clear error: {e}")
+
+        return affected
 
     def _format_row(self, row: Dict[str, Any]) -> Dict[str, Any]:
         """Parse JSON fields in row for clean API output."""

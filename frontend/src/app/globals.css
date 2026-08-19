@@ -269,6 +269,32 @@ select,
   box-shadow: var(--shadow-hard);
 }
 
+.btn-editorial-dark {
+  background-color: var(--ink-black);
+  color: #FFFFFF !important;
+  border: var(--border-thick);
+  border-radius: var(--radius-pill);
+  padding: 10px 20px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.btn-editorial-dark:hover:not(:disabled) {
+  transform: translate(-1px, -1px);
+  box-shadow: var(--shadow-hard);
+  background-color: #262320;
+}
+
 /* Upload Dropzone */
 .dropzone-editorial {
   border: 2.5px dashed var(--ink-black);
