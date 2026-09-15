@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Eye, ArrowLeft, ArrowRight, Shield, HardDrive, PlusCircle } from 'lucide-react';
 import ClinicalRecordsArchive from '../../components/ClinicalRecordsArchive';
 import { ClinicalRecord, fetchDatabaseStatus, DatabaseStatus } from '../../services/clinicalRecordsStorage';
-import { FloatingOrbs, EyeCursorFollower, PulseDot, RippleButton } from '../../components/AnimationKit';
+import { FloatingOrbs, PulseDot, RippleButton } from '../../components/AnimationKit';
 import TickerBar from '../../components/TickerBar';
 import SiteFooter from '../../components/SiteFooter';
 

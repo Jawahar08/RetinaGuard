@@ -19,8 +19,7 @@ import {
   ClinicalRecord,
   fetchClinicalRecords
 } from '../services/clinicalRecordsStorage';
-import { PatientInfoData } from '../components/PatientIntakeForm';
-import { FloatingOrbs, EyeCursorFollower } from '../components/AnimationKit';
+import { FloatingOrbs } from '../components/AnimationKit';
 
 
 interface ClassPrediction {
