@@ -83,7 +83,7 @@ export interface DatabaseStatus {
   sqlite_path?: string;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000';
 const LOCAL_STORAGE_KEY = 'retinaguard_clinical_records_cache_v1';
 
 /// Seed sample patient records (initialized empty for clean user testing)

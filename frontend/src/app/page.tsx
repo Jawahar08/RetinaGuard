@@ -314,7 +314,7 @@ export default function OphthaFusionDashboard() {
   const workspaceRef = useRef<HTMLDivElement>(null);
   const methodRef = useRef<HTMLDivElement>(null);
 
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000';
 
   useEffect(() => {
     // Load initial records count from database
