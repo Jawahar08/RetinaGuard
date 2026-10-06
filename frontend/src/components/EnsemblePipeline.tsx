@@ -1,58 +1,96 @@
 'use client';
 
 import React from 'react';
-import { Cpu, Layers, Award } from 'lucide-react';
+import { Cpu, Layers, Award, ArrowRight } from 'lucide-react';
+import { RevealUp, MagneticCard } from './AnimationKit';
 
 interface EnsemblePipelineProps {
   t: Record<string, string>;
   methodRef: React.RefObject<HTMLDivElement>;
 }
 
+const PIPELINE_STEPS = [
+  { icon: <Cpu size={28} color="var(--electric-blue)" />, title: 'ResNet-50', sub: '2048d Deep Features', bg: '#FFFFFF', delay: 0 },
+  { icon: <Cpu size={28} color="var(--electric-blue)" />, title: 'DenseNet-121', sub: '1024d Dense Features', bg: '#FFFFFF', delay: 100 },
+  { icon: <Cpu size={28} color="var(--electric-blue)" />, title: 'EfficientNet-B3', sub: '1536d Scaled Features', bg: '#FFFFFF', delay: 200 },
+  { icon: <Layers size={28} color="var(--ink-black)" />, title: 'Feature Fusion', sub: '4608d Joint Vector', bg: 'var(--signal-yellow)', delay: 300 },
+  { icon: <Award size={28} color="#FFFFFF" />, title: 'Stacking Meta', sub: 'Calibrated Prediction', bg: 'var(--clinical-pink)', textColor: '#FFFFFF', delay: 400 },
+];
+
 export default function EnsemblePipeline({ t, methodRef }: EnsemblePipelineProps) {
   return (
-    <section id="method" ref={methodRef} style={{ maxWidth: '1360px', margin: '0 auto', padding: '64px 32px', borderTop: '2px solid rgba(20,18,16,0.1)' }}>
-      <div style={{ textAlign: 'center', maxWidth: '750px', margin: '0 auto 48px' }}>
-        <span className="pill-badge pill-badge-blue" style={{ marginBottom: '16px' }}>
-          ARCHITECTURE PIPELINE
-        </span>
-        <h2 className="font-serif-display" style={{ fontSize: '2.5rem', fontWeight: 800 }}>
-          {t.ensembleTitle}
-        </h2>
-        <p style={{ color: 'var(--text-muted)', marginTop: '10px', fontSize: '1.05rem' }}>
-          {t.ensembleSub}
-        </p>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '16px' }}>
-        <div className="editorial-card" style={{ padding: '24px', textAlign: 'center' }}>
-          <Cpu size={32} color="var(--electric-blue)" style={{ marginBottom: '12px' }} />
-          <h4 className="font-serif-display" style={{ fontSize: '1.1rem', fontWeight: 700 }}>ResNet-50</h4>
-          <p className="font-grotesk-mono" style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>2048d Deep Features</p>
+    <section
+      id="method"
+      ref={methodRef}
+      className="container-editorial"
+      style={{ paddingTop: '56px', paddingBottom: '56px', borderTop: '1.5px solid rgba(20,18,16,0.08)', position: 'relative', zIndex: 1 }}
+    >
+      <RevealUp>
+        <div style={{ textAlign: 'center', maxWidth: '750px', margin: '0 auto 44px' }}>
+          <span className="pill-badge pill-badge-blue" style={{ marginBottom: '14px' }}>
+            ARCHITECTURE PIPELINE
+          </span>
+          <h2 className="font-serif-display" style={{ fontSize: '2.2rem', fontWeight: 800, lineHeight: 1.15 }}>
+            {t.ensembleTitle}
+          </h2>
+          <p style={{ color: 'var(--text-muted)', marginTop: '8px', fontSize: '0.98rem', lineHeight: 1.6 }}>
+            {t.ensembleSub}
+          </p>
         </div>
+      </RevealUp>
 
-        <div className="editorial-card" style={{ padding: '24px', textAlign: 'center' }}>
-          <Cpu size={32} color="var(--electric-blue)" style={{ marginBottom: '12px' }} />
-          <h4 className="font-serif-display" style={{ fontSize: '1.1rem', fontWeight: 700 }}>DenseNet-121</h4>
-          <p className="font-grotesk-mono" style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>1024d Dense Features</p>
-        </div>
+      {/* Pipeline flow with animated arrows */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '6px',
+        overflowX: 'auto',
+        paddingBottom: '8px',
+        justifyContent: 'center',
+        flexWrap: 'nowrap',
+      }}>
+        {PIPELINE_STEPS.map((step, i) => (
+          <React.Fragment key={i}>
+            <RevealUp delay={step.delay} style={{ flexShrink: 0 }}>
+              <MagneticCard
+                className="editorial-card"
+                style={{
+                  padding: '24px 18px',
+                  textAlign: 'center',
+                  backgroundColor: step.bg,
+                  minWidth: '160px',
+                  color: step.textColor,
+                  animation: `card-entrance 0.55s cubic-bezier(0.22,1,0.36,1) ${step.delay}ms both`,
+                }}
+              >
+                <div style={{ margin: '0 auto 10px', display: 'flex', justifyContent: 'center' }}>
+                  {step.icon}
+                </div>
+                <h4 className="font-serif-display" style={{ fontSize: '1.05rem', fontWeight: 800, color: step.textColor }}>
+                  {step.title}
+                </h4>
+                <p className="font-grotesk-mono" style={{
+                  fontSize: '0.68rem', color: step.textColor || 'var(--text-muted)',
+                  marginTop: '4px', fontWeight: step.textColor ? 700 : undefined,
+                  opacity: step.textColor ? 0.9 : 1,
+                }}>
+                  {step.sub}
+                </p>
+              </MagneticCard>
+            </RevealUp>
 
-        <div className="editorial-card" style={{ padding: '24px', textAlign: 'center' }}>
-          <Cpu size={32} color="var(--electric-blue)" style={{ marginBottom: '12px' }} />
-          <h4 className="font-serif-display" style={{ fontSize: '1.1rem', fontWeight: 700 }}>EfficientNet-B3</h4>
-          <p className="font-grotesk-mono" style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>1536d Scaled Features</p>
-        </div>
-
-        <div className="editorial-card" style={{ padding: '24px', textAlign: 'center', backgroundColor: 'var(--signal-yellow)' }}>
-          <Layers size={32} color="var(--ink-black)" style={{ marginBottom: '12px' }} />
-          <h4 className="font-serif-display" style={{ fontSize: '1.1rem', fontWeight: 800 }}>Feature Fusion</h4>
-          <p className="font-grotesk-mono" style={{ fontSize: '0.75rem', color: 'var(--ink-black)', marginTop: '4px', fontWeight: 700 }}>4608d Joint Vector</p>
-        </div>
-
-        <div className="editorial-card" style={{ padding: '24px', textAlign: 'center', backgroundColor: 'var(--clinical-pink)', color: '#FFFFFF' }}>
-          <Award size={32} color="#FFFFFF" style={{ marginBottom: '12px' }} />
-          <h4 className="font-serif-display" style={{ fontSize: '1.1rem', fontWeight: 800 }}>Stacking Meta</h4>
-          <p className="font-grotesk-mono" style={{ fontSize: '0.75rem', marginTop: '4px', opacity: 0.9 }}>Calibrated Prediction</p>
-        </div>
+            {/* Arrow connector (skip after last) */}
+            {i < PIPELINE_STEPS.length - 1 && (
+              <div style={{
+                flexShrink: 0,
+                animation: `badge-pop 0.4s cubic-bezier(0.22,1,0.36,1) ${step.delay + 200}ms both`,
+                opacity: 0,
+              }}>
+                <ArrowRight size={22} color="var(--electric-blue)" />
+              </div>
+            )}
+          </React.Fragment>
+        ))}
       </div>
     </section>
   );
