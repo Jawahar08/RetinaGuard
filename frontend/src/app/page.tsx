@@ -11,7 +11,6 @@ import ResearchMetrics from '../components/ResearchMetrics';
 import DiseaseReference from '../components/DiseaseReference';
 import SiteFooter from '../components/SiteFooter';
 import DIPExplorer from '../components/DIPExplorer';
-import ProgressionTrackerUI from '../components/ProgressionTrackerUI';
 import SemanticExplainPanel, { SemanticExplainabilityResult } from '../components/SemanticExplainPanel';
 import ClinicalRecordsArchive from '../components/ClinicalRecordsArchive';
 import {
@@ -493,14 +492,6 @@ export default function OphthaFusionDashboard() {
     scrollToWorkspace();
   };
 
-  const handleSendRecordToProgression = (record: ClinicalRecord) => {
-    // Scroll smoothly to progression section
-    const progEl = document.getElementById('progression');
-    if (progEl) {
-      progEl.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
   const handleGenerateReportFromRecord = (record: ClinicalRecord) => {
     // Load and trigger report
     handleLoadRecordIntoWorkspace(record);
@@ -954,8 +945,6 @@ export default function OphthaFusionDashboard() {
           onClose={() => setSemanticResult(null)}
         />
       )}
-
-      <ProgressionTrackerUI />
 
       <EnsemblePipeline
         t={t}

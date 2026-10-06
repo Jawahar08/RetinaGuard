@@ -26,13 +26,6 @@ export default function RecordsPage() {
     }
   };
 
-  const handleSendToProgression = (record: ClinicalRecord) => {
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('retinaguard_progression_baseline', JSON.stringify(record));
-      router.push('/#progression');
-    }
-  };
-
   return (
     <div style={{ background: 'var(--bg-paper)', color: 'var(--ink-black)', minHeight: '100vh', position: 'relative' }}>
       <TickerBar />
@@ -142,7 +135,6 @@ export default function RecordsPage() {
       <main style={{ minHeight: '80vh', paddingBottom: '60px' }}>
         <ClinicalRecordsArchive
           onLoadIntoWorkspace={handleLoadIntoWorkspace}
-          onSendToProgression={handleSendToProgression}
         />
       </main>
 

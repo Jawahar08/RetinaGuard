@@ -89,7 +89,6 @@ export default function SiteHeader({ onStartScreening, onExploreMethod, recordsC
             { label: 'Overview', href: '#overview' },
             { label: 'Screening', onClick: onStartScreening },
             { label: 'DIP Biomarkers', href: '#dip-explorer' },
-            { label: 'Progression', href: '#progression' },
             {
               label: 'Past Records 🗂️',
               href: '/records',
