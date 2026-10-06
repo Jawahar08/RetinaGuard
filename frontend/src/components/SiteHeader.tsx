@@ -89,11 +89,6 @@ export default function SiteHeader({ onStartScreening, onExploreMethod, recordsC
             { label: 'Overview', href: '#overview' },
             { label: 'Screening', onClick: onStartScreening },
             { label: 'DIP Biomarkers', href: '#dip-explorer' },
-            {
-              label: 'Past Records 🗂️',
-              href: '/records',
-              badge: typeof recordsCount === 'number' ? recordsCount : undefined
-            },
             { label: 'Research', href: '#research' },
           ].map((item, i) =>
             item.href ? (
@@ -114,19 +109,6 @@ export default function SiteHeader({ onStartScreening, onExploreMethod, recordsC
                 className="nav-link-animated"
               >
                 {item.label}
-                {typeof item.badge === 'number' && (
-                  <span style={{
-                    fontSize: '0.65rem',
-                    fontWeight: 800,
-                    background: '#E2E8F0',
-                    color: 'var(--ink-black)',
-                    padding: '1px 6px',
-                    borderRadius: '10px',
-                    border: '1px solid rgba(20,18,16,0.15)'
-                  }}>
-                    {item.badge}
-                  </span>
-                )}
               </a>
             ) : (
               <button

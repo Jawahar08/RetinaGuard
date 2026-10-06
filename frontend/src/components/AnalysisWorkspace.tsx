@@ -83,9 +83,6 @@ interface AnalysisWorkspaceProps {
   runPrediction: () => void;
   downloadReport: () => void;
   workspaceRef: React.RefObject<HTMLDivElement> | any;
-  onSaveToArchive?: () => void;
-  onOpenArchive?: () => void;
-  isSavedToArchive?: boolean;
 }
 
 export default function AnalysisWorkspace({
@@ -108,10 +105,7 @@ export default function AnalysisWorkspace({
   handleDrop,
   runPrediction,
   downloadReport,
-  workspaceRef,
-  onSaveToArchive,
-  onOpenArchive,
-  isSavedToArchive
+  workspaceRef
 }: AnalysisWorkspaceProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -552,63 +546,7 @@ export default function AnalysisWorkspace({
                   </div>
                 )}
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', marginTop: '20px', paddingTop: '16px', borderTop: '1px solid rgba(20,18,16,0.1)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    {onSaveToArchive && (
-                      <button
-                        type="button"
-                        onClick={onSaveToArchive}
-                        style={{
-                          fontSize: '0.8rem',
-                          fontWeight: 800,
-                          padding: '9px 16px',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '8px',
-                          background: isSavedToArchive ? '#166534' : '#141210',
-                          color: '#FFFFFF',
-                          border: '2px solid #141210',
-                          borderRadius: 'var(--radius-pill)',
-                          cursor: 'pointer',
-                          boxShadow: 'var(--shadow-sm)',
-                          transition: 'all 0.2s ease',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.04em'
-                        }}
-                      >
-                        {isSavedToArchive ? (
-                          <>
-                            <CheckCircle2 size={16} color="#FFFFFF" />
-                            <span style={{ color: '#FFFFFF' }}>Saved to Patient Archive</span>
-                          </>
-                        ) : (
-                          <>
-                            <Layers size={16} color="#FFC83D" />
-                            <span style={{ color: '#FFFFFF' }}>Save to Patient Archive 💾</span>
-                          </>
-                        )}
-                      </button>
-                    )}
-
-                    {onOpenArchive && (
-                      <button
-                        type="button"
-                        onClick={onOpenArchive}
-                        style={{
-                          background: 'none',
-                          border: 'none',
-                          color: '#0369A1',
-                          fontWeight: 700,
-                          fontSize: '0.78rem',
-                          cursor: 'pointer',
-                          textDecoration: 'underline'
-                        }}
-                      >
-                        View Past Patient Checks →
-                      </button>
-                    )}
-                  </div>
-
+                <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', flexWrap: 'wrap', gap: '10px', marginTop: '20px', paddingTop: '16px', borderTop: '1px solid rgba(20,18,16,0.1)' }}>
                   <button className="btn-editorial-secondary" onClick={downloadReport}>
                     <Download size={15} /> {t.downloadReportBtn}
                   </button>
