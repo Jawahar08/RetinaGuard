@@ -532,4 +532,44 @@ async def semantic_explain(
         raise HTTPException(status_code=500, detail=f"Semantic explainability error: {str(e)}")
 
 
+from ml.individual_eval import load_canonical_benchmark, run_individual_model_predictions
+
+
+@app.get("/model-benchmark", tags=["Model Evaluation"])
+def get_model_benchmark():
+    """
+    Returns the canonical test-set benchmark evaluation results
+    for all evaluated CNN architectures on held-out test data.
+    """
+    try:
+        benchmark = load_canonical_benchmark()
+        return benchmark
+    except Exception as e:
+        logger.error(f"Failed to load model benchmark: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to load benchmark: {str(e)}")
+
+
+@app.post("/predict-individual-models", tags=["Model Evaluation"])
+async def predict_individual_models(file: UploadFile = File(...)):
+    """
+    Runs each compatible trained CNN model independently on the uploaded image.
+    Separates models that perform different tasks and reports per-model image confidence
+    strictly separated from test-set benchmark accuracy.
+    """
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Uploaded file is not a valid image.")
+
+    content = await file.read()
+    if not content:
+        raise HTTPException(status_code=400, detail="Uploaded file is empty.")
+
+    try:
+        res = run_individual_model_predictions(content, filename=file.filename)
+        return res
+    except Exception as e:
+        logger.error(f"Individual model prediction error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Inference error: {str(e)}")
+
+
+
 

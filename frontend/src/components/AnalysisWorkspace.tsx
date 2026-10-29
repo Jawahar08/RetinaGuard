@@ -3,6 +3,7 @@
 import React, { useRef } from 'react';
 import { Eye, Activity, AlertTriangle, RefreshCw, Sparkles, Download, UserCheck, CheckCircle2, Shield, Layers } from 'lucide-react';
 import PatientIntakeForm, { PatientInfoData } from './PatientIntakeForm';
+import CNNPerformanceEvaluation from './CNNPerformanceEvaluation';
 
 interface ClassPrediction {
   label: string;
@@ -553,51 +554,9 @@ export default function AnalysisWorkspace({
                 </div>
               </div>
 
-              {/* Heatmap Visual Attention Map Card */}
-              {heatmapData && (
-                <div className="editorial-card" style={{ padding: '28px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
-                    <div>
-                      <span className="font-grotesk-mono" style={{ fontSize: '0.72rem', color: 'var(--electric-blue)', fontWeight: 700 }}>
-                        MODEL ATTENTION / GRAD-CAM++
-                      </span>
-                      <h3 className="font-serif-display" style={{ fontSize: '1.3rem', fontWeight: 800, marginTop: '2px' }}>
-                        {t.heatmapTitle}
-                      </h3>
-                    </div>
+              {/* CNN Model Performance Evaluation Dashboard */}
+              <CNNPerformanceEvaluation selectedFile={selectedFile} />
 
-                    <div style={{ display: 'flex', gap: '6px' }}>
-                      <button className={`btn-editorial-secondary ${activeHeatmapTab === 'overlay' ? 'active' : ''}`} onClick={() => setActiveHeatmapTab('overlay')} style={{ padding: '6px 12px', fontSize: '0.75rem' }}>
-                        {t.tabBlended}
-                      </button>
-                      <button className={`btn-editorial-secondary ${activeHeatmapTab === 'heatmap' ? 'active' : ''}`} onClick={() => setActiveHeatmapTab('heatmap')} style={{ padding: '6px 12px', fontSize: '0.75rem' }}>
-                        {t.tabHeatmap}
-                      </button>
-                      <button className={`btn-editorial-secondary ${activeHeatmapTab === 'original' ? 'active' : ''}`} onClick={() => setActiveHeatmapTab('original')} style={{ padding: '6px 12px', fontSize: '0.75rem' }}>
-                        {t.tabOriginal}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div style={{ border: 'var(--border-thick)', borderRadius: '16px', overflow: 'hidden', boxShadow: 'var(--shadow-sm)', backgroundColor: '#000000', maxHeight: '380px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <img
-                      src={
-                        activeHeatmapTab === 'overlay'
-                          ? heatmapData.overlay_base64
-                          : activeHeatmapTab === 'heatmap'
-                          ? heatmapData.heatmap_base64
-                          : heatmapData.original_image_base64
-                      }
-                      alt="Grad-CAM Model Attention"
-                      style={{ width: '100%', maxHeight: '380px', objectFit: 'contain', display: 'block' }}
-                    />
-                  </div>
-
-                  <div style={{ marginTop: '14px', padding: '12px 14px', background: '#FAF8F5', border: 'var(--border-thick)', borderRadius: '12px', fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
-                    <strong>Clinical Notice:</strong> {t.disclaimerGradcam}
-                  </div>
-                </div>
-              )}
             </>
           )}
         </div>
