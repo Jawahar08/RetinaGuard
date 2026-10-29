@@ -276,42 +276,42 @@ export default function CNNPerformanceEvaluation({
   };
 
   return (
-    <div className="editorial-card" style={{ padding: '28px', marginTop: '24px' }}>
+    <div className="editorial-card" style={{ padding: '32px', background: '#FFFFFF', borderRadius: '24px', boxShadow: 'var(--shadow-hard)', border: 'var(--border-thick)' }}>
       {/* ── CARD HEADER ── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px', marginBottom: '22px' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-            <span className="font-grotesk-mono" style={{ fontSize: '0.72rem', color: 'var(--electric-blue)', fontWeight: 800 }}>
-              MODEL BENCHMARKING / TEST-SET EVALUATION
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+            <span className="font-grotesk-mono" style={{ fontSize: '0.72rem', color: 'var(--electric-blue)', fontWeight: 800, letterSpacing: '0.04em' }}>
+              MODEL BENCHMARKING / HELD-OUT TEST EVALUATION
             </span>
-            <span style={{ fontSize: '0.68rem', background: '#EFF6FF', border: '1px solid #BFDBFE', color: '#1D4ED8', padding: '2px 8px', borderRadius: '9999px', fontWeight: 700 }}>
+            <span style={{ fontSize: '0.68rem', background: '#EFF6FF', border: '1.5px solid #BFDBFE', color: '#1D4ED8', padding: '2px 8px', borderRadius: '9999px', fontWeight: 800 }}>
               HELD-OUT TEST
             </span>
           </div>
 
-          <h3 className="font-serif-display" style={{ fontSize: '1.45rem', fontWeight: 800, margin: '2px 0 4px 0', color: 'var(--ink-black)' }}>
+          <h3 className="font-serif-display" style={{ fontSize: '1.65rem', fontWeight: 800, margin: '2px 0 6px 0', color: 'var(--ink-black)', letterSpacing: '-0.02em' }}>
             CNN Model Performance Evaluation
           </h3>
 
-          <p style={{ fontSize: '0.84rem', color: 'var(--text-muted)', margin: 0, maxWidth: '640px' }}>
-            Independent benchmark metrics from labeled held-out test data.
+          <p style={{ fontSize: '0.86rem', color: 'var(--text-muted)', margin: 0, maxWidth: '720px', lineHeight: 1.5 }}>
+            Independent diagnostic benchmark metrics evaluated on 732 labeled held-out retinal fundus scans with patient-stratified split.
           </p>
         </div>
 
         {/* Evaluation Metadata Badges */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-end' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', fontSize: '0.74rem' }}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#F1F5F9', padding: '4px 9px', borderRadius: '6px', border: '1px solid #CBD5E1', color: '#334155', fontWeight: 600 }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#F8FAFC', padding: '5px 11px', borderRadius: '8px', border: '1.5px solid #CBD5E1', color: '#334155', fontWeight: 700 }}>
               <Calendar size={13} style={{ color: 'var(--electric-blue)' }} />
               {formattedDate}
             </span>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#F1F5F9', padding: '4px 9px', borderRadius: '6px', border: '1px solid #CBD5E1', color: '#334155', fontWeight: 600 }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#F8FAFC', padding: '5px 11px', borderRadius: '8px', border: '1.5px solid #CBD5E1', color: '#334155', fontWeight: 700 }}>
               <Database size={13} style={{ color: '#10B981' }} />
               {benchmark?.dataset || 'APTOS 2019 Blindness Detection'}
             </span>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#FFFBEB', padding: '4px 9px', borderRadius: '6px', border: '1px solid #FDE68A', color: '#92400E', fontWeight: 700 }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#FFFBEB', padding: '5px 11px', borderRadius: '8px', border: '1.5px solid #FDE68A', color: '#92400E', fontWeight: 800 }}>
               <Layers size={13} style={{ color: '#F59E0B' }} />
-              {benchmark?.testSampleCount ? `${benchmark.testSampleCount} Test Images` : '732 Test Images'}
+              {benchmark?.testSampleCount ? `${benchmark.testSampleCount} Scans` : '732 Scans'}
             </span>
           </div>
 
@@ -322,336 +322,420 @@ export default function CNNPerformanceEvaluation({
       </div>
 
       {/* ── RESPONSIVE SEGMENTED NAVIGATION TABS ── */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '22px', borderBottom: '2px solid rgba(20,18,16,0.08)', paddingBottom: '12px', overflowX: 'auto' }}>
-        <button
-          onClick={() => setActiveTab('overview')}
-          className={`btn-editorial-secondary ${activeTab === 'overview' ? 'active' : ''}`}
-          style={{
-            padding: '7px 15px',
-            fontSize: '0.78rem',
-            gap: '6px',
-            backgroundColor: activeTab === 'overview' ? 'var(--signal-yellow)' : '#FFFFFF',
-            borderColor: 'var(--ink-black)'
-          }}
-        >
-          <BarChart2 size={14} /> Overview
-        </button>
-
-        <button
-          onClick={() => setActiveTab('comparison')}
-          className={`btn-editorial-secondary ${activeTab === 'comparison' ? 'active' : ''}`}
-          style={{
-            padding: '7px 15px',
-            fontSize: '0.78rem',
-            gap: '6px',
-            backgroundColor: activeTab === 'comparison' ? 'var(--signal-yellow)' : '#FFFFFF',
-            borderColor: 'var(--ink-black)'
-          }}
-        >
-          <TableIcon size={14} /> Model Comparison
-        </button>
-
-        <button
-          onClick={() => setActiveTab('matrix')}
-          className={`btn-editorial-secondary ${activeTab === 'matrix' ? 'active' : ''}`}
-          style={{
-            padding: '7px 15px',
-            fontSize: '0.78rem',
-            gap: '6px',
-            backgroundColor: activeTab === 'matrix' ? 'var(--signal-yellow)' : '#FFFFFF',
-            borderColor: 'var(--ink-black)'
-          }}
-        >
-          <GridIcon size={14} /> Confusion Matrix
-        </button>
-
-        {canShowPredictionsTab && (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '12px',
+        marginBottom: '26px',
+        paddingBottom: '16px',
+        borderBottom: '1.5px solid rgba(20, 18, 16, 0.1)'
+      }}>
+        <div style={{
+          background: '#F1F5F9',
+          padding: '4px',
+          borderRadius: '12px',
+          border: '1.5px solid #CBD5E1',
+          display: 'inline-flex',
+          gap: '4px',
+          flexWrap: 'wrap'
+        }}>
           <button
-            onClick={() => setActiveTab('predictions')}
-            className={`btn-editorial-secondary ${activeTab === 'predictions' ? 'active' : ''}`}
+            type="button"
+            onClick={() => setActiveTab('overview')}
             style={{
-              padding: '7px 15px',
-              fontSize: '0.78rem',
+              padding: '8px 18px',
+              fontSize: '0.8rem',
+              fontWeight: activeTab === 'overview' ? 800 : 600,
               gap: '6px',
-              backgroundColor: activeTab === 'predictions' ? 'var(--signal-yellow)' : '#FFFFFF',
-              borderColor: 'var(--ink-black)'
+              display: 'inline-flex',
+              alignItems: 'center',
+              backgroundColor: activeTab === 'overview' ? 'var(--signal-yellow)' : 'transparent',
+              color: activeTab === 'overview' ? 'var(--ink-black)' : '#475569',
+              border: activeTab === 'overview' ? '1.5px solid var(--ink-black)' : '1.5px solid transparent',
+              borderRadius: '9px',
+              boxShadow: activeTab === 'overview' ? 'var(--shadow-sm)' : 'none',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease'
             }}
           >
-            <Sparkles size={14} style={{ color: 'var(--electric-blue)' }} /> Image Predictions
+            <BarChart2 size={15} /> Overview & Visuals
           </button>
-        )}
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('comparison')}
+            style={{
+              padding: '8px 18px',
+              fontSize: '0.8rem',
+              fontWeight: activeTab === 'comparison' ? 800 : 600,
+              gap: '6px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              backgroundColor: activeTab === 'comparison' ? 'var(--signal-yellow)' : 'transparent',
+              color: activeTab === 'comparison' ? 'var(--ink-black)' : '#475569',
+              border: activeTab === 'comparison' ? '1.5px solid var(--ink-black)' : '1.5px solid transparent',
+              borderRadius: '9px',
+              boxShadow: activeTab === 'comparison' ? 'var(--shadow-sm)' : 'none',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            <TableIcon size={15} /> Model Comparison Table
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('matrix')}
+            style={{
+              padding: '8px 18px',
+              fontSize: '0.8rem',
+              fontWeight: activeTab === 'matrix' ? 800 : 600,
+              gap: '6px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              backgroundColor: activeTab === 'matrix' ? 'var(--signal-yellow)' : 'transparent',
+              color: activeTab === 'matrix' ? 'var(--ink-black)' : '#475569',
+              border: activeTab === 'matrix' ? '1.5px solid var(--ink-black)' : '1.5px solid transparent',
+              borderRadius: '9px',
+              boxShadow: activeTab === 'matrix' ? 'var(--shadow-sm)' : 'none',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            <GridIcon size={15} /> Confusion Matrix (5x5)
+          </button>
+
+          {canShowPredictionsTab && (
+            <button
+              type="button"
+              onClick={() => setActiveTab('predictions')}
+              style={{
+                padding: '8px 18px',
+                fontSize: '0.8rem',
+                fontWeight: activeTab === 'predictions' ? 800 : 600,
+                gap: '6px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                backgroundColor: activeTab === 'predictions' ? 'var(--signal-yellow)' : 'transparent',
+                color: activeTab === 'predictions' ? 'var(--ink-black)' : '#475569',
+                border: activeTab === 'predictions' ? '1.5px solid var(--ink-black)' : '1.5px solid transparent',
+                borderRadius: '9px',
+                boxShadow: activeTab === 'predictions' ? 'var(--shadow-sm)' : 'none',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              <Sparkles size={15} style={{ color: 'var(--electric-blue)' }} /> Current Scan Predictions
+            </button>
+          )}
+        </div>
+
+        <div className="font-grotesk-mono" style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+          {activeTab === 'overview' && 'MODE: EXECUTIVE SUMMARY & COMPARATIVE CHARTS'}
+          {activeTab === 'comparison' && 'MODE: FULL MULTI-ARCHITECTURAL BENCHMARK TABLE'}
+          {activeTab === 'matrix' && 'MODE: 5-CLASS HELD-OUT CONFUSION HEATMAP'}
+          {activeTab === 'predictions' && 'MODE: PER-SCAN MULTI-BACKBONE INFERENCE'}
+        </div>
       </div>
 
       {/* ── TAB 1: OVERVIEW ── */}
       {activeTab === 'overview' && (
         <div>
-          {/* Four Canonical Summary Cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px', marginBottom: '26px' }}>
+          {/* Four Canonical Summary Cards: Balanced 4-Column Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px', marginBottom: '28px' }}>
             {/* Card 1: Best Model */}
-            <div style={{ background: '#EFF6FF', border: 'var(--border-thick)', borderRadius: '16px', padding: '16px 18px', boxShadow: 'var(--shadow-sm)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span className="font-grotesk-mono" style={{ fontSize: '0.7rem', color: '#1E40AF', fontWeight: 800 }}>
-                  BEST MODEL
+            <div style={{ background: '#EFF6FF', border: 'var(--border-thick)', borderRadius: '16px', padding: '18px 20px', minHeight: '136px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: 'var(--shadow-sm)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span className="font-grotesk-mono" style={{ fontSize: '0.7rem', color: '#1E40AF', fontWeight: 800, letterSpacing: '0.04em' }}>
+                  BEST OVERALL MODEL
                 </span>
                 <Award size={18} style={{ color: '#2563EB' }} />
               </div>
-              <div className="font-serif-display" style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--ink-black)', lineHeight: 1.2 }}>
+              <div className="font-serif-display" style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--ink-black)', lineHeight: 1.2, margin: '6px 0' }}>
                 {benchmark?.bestModelSummary?.displayName || 'RetinaGuard Stacking Ensemble'}
               </div>
-              <div style={{ fontSize: '0.72rem', color: '#3B82F6', fontWeight: 700, marginTop: '6px' }}>
-                4608-d Feature Concatenation + OOF
+              <div style={{ fontSize: '0.74rem', color: '#2563EB', fontWeight: 700 }}>
+                4608-d Feature Concatenation + Soft Voting
               </div>
             </div>
 
             {/* Card 2: Best Selected Metric */}
-            <div style={{ background: '#F0FDF4', border: 'var(--border-thick)', borderRadius: '16px', padding: '16px 18px', boxShadow: 'var(--shadow-sm)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span className="font-grotesk-mono" style={{ fontSize: '0.7rem', color: '#166534', fontWeight: 800 }}>
-                  BEST SELECTED METRIC
+            <div style={{ background: '#F0FDF4', border: 'var(--border-thick)', borderRadius: '16px', padding: '18px 20px', minHeight: '136px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: 'var(--shadow-sm)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span className="font-grotesk-mono" style={{ fontSize: '0.7rem', color: '#166534', fontWeight: 800, letterSpacing: '0.04em' }}>
+                  HELD-OUT TEST ACCURACY
                 </span>
                 <TrendingUp size={18} style={{ color: '#16A34A' }} />
               </div>
-              <div className="font-serif-display" style={{ fontSize: '1.65rem', fontWeight: 900, color: '#15803D', lineHeight: 1 }}>
+              <div className="font-serif-display" style={{ fontSize: '1.75rem', fontWeight: 900, color: '#15803D', lineHeight: 1, margin: '6px 0' }}>
                 {benchmark?.bestModelSummary ? `${(benchmark.bestModelSummary.accuracy * 100).toFixed(2)}%` : '96.85%'}
               </div>
-              <div style={{ fontSize: '0.72rem', color: '#166534', fontWeight: 700, marginTop: '6px' }}>
-                Accuracy (0.9880 ROC-AUC | F1: 0.966)
+              <div style={{ fontSize: '0.74rem', color: '#166534', fontWeight: 700 }}>
+                ROC-AUC: 0.9880 • Macro F1: 0.9665
               </div>
             </div>
 
             {/* Card 3: Evaluated Models */}
-            <div style={{ background: '#FFFBEB', border: 'var(--border-thick)', borderRadius: '16px', padding: '16px 18px', boxShadow: 'var(--shadow-sm)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span className="font-grotesk-mono" style={{ fontSize: '0.7rem', color: '#92400E', fontWeight: 800 }}>
-                  EVALUATED MODELS
+            <div style={{ background: '#FFFBEB', border: 'var(--border-thick)', borderRadius: '16px', padding: '18px 20px', minHeight: '136px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: 'var(--shadow-sm)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span className="font-grotesk-mono" style={{ fontSize: '0.7rem', color: '#92400E', fontWeight: 800, letterSpacing: '0.04em' }}>
+                  EVALUATED ARCHITECTURES
                 </span>
                 <CheckCircle2 size={18} style={{ color: '#D97706' }} />
               </div>
-              <div className="font-serif-display" style={{ fontSize: '1.65rem', fontWeight: 900, color: '#B45309', lineHeight: 1 }}>
-                {modelsList.length || 5}
+              <div className="font-serif-display" style={{ fontSize: '1.75rem', fontWeight: 900, color: '#B45309', lineHeight: 1, margin: '6px 0' }}>
+                {modelsList.length || 5} Architectures
               </div>
-              <div style={{ fontSize: '0.72rem', color: '#92400E', fontWeight: 700, marginTop: '6px' }}>
+              <div style={{ fontSize: '0.74rem', color: '#92400E', fontWeight: 700 }}>
                 4 Deep Backbones + Stacking Meta-Learner
               </div>
             </div>
 
             {/* Card 4: Test-set Size */}
-            <div style={{ background: '#FAF5FF', border: 'var(--border-thick)', borderRadius: '16px', padding: '16px 18px', boxShadow: 'var(--shadow-sm)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span className="font-grotesk-mono" style={{ fontSize: '0.7rem', color: '#6B21A8', fontWeight: 800 }}>
-                  TEST-SET SIZE
+            <div style={{ background: '#FAF5FF', border: 'var(--border-thick)', borderRadius: '16px', padding: '18px 20px', minHeight: '136px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: 'var(--shadow-sm)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span className="font-grotesk-mono" style={{ fontSize: '0.7rem', color: '#6B21A8', fontWeight: 800, letterSpacing: '0.04em' }}>
+                  HELD-OUT TEST COHORT
                 </span>
                 <Database size={18} style={{ color: '#9333EA' }} />
               </div>
-              <div className="font-serif-display" style={{ fontSize: '1.65rem', fontWeight: 900, color: '#7E22CE', lineHeight: 1 }}>
-                {benchmark?.testSampleCount ? `${benchmark.testSampleCount}` : '732'}
+              <div className="font-serif-display" style={{ fontSize: '1.75rem', fontWeight: 900, color: '#7E22CE', lineHeight: 1, margin: '6px 0' }}>
+                {benchmark?.testSampleCount ? `${benchmark.testSampleCount} Scans` : '732 Scans'}
               </div>
-              <div style={{ fontSize: '0.72rem', color: '#6B21A8', fontWeight: 700, marginTop: '6px' }}>
+              <div style={{ fontSize: '0.74rem', color: '#6B21A8', fontWeight: 700 }}>
                 Stratified Patient Split (Zero Leakage)
               </div>
             </div>
           </div>
 
-          {/* ── CHARTS SECTION ── */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: '20px' }}>
+          {/* ── CHARTS SECTION: Side-by-Side 50%/50% ── */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(480px, 1fr))', gap: '24px' }}>
             {/* Chart 1: Accuracy Comparison Bar Chart */}
-            <div style={{ background: '#FAF8F5', border: 'var(--border-thick)', borderRadius: '16px', padding: '20px', boxShadow: 'var(--shadow-sm)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <div>
-                  <h4 className="font-serif-display" style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0 }}>
-                    Test Accuracy Comparison
-                  </h4>
-                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                    Evaluated on 732 held-out APTOS fundus images
+            <div style={{ background: '#FAF8F5', border: 'var(--border-thick)', borderRadius: '16px', padding: '24px', boxShadow: 'var(--shadow-sm)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
+                  <div>
+                    <h4 className="font-serif-display" style={{ fontSize: '1.12rem', fontWeight: 800, margin: 0, color: 'var(--ink-black)' }}>
+                      Test Accuracy Comparison
+                    </h4>
+                    <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+                      Evaluated on 732 held-out APTOS fundus images
+                    </span>
+                  </div>
+                  <span className="font-grotesk-mono" style={{ fontSize: '0.68rem', background: '#FFFFFF', padding: '4px 10px', borderRadius: '6px', border: '1px solid #CBD5E1', fontWeight: 700, color: '#1E293B' }}>
+                    METRIC: ACCURACY %
                   </span>
                 </div>
-                <span className="font-grotesk-mono" style={{ fontSize: '0.68rem', background: '#FFFFFF', padding: '3px 8px', borderRadius: '4px', border: '1px solid #CBD5E1', fontWeight: 700 }}>
-                  METRIC: ACCURACY %
-                </span>
+
+                {/* Horizontal Aligned Bar Chart */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {modelsList.map((m, idx) => {
+                    const pct = m.accuracy * 100;
+                    const isTop = m.accuracy === bestColumnValues.accuracy;
+                    const barColor = isTop
+                      ? 'linear-gradient(90deg, #315CF5 0%, #10B981 100%)'
+                      : idx === 0
+                      ? '#64748B'
+                      : idx === 1
+                      ? '#3B82F6'
+                      : idx === 2
+                      ? '#0284C7'
+                      : '#0D9488';
+
+                    return (
+                      <div
+                        key={m.key}
+                        onMouseEnter={() => setHoveredBar(m)}
+                        onMouseLeave={() => setHoveredBar(null)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '12px',
+                          cursor: 'pointer',
+                          padding: '6px 8px',
+                          borderRadius: '8px',
+                          background: hoveredBar?.key === m.key ? 'rgba(49, 92, 245, 0.06)' : 'transparent',
+                          transition: 'background 0.15s ease'
+                        }}
+                      >
+                        {/* Left Label: Fixed 180px */}
+                        <div style={{
+                          width: '180px',
+                          minWidth: '180px',
+                          fontSize: '0.8rem',
+                          fontWeight: isTop ? 800 : 600,
+                          color: isTop ? '#15803D' : 'var(--ink-black)',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis'
+                        }}>
+                          {isTop ? '🏆 ' : ''}{m.displayName}
+                        </div>
+
+                        {/* Center Bar Track */}
+                        <div style={{
+                          flex: 1,
+                          height: '22px',
+                          background: '#E2E8F0',
+                          borderRadius: '9999px',
+                          overflow: 'hidden',
+                          border: '1px solid rgba(20,18,16,0.12)',
+                          display: 'flex',
+                          alignItems: 'center'
+                        }}>
+                          <div
+                            style={{
+                              height: '100%',
+                              width: `${pct}%`,
+                              background: barColor,
+                              borderRadius: '9999px',
+                              transition: 'width 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
+                              boxShadow: isTop ? '0 0 8px rgba(16, 185, 129, 0.5)' : 'none'
+                            }}
+                          />
+                        </div>
+
+                        {/* Right Value: Fixed 120px */}
+                        <div style={{
+                          width: '120px',
+                          minWidth: '120px',
+                          textAlign: 'right',
+                          fontSize: '0.82rem',
+                          fontWeight: 800,
+                          fontVariantNumeric: 'tabular-nums',
+                          color: isTop ? '#047857' : 'inherit'
+                        }}>
+                          {pct.toFixed(2)}% <span style={{ fontSize: '0.68rem', opacity: 0.65 }}>({m.correctPredictions}/{m.totalSamples})</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
 
-              {/* Horizontal / Scaled SVG Bar Chart */}
-              <div style={{ position: 'relative' }}>
-                {modelsList.map((m, idx) => {
-                  const pct = m.accuracy * 100;
-                  const isTop = m.accuracy === bestColumnValues.accuracy;
-                  const barColor = isTop
-                    ? 'linear-gradient(90deg, #315CF5 0%, #10B981 100%)'
-                    : idx === 0
-                    ? '#64748B'
-                    : idx === 1
-                    ? '#3B82F6'
-                    : idx === 2
-                    ? '#0284C7'
-                    : '#0D9488';
-
-                  return (
-                    <div
-                      key={m.key}
-                      onMouseEnter={() => setHoveredBar(m)}
-                      onMouseLeave={() => setHoveredBar(null)}
-                      style={{
-                        marginBottom: '14px',
-                        cursor: 'pointer',
-                        padding: '6px 8px',
-                        borderRadius: '8px',
-                        background: hoveredBar?.key === m.key ? 'rgba(49, 92, 245, 0.05)' : 'transparent',
-                        transition: 'background 0.2s'
-                      }}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', fontWeight: isTop ? 800 : 600, marginBottom: '5px' }}>
-                        <span>
-                          {isTop ? '🏆 ' : ''}{m.displayName}
-                        </span>
-                        <span style={{ color: isTop ? '#047857' : 'inherit', fontWeight: 800 }}>
-                          {pct.toFixed(2)}% ({m.correctPredictions}/{m.totalSamples})
-                        </span>
-                      </div>
-
-                      {/* Bar Container */}
-                      <div style={{ height: '20px', width: '100%', background: '#E2E8F0', borderRadius: '9999px', overflow: 'hidden', border: '1px solid rgba(20,18,16,0.15)', display: 'flex', alignItems: 'center' }}>
-                        <div
-                          style={{
-                            height: '100%',
-                            width: `${pct}%`,
-                            background: barColor,
-                            borderRadius: '9999px',
-                            transition: 'width 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
-                            boxShadow: isTop ? '0 0 8px rgba(16, 185, 129, 0.5)' : 'none'
-                          }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-
-                {/* Accuracy Scale ticks */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem', color: '#64748B', marginTop: '12px', borderTop: '1px dashed #CBD5E1', paddingTop: '6px' }}>
+              {/* Accuracy Scale Axis Ticks */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                marginTop: '16px',
+                borderTop: '1px dashed #CBD5E1',
+                paddingTop: '8px'
+              }}>
+                <div style={{ width: '180px', minWidth: '180px', fontSize: '0.68rem', color: '#64748B', fontWeight: 700 }}>
+                  SCALE (0% → 100%)
+                </div>
+                <div style={{ flex: 1, display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem', color: '#64748B' }}>
                   <span>0%</span>
                   <span>25%</span>
                   <span>50%</span>
                   <span>75%</span>
                   <span style={{ fontWeight: 700 }}>100%</span>
                 </div>
+                <div style={{ width: '120px', minWidth: '120px' }} />
               </div>
             </div>
 
-            {/* Chart 2: Grouped Performance Chart */}
-            <div style={{ background: '#FAF8F5', border: 'var(--border-thick)', borderRadius: '16px', padding: '20px', boxShadow: 'var(--shadow-sm)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
-                <div>
-                  <h4 className="font-serif-display" style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0 }}>
-                    Multi-Metric Grouped Comparison
-                  </h4>
-                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                    Accuracy, Precision, Recall, and F1 across models
-                  </span>
+            {/* Chart 2: Multi-Metric Grouped Comparison */}
+            <div style={{ background: '#FAF8F5', border: 'var(--border-thick)', borderRadius: '16px', padding: '24px', boxShadow: 'var(--shadow-sm)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
+                  <div>
+                    <h4 className="font-serif-display" style={{ fontSize: '1.12rem', fontWeight: 800, margin: 0, color: 'var(--ink-black)' }}>
+                      Multi-Metric Grouped Comparison
+                    </h4>
+                    <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+                      Accuracy, Precision, Recall, and F1 across models
+                    </span>
+                  </div>
+
+                  {/* Series Toggles */}
+                  <div style={{ display: 'flex', gap: '6px', fontSize: '0.7rem' }}>
+                    {[
+                      { key: 'accuracy', label: 'Acc', color: '#315CF5' },
+                      { key: 'precision', label: 'Prec', color: '#10B981' },
+                      { key: 'recall', label: 'Rec', color: '#F59E0B' },
+                      { key: 'f1', label: 'F1', color: '#E7358A' }
+                    ].map(s => (
+                      <button
+                        key={s.key}
+                        onClick={() =>
+                          setVisibleSeries(prev => ({
+                            ...prev,
+                            [s.key]: !prev[s.key as keyof typeof prev]
+                          }))
+                        }
+                        style={{
+                          padding: '3px 8px',
+                          borderRadius: '6px',
+                          border: '1.5px solid',
+                          borderColor: s.color,
+                          background: visibleSeries[s.key as keyof typeof visibleSeries] ? s.color : '#FFFFFF',
+                          color: visibleSeries[s.key as keyof typeof visibleSeries] ? '#FFFFFF' : s.color,
+                          fontWeight: 800,
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        {s.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
-                {/* Series Toggles */}
-                <div style={{ display: 'flex', gap: '6px', fontSize: '0.7rem' }}>
-                  {[
-                    { key: 'accuracy', label: 'Acc', color: '#315CF5' },
-                    { key: 'precision', label: 'Prec', color: '#10B981' },
-                    { key: 'recall', label: 'Rec', color: '#F59E0B' },
-                    { key: 'f1', label: 'F1', color: '#E7358A' }
-                  ].map(s => (
-                    <button
-                      key={s.key}
-                      onClick={() =>
-                        setVisibleSeries(prev => ({
-                          ...prev,
-                          [s.key]: !prev[s.key as keyof typeof prev]
-                        }))
-                      }
-                      style={{
-                        padding: '3px 7px',
-                        borderRadius: '4px',
-                        border: '1px solid',
-                        borderColor: s.color,
-                        background: visibleSeries[s.key as keyof typeof visibleSeries] ? s.color : '#FFFFFF',
-                        color: visibleSeries[s.key as keyof typeof visibleSeries] ? '#FFFFFF' : s.color,
-                        fontWeight: 700,
-                        cursor: 'pointer'
-                      }}
-                    >
-                      {s.label}
-                    </button>
+                {/* Grouped Bars per Model */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {modelsList.map(m => (
+                    <div key={m.key} style={{ padding: '8px 12px', background: '#FFFFFF', borderRadius: '10px', border: '1px solid #E2E8F0', boxShadow: '0 1px 2px rgba(0,0,0,0.03)' }}>
+                      <div style={{ fontSize: '0.8rem', fontWeight: 800, marginBottom: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span>{m.displayName}</span>
+                        <span className="font-grotesk-mono" style={{ fontSize: '0.68rem', color: 'var(--text-muted)', background: '#F8FAFC', padding: '2px 6px', borderRadius: '4px', border: '1px solid #E2E8F0' }}>
+                          ECE: {m.ece.toFixed(4)}
+                        </span>
+                      </div>
+
+                      {/* Grouped Metric Mini-Bars */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        {[
+                          { key: 'accuracy', label: 'Acc', val: m.accuracy, color: '#315CF5' },
+                          { key: 'precision', label: 'Prec', val: m.precision, color: '#10B981' },
+                          { key: 'recall', label: 'Rec', val: m.recall, color: '#F59E0B' },
+                          { key: 'f1', label: 'F1', val: m.f1, color: '#E7358A' }
+                        ]
+                          .filter(s => visibleSeries[s.key as keyof typeof visibleSeries])
+                          .map(s => (
+                            <div key={s.key} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <span style={{ width: '34px', minWidth: '34px', fontSize: '0.68rem', fontWeight: 800, color: s.color }}>
+                                {s.label}
+                              </span>
+                              <div style={{ flex: 1, height: '7px', background: '#F1F5F9', borderRadius: '9999px', overflow: 'hidden' }}>
+                                <div
+                                  style={{
+                                    height: '100%',
+                                    width: `${s.val * 100}%`,
+                                    background: s.color,
+                                    borderRadius: '9999px',
+                                    transition: 'width 0.6s cubic-bezier(0.4, 0, 0.2, 1)'
+                                  }}
+                                />
+                              </div>
+                              <span style={{ width: '48px', minWidth: '48px', textAlign: 'right', fontSize: '0.72rem', fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: '#1E293B' }}>
+                                {(s.val * 100).toFixed(1)}%
+                              </span>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>
 
-              {/* Grouped Bars per Model */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                {modelsList.map(m => (
-                  <div key={m.key} style={{ padding: '8px 10px', background: '#FFFFFF', borderRadius: '10px', border: '1px solid #E2E8F0' }}>
-                    <div style={{ fontSize: '0.78rem', fontWeight: 700, marginBottom: '6px', display: 'flex', justifyContent: 'space-between' }}>
-                      <span>{m.displayName}</span>
-                      <span className="font-grotesk-mono" style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
-                        ECE: {m.ece.toFixed(4)}
-                      </span>
-                    </div>
-
-                    <div style={{ display: 'flex', gap: '4px', height: '14px', background: '#F1F5F9', borderRadius: '4px', padding: '2px', overflow: 'hidden' }}>
-                      {visibleSeries.accuracy && (
-                        <div
-                          title={`Accuracy: ${(m.accuracy * 100).toFixed(1)}%`}
-                          style={{
-                            height: '100%',
-                            width: `${m.accuracy * 100}%`,
-                            background: '#315CF5',
-                            borderRadius: '3px',
-                            transition: 'width 0.5s'
-                          }}
-                        />
-                      )}
-                      {visibleSeries.precision && (
-                        <div
-                          title={`Precision: ${(m.precision * 100).toFixed(1)}%`}
-                          style={{
-                            height: '100%',
-                            width: `${m.precision * 100}%`,
-                            background: '#10B981',
-                            borderRadius: '3px',
-                            transition: 'width 0.5s'
-                          }}
-                        />
-                      )}
-                      {visibleSeries.recall && (
-                        <div
-                          title={`Recall: ${(m.recall * 100).toFixed(1)}%`}
-                          style={{
-                            height: '100%',
-                            width: `${m.recall * 100}%`,
-                            background: '#F59E0B',
-                            borderRadius: '3px',
-                            transition: 'width 0.5s'
-                          }}
-                        />
-                      )}
-                      {visibleSeries.f1 && (
-                        <div
-                          title={`F1-Score: ${(m.f1 * 100).toFixed(1)}%`}
-                          style={{
-                            height: '100%',
-                            width: `${m.f1 * 100}%`,
-                            background: '#E7358A',
-                            borderRadius: '3px',
-                            transition: 'width 0.5s'
-                          }}
-                        />
-                      )}
-                    </div>
-
-                    {/* Numeric details row */}
-                    <div style={{ display: 'flex', gap: '12px', fontSize: '0.68rem', color: '#475569', marginTop: '4px' }}>
-                      {visibleSeries.accuracy && <span>Acc: <strong>{(m.accuracy * 100).toFixed(1)}%</strong></span>}
-                      {visibleSeries.precision && <span>Prec: <strong>{(m.precision * 100).toFixed(1)}%</strong></span>}
-                      {visibleSeries.recall && <span>Rec: <strong>{(m.recall * 100).toFixed(1)}%</strong></span>}
-                      {visibleSeries.f1 && <span>F1: <strong>{(m.f1 * 100).toFixed(1)}%</strong></span>}
-                    </div>
-                  </div>
-                ))}
+              {/* Legend Note */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '16px', borderTop: '1px dashed #CBD5E1', paddingTop: '8px', fontSize: '0.68rem', color: '#64748B' }}>
+                <Info size={13} style={{ color: 'var(--electric-blue)' }} />
+                <span>Toggle metric chips above to filter active comparison bars across all 5 architectures.</span>
               </div>
             </div>
           </div>
@@ -742,7 +826,8 @@ export default function CNNPerformanceEvaluation({
                           borderRadius: '6px',
                           background: isTopAcc ? '#DCFCE7' : 'transparent',
                           color: isTopAcc ? '#15803D' : 'inherit',
-                          fontWeight: isTopAcc ? 900 : 700
+                          fontWeight: isTopAcc ? 900 : 700,
+                          fontVariantNumeric: 'tabular-nums'
                         }}>
                           {(row.accuracy * 100).toFixed(2)}%
                         </span>
@@ -755,7 +840,8 @@ export default function CNNPerformanceEvaluation({
                           borderRadius: '6px',
                           background: isTopPrec ? '#DCFCE7' : 'transparent',
                           color: isTopPrec ? '#15803D' : 'inherit',
-                          fontWeight: isTopPrec ? 900 : 600
+                          fontWeight: isTopPrec ? 900 : 600,
+                          fontVariantNumeric: 'tabular-nums'
                         }}>
                           {(row.precision * 100).toFixed(2)}%
                         </span>
@@ -768,7 +854,8 @@ export default function CNNPerformanceEvaluation({
                           borderRadius: '6px',
                           background: isTopRec ? '#DCFCE7' : 'transparent',
                           color: isTopRec ? '#15803D' : 'inherit',
-                          fontWeight: isTopRec ? 900 : 600
+                          fontWeight: isTopRec ? 900 : 600,
+                          fontVariantNumeric: 'tabular-nums'
                         }}>
                           {(row.recall * 100).toFixed(2)}%
                         </span>
@@ -781,7 +868,8 @@ export default function CNNPerformanceEvaluation({
                           borderRadius: '6px',
                           background: isTopF1 ? '#DCFCE7' : 'transparent',
                           color: isTopF1 ? '#15803D' : 'inherit',
-                          fontWeight: isTopF1 ? 900 : 600
+                          fontWeight: isTopF1 ? 900 : 600,
+                          fontVariantNumeric: 'tabular-nums'
                         }}>
                           {row.f1.toFixed(4)}
                         </span>
@@ -794,7 +882,8 @@ export default function CNNPerformanceEvaluation({
                           borderRadius: '6px',
                           background: isTopAuc ? '#DCFCE7' : 'transparent',
                           color: isTopAuc ? '#15803D' : 'inherit',
-                          fontWeight: isTopAuc ? 900 : 600
+                          fontWeight: isTopAuc ? 900 : 600,
+                          fontVariantNumeric: 'tabular-nums'
                         }}>
                           {row.roc_auc.toFixed(4)}
                         </span>
@@ -902,11 +991,11 @@ export default function CNNPerformanceEvaluation({
 
           {/* 5x5 Heatmap Matrix Grid */}
           {currentMatrixModel && currentMatrixModel.confusionMatrix && (
-            <div style={{ overflowX: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <div style={{ display: 'inline-block', position: 'relative', minWidth: '540px' }}>
+            <div style={{ overflowX: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+              <div style={{ display: 'inline-block', position: 'relative', minWidth: '600px' }}>
                 {/* Horizontal Axis Title */}
                 <div style={{ textAlign: 'center', fontWeight: 800, fontSize: '0.82rem', marginBottom: '8px', color: '#1E293B' }}>
-                  PREDICTED CLASS →
+                  PREDICTED CLASS (MODEL INFERENCE) →
                 </div>
 
                 <div style={{ display: 'flex' }}>
@@ -917,10 +1006,10 @@ export default function CNNPerformanceEvaluation({
 
                   <div>
                     {/* Column Headers */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '120px repeat(5, 75px)', gap: '4px', marginBottom: '4px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '140px repeat(5, 84px)', gap: '6px', marginBottom: '6px' }}>
                       <div />
                       {benchmark?.classNames.map((cName, idx) => (
-                        <div key={idx} className="font-grotesk-mono" style={{ fontSize: '0.66rem', textAlign: 'center', fontWeight: 700, color: '#475569' }}>
+                        <div key={idx} className="font-grotesk-mono" style={{ fontSize: '0.68rem', textAlign: 'center', fontWeight: 700, color: '#475569' }}>
                           {cName}
                         </div>
                       ))}
@@ -932,10 +1021,10 @@ export default function CNNPerformanceEvaluation({
                       const className = benchmark?.classNames[rIdx] || `Class ${rIdx}`;
 
                       return (
-                        <div key={rIdx} style={{ display: 'grid', gridTemplateColumns: '120px repeat(5, 75px)', gap: '4px', marginBottom: '4px' }}>
+                        <div key={rIdx} style={{ display: 'grid', gridTemplateColumns: '140px repeat(5, 84px)', gap: '6px', marginBottom: '6px' }}>
                           {/* Row Header */}
-                          <div className="font-grotesk-mono" style={{ fontSize: '0.72rem', display: 'flex', alignItems: 'center', fontWeight: 700, color: '#334155' }}>
-                            {className} <span style={{ fontSize: '0.65rem', color: '#64748B', marginLeft: '4px' }}>({rowTotal})</span>
+                          <div className="font-grotesk-mono" style={{ fontSize: '0.74rem', display: 'flex', alignItems: 'center', fontWeight: 700, color: '#334155' }}>
+                            {className} <span style={{ fontSize: '0.66rem', color: '#64748B', marginLeft: '4px' }}>({rowTotal})</span>
                           </div>
 
                           {/* Matrix Cells */}
@@ -1074,14 +1163,14 @@ export default function CNNPerformanceEvaluation({
                       </td>
 
                       <td style={{ padding: '14px 14px', textAlign: 'right' }}>
-                        <span style={{ fontSize: '0.88rem', fontWeight: 800, color: 'var(--electric-blue)' }}>
+                        <span style={{ fontSize: '0.88rem', fontWeight: 800, color: 'var(--electric-blue)', fontVariantNumeric: 'tabular-nums' }}>
                           {(pred.imageConfidence * 100).toFixed(1)}%
                         </span>
                         <div style={{ fontSize: '0.64rem', color: 'var(--text-muted)' }}>on this scan</div>
                       </td>
 
                       <td style={{ padding: '14px 14px', textAlign: 'right' }}>
-                        <span style={{ fontSize: '0.85rem', fontWeight: 700 }}>
+                        <span style={{ fontSize: '0.85rem', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
                           {(pred.testSetAccuracy * 100).toFixed(2)}%
                         </span>
                         <div style={{ fontSize: '0.64rem', color: 'var(--text-muted)' }}>held-out test</div>

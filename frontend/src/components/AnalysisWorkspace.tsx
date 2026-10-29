@@ -121,18 +121,19 @@ export default function AnalysisWorkspace({
         onComplete={() => {}}
       />
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1.15fr)', gap: '32px', alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1.15fr)', gap: '32px', alignItems: 'stretch' }}>
         
         {/* Left Column: Form & Upload */}
-        <div className="editorial-card" style={{ padding: '32px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px' }}>
-            <h2 className="font-serif-display" style={{ fontSize: '1.4rem', fontWeight: 800, margin: 0 }}>
-              {t.step1Title}
-            </h2>
-            <span className="pill-badge pill-badge-yellow" style={{ fontSize: '0.7rem' }}>
-              STEP 1 OF 2
-            </span>
-          </div>
+        <div className="editorial-card" style={{ padding: '32px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px' }}>
+              <h2 className="font-serif-display" style={{ fontSize: '1.4rem', fontWeight: 800, margin: 0 }}>
+                {t.step1Title}
+              </h2>
+              <span className="pill-badge pill-badge-yellow" style={{ fontSize: '0.7rem' }}>
+                STEP 1 OF 2
+              </span>
+            </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '28px' }}>
             <button
@@ -369,13 +370,15 @@ export default function AnalysisWorkspace({
             )}
           </div>
 
+          </div>
+
           {errorMsg && (
             <div style={{ marginTop: '16px', padding: '12px 14px', background: '#FDF2F2', border: 'var(--border-thick)', color: 'var(--clinical-pink)', borderRadius: '12px', fontSize: '0.82rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
               <AlertTriangle size={16} /> {errorMsg}
             </div>
           )}
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '24px', flexWrap: 'wrap', gap: '12px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: '20px', flexWrap: 'wrap', gap: '12px' }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600 }}>
               <input type="checkbox" checked={useMock} onChange={(e) => setUseMock(e.target.checked)} />
               {t.mockModeLabel}
@@ -397,15 +400,15 @@ export default function AnalysisWorkspace({
         </div>
 
         {/* Right Column: Results & Heatmap */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', height: '100%' }}>
           {!prediction ? (
-            <div className="editorial-card" style={{ padding: '56px 32px', textAlign: 'center', backgroundColor: '#FAF8F5' }}>
+            <div className="editorial-card" style={{ padding: '56px 32px', textAlign: 'center', backgroundColor: '#FAF8F5', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
               <Activity size={52} color="var(--text-muted)" style={{ opacity: 0.35, marginBottom: '16px' }} />
               <h3 className="font-serif-display" style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--ink-black)' }}>
                 Awaiting Retinal Image Submission
               </h3>
               <p style={{ color: 'var(--text-muted)', marginTop: '8px', fontSize: '0.88rem', maxWidth: '420px', margin: '8px auto 0', lineHeight: 1.6 }}>
-                Select a screening task, upload or select a clinical fundus photo, and execute analysis to view 4608d ensemble predictions, structural DIP biomarkers, and Grad-CAM visual heatmaps.
+                Select a screening task, upload or select a clinical fundus photo, and execute analysis to view 4608d ensemble predictions, structural DIP biomarkers, and CNN performance evaluation benchmarks.
               </p>
             </div>
           ) : (
@@ -428,8 +431,9 @@ export default function AnalysisWorkspace({
                 </div>
               ) : null}
 
-              <div className="editorial-card" style={{ padding: '32px' }}>
-                {/* Patient Summary Badge */}
+              <div className="editorial-card" style={{ padding: '32px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div>
+                  {/* Patient Summary Badge */}
                 {patientInfo.name && (
                   <div style={{ background: '#F0F9FF', border: 'var(--border-thick)', borderRadius: '14px', padding: '12px 16px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -546,21 +550,25 @@ export default function AnalysisWorkspace({
                     </div>
                   </div>
                 )}
+                </div>
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', flexWrap: 'wrap', gap: '10px', marginTop: '20px', paddingTop: '16px', borderTop: '1px solid rgba(20,18,16,0.1)' }}>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', flexWrap: 'wrap', gap: '10px', marginTop: 'auto', paddingTop: '20px', borderTop: '1px solid rgba(20,18,16,0.1)' }}>
                   <button className="btn-editorial-secondary" onClick={downloadReport}>
                     <Download size={15} /> {t.downloadReportBtn}
                   </button>
                 </div>
               </div>
-
-              {/* CNN Model Performance Evaluation Dashboard */}
-              <CNNPerformanceEvaluation selectedFile={selectedFile} />
-
             </>
           )}
         </div>
       </div>
+
+      {/* Full-Width CNN Model Performance Evaluation Dashboard */}
+      {prediction && (
+        <div style={{ marginTop: '36px' }}>
+          <CNNPerformanceEvaluation selectedFile={selectedFile} />
+        </div>
+      )}
     </section>
   );
 }
