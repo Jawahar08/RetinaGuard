@@ -1,0 +1,11 @@
+filename,true_label,predicted_disease,prediction_confidence,grounding_score,grounding_label,warnings_count,abstain
+00_DIABETIC_RETINOPATHY_SEVERE.JPG,1,Diabetic Retinopathy,0.9965,25.64,Weak agreement,2,True
+01_NORMAL.JPG,0,Normal,0.9955,25.65,Weak agreement,2,True
+02_DIABETIC_RETINOPATHY_SEVERE.JPG,1,Diabetic Retinopathy,0.9965,25.63,Weak agreement,2,True
+03_NORMAL.JPG,0,Normal,0.9955,25.65,Weak agreement,2,True
+04_DIABETIC_RETINOPATHY_SEVERE.JPG,1,Diabetic Retinopathy,0.9942,25.65,Weak agreement,2,True
+05_NORMAL.JPG,0,Normal,0.9955,25.65,Weak agreement,2,True
+06_DIABETIC_RETINOPATHY_SEVERE.JPG,1,Normal,0.9971,25.65,Weak agreement,2,True
+07_NORMAL.JPG,0,Normal,0.9955,25.65,Weak agreement,2,True
+08_DIABETIC_RETINOPATHY_SEVERE.JPG,1,Diabetic Retinopathy,0.9965,25.65,Weak agreement,2,True
+09_NORMAL.JPG,0,Normal,0.9955,25.65,Weak agreement,2,True

@@ -765,7 +765,7 @@ docker-compose up --build
 <text font-family="'Segoe UI',sans-serif" font-size="12" fill="#64748b">
 Built with PyTorch · FastAPI · Next.js 14 · OpenCV · Classical DIP · Grad-CAM++
 <br />
-RetinaGuard © 2026 — Research & Educational Use Only · Made with ❤️
+RetinaGuard © 2026 — Research & Educational Use Only · Made with CJ❤️
 </text>
 
 </div>

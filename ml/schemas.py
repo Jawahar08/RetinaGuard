@@ -207,3 +207,240 @@ class MultiTaskPredictionResponse(BaseModel):
         description="Clinical safety boundary disclaimer"
     )
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Lesion-Level Semantic Explainability Schemas (Research Contribution)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class LesionInstance(BaseModel):
+    """Spatial metadata for a single detected lesion connected component."""
+    centroid_x: int = Field(..., description="Centroid X coordinate in image pixel space")
+    centroid_y: int = Field(..., description="Centroid Y coordinate in image pixel space")
+    bbox: List[int] = Field(..., description="Bounding box [x, y, w, h] in pixel coordinates")
+    pixel_area: int = Field(..., description="Total pixel area of this connected component")
+    detection_confidence: float = Field(
+        ...,
+        description=(
+            "Detection confidence [0.0–1.0]. "
+            "Set to 0.0 for classical DIP candidates (no probabilistic model used). "
+            "Values >0 indicate a trained detector was used."
+        )
+    )
+    severity_index: Optional[float] = Field(
+        None,
+        description="Optional per-instance severity metric (e.g., relative intensity, future use)"
+    )
+
+
+class LesionSpatialMask(BaseModel):
+    """
+    Full spatial description for all detected instances of one lesion class.
+
+    IMPORTANT: Binary mask arrays are NOT stored in this schema (too large for API transport).
+    The mask_shape field records dimensions for client-side reconstruction if needed.
+    Actual mask arrays are handled in-memory within the ML pipeline.
+    """
+    lesion_class: str = Field(
+        ...,
+        description="Lesion class identifier: 'microaneurysm' | 'hemorrhage' | 'hard_exudate'"
+    )
+    source: str = Field(
+        ...,
+        description=(
+            "Provenance of this mask. "
+            "'classical_dip' = algorithmic candidate (Black Top-Hat / CIE LAB). "
+            "'expert_annotation' = human-validated ground truth. "
+            "'dl_model' = trained deep-learning detector."
+        )
+    )
+    mask_shape: List[int] = Field(..., description="[H, W] of the binary mask array")
+    instance_count: int = Field(..., description="Total number of detected connected components")
+    instances: List[LesionInstance] = Field(
+        default_factory=list,
+        description="Per-instance spatial metadata (centroid, bbox, area)"
+    )
+    total_pixel_area: int = Field(..., description="Sum of all instance pixel areas")
+    area_ratio: float = Field(
+        ...,
+        description="total_pixel_area / (H * W) — fraction of image covered by this lesion class"
+    )
+    detection_note: str = Field(
+        ...,
+        description="Human-readable note about detection reliability and source limitations"
+    )
+
+
+class AttentionMap(BaseModel):
+    """
+    Normalized Grad-CAM++ attention map metadata for one forward pass.
+
+    The raw float32 map is handled in-memory. This schema carries the
+    derived summary statistics and visualization outputs.
+    """
+    method: str = Field("gradcam_plusplus", description="XAI method used")
+    target_class: str = Field(..., description="Disease class for which attention was generated")
+    target_class_idx: int = Field(..., description="Class index into the model output vector")
+    map_shape: List[int] = Field(..., description="[H, W] of the attention map")
+    attention_threshold: float = Field(
+        ...,
+        description="Threshold applied to binarize the normalized map for spatial matching"
+    )
+    high_attention_pixel_count: int = Field(
+        ...,
+        description="Number of pixels exceeding the attention threshold"
+    )
+    peak_attention_x: int = Field(..., description="X coordinate of the maximum attention pixel")
+    peak_attention_y: int = Field(..., description="Y coordinate of the maximum attention pixel")
+    overlay_base64: str = Field(..., description="Grad-CAM++ overlay PNG (base64)")
+    heatmap_base64: str = Field(..., description="Grad-CAM++ heatmap PNG (base64)")
+    original_base64: str = Field(..., description="Original fundus image PNG (base64)")
+    disclaimer: str = Field(
+        "Grad-CAM++ attention highlights model feature sensitivity, not proven lesion location. "
+        "Attention maps are spatially coarse and should not be interpreted as pixel-level diagnoses.",
+        description="XAI safety disclaimer"
+    )
+
+
+class PerLesionGroundingMetrics(BaseModel):
+    """
+    Spatial agreement metrics between Grad-CAM++ attention and one lesion class.
+
+    Metrics are computed only when both an attention mask and a lesion mask are available.
+    Optional fields are None when computation is not applicable (e.g., no lesions detected).
+    """
+    lesion_class: str = Field(..., description="Lesion class these metrics describe")
+    iou: Optional[float] = Field(
+        None,
+        description="Intersection over Union between binarized attention and lesion mask. "
+                    "Unreliable for tiny lesions (<50px); see distance_to_nearest_lesion instead."
+    )
+    dice: Optional[float] = Field(
+        None,
+        description="Dice coefficient (2*|G∩L|)/(|G|+|L|) between attention and lesion mask"
+    )
+    lesion_coverage: float = Field(
+        ...,
+        description="Fraction [0–1] of detected lesion pixels that fall within the high-attention region"
+    )
+    attention_coverage: float = Field(
+        ...,
+        description="Fraction [0–1] of high-attention pixels that overlap with the lesion mask"
+    )
+    distance_to_nearest_lesion: Optional[float] = Field(
+        None,
+        description="Euclidean distance (px) from the attention peak to the nearest lesion centroid. "
+                    "Useful for tiny lesions where IoU is near-zero by construction."
+    )
+    pointing_game_hit: Optional[bool] = Field(
+        None,
+        description="True if peak attention pixel falls within any lesion bounding box ± tolerance_px"
+    )
+    pointing_game_tolerance_px: int = Field(
+        ...,
+        description="Tolerance in pixels applied to pointing-game evaluation"
+    )
+    instance_count: int = Field(..., description="Number of detected lesion instances for this class")
+    note: str = Field(..., description="Human-readable interpretation of these metrics")
+
+
+class LesionGroundingResult(BaseModel):
+    """
+    Transparent, configurable Lesion Grounding Score measuring how well
+    model attention corresponds to detected pathological structures.
+
+    IMPORTANT DISTINCTION:
+    - prediction_confidence: classifier certainty about the disease prediction
+    - grounding_score: spatial overlap between attention and detected lesions
+
+    These are independent. A high grounding score does NOT prove clinical correctness.
+    """
+    score: float = Field(..., description="Lesion Grounding Score [0–100]")
+    label: str = Field(
+        ...,
+        description="Interpretable label: 'Strong anatomical agreement' | 'Moderate agreement' | "
+                    "'Weak agreement' | 'Insufficient evidence'"
+    )
+    label_color: str = Field(..., description="Hex color for dashboard display")
+    component_scores: Dict[str, float] = Field(
+        default_factory=dict,
+        description="Per-component weighted scores contributing to the final score"
+    )
+    attention_distribution: Dict[str, float] = Field(
+        default_factory=dict,
+        description="Fraction of total attention mass associated with each region "
+                    "(microaneurysm, hemorrhage, hard_exudate, vessels, optic_disc, other)"
+    )
+    per_lesion_metrics: List[PerLesionGroundingMetrics] = Field(
+        default_factory=list,
+        description="Full spatial metrics for each evaluated lesion class"
+    )
+    semantic_interpretation: str = Field(
+        ...,
+        description="Auto-generated human-readable explanation of the grounding result"
+    )
+    warnings: List[str] = Field(
+        default_factory=list,
+        description=(
+            "Safety flags that require attention: "
+            "HIGH_CONFIDENCE_LOW_GROUNDING | NO_LESION_CANDIDATES | "
+            "INSUFFICIENT_LESION_EVIDENCE | BORDER_ATTENTION_SHORTCUT"
+        )
+    )
+    config_version: str = Field(..., description="Version of lesion_grounding_config.json used")
+    disclaimer: str = Field(
+        "The Lesion Grounding Score is a research metric. It does not constitute clinical validation "
+        "or proof of diagnostic correctness. Expert review is always required.",
+        description="Research safety disclaimer"
+    )
+
+
+class SemanticExplainabilityResult(BaseModel):
+    """
+    Complete output of the Lesion-Level Semantic Explainability pipeline.
+
+    Combines disease prediction, Grad-CAM++ attention, spatial lesion detection,
+    and lesion grounding into a single typed response suitable for dashboard
+    display and PDF report integration.
+    """
+    request_id: str
+    predicted_disease: str = Field(..., description="Top predicted disease class")
+    prediction_confidence: float = Field(
+        ...,
+        description="Classifier confidence [0–1] for the predicted disease (independent of grounding)"
+    )
+    quality_gate: QualityGateResult
+    attention_map: AttentionMap
+    lesion_masks: List[LesionSpatialMask] = Field(
+        default_factory=list,
+        description="Spatial lesion masks for all evaluated lesion classes"
+    )
+    grounding_result: LesionGroundingResult
+    safety_flags: List[str] = Field(
+        default_factory=list,
+        description="All active safety flags from quality gate, abstention, and explainability checks"
+    )
+    abstain: bool = Field(
+        False,
+        description="True if the system recommends human review before acting on this result"
+    )
+    abstention_reason: Optional[str] = Field(
+        None,
+        description="Human-readable reason for abstention if abstain=True"
+    )
+    combined_overlay_base64: Optional[str] = Field(
+        None,
+        description=(
+            "Combined visualization: original fundus + Grad-CAM++ heatmap + lesion masks overlaid. "
+            "Lesion colors: microaneurysms=red, hemorrhages=darkred, hard_exudates=yellow, "
+            "vessels=green. Attention contour in white."
+        )
+    )
+    disclaimer: str = Field(
+        "For research and educational screening support only. Not clinically validated. "
+        "Lesion candidates are algorithmic approximations. Expert ophthalmologist review required.",
+        description="Full clinical and research safety disclaimer"
+    )
+    limitations: List[str] = Field(
+        default_factory=list,
+        description="Known limitations of this result loaded from configuration"
+    )

@@ -9,18 +9,18 @@ interface DiseaseReferenceProps {
 
 export default function DiseaseReference({ t, diseaseInfoMap }: DiseaseReferenceProps) {
   return (
-    <section style={{ maxWidth: '1360px', margin: '0 auto', padding: '64px 32px', borderTop: '2px solid rgba(20,18,16,0.1)' }}>
-      <h2 className="font-serif-display" style={{ fontSize: '2.2rem', fontWeight: 800, marginBottom: '28px' }}>
+    <section className="container-editorial" style={{ paddingTop: '48px', paddingBottom: '48px', borderTop: '1.5px solid rgba(20,18,16,0.1)' }}>
+      <h2 className="font-serif-display" style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '24px', lineHeight: 1.15 }}>
         {t.clinicalRefTitle}
       </h2>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
         {Object.entries(diseaseInfoMap).map(([disease, info]) => (
-          <div key={disease} className="editorial-card" style={{ padding: '28px' }}>
-            <h3 className="font-serif-display" style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--electric-blue)', marginBottom: '10px' }}>
+          <div key={disease} className="editorial-card" style={{ padding: '24px' }}>
+            <h3 className="font-serif-display" style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--electric-blue)', marginBottom: '8px' }}>
               {disease}
             </h3>
-            <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>
+            <p style={{ fontSize: '0.88rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>
               {info}
             </p>
           </div>

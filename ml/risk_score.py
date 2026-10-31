@@ -191,6 +191,7 @@ class ClinicalRiskScorer:
         top_prediction: str = "Normal",
         optic_disc_found: bool = False,
         macula_center: Optional[list] = None,
+        grounding_result: Optional[object] = None,
     ) -> Dict:
         """
         Compute clinical risk score and generate interpretation.
@@ -233,11 +234,18 @@ class ClinicalRiskScorer:
 
         # Recommendations
         recommendations = self._generate_recommendations(
-            risk_score, severity_grade, microaneurysm_count, exudate_area_ratio
+            risk_score, severity_grade, microaneurysm_count, exudate_area_ratio,
+            grounding_result=grounding_result,
         )
 
         # Expected Next Check-up Date Calculation
         next_checkup_date, followup_interval, followup_days = self._compute_next_checkup(risk_score)
+
+        abstain_for_review = False
+        if grounding_result is not None:
+            warnings = getattr(grounding_result, "warnings", [])
+            if any("HIGH_CONFIDENCE_LOW_GROUNDING" in w for w in warnings):
+                abstain_for_review = True
 
         return {
             "risk_score": risk_score,
@@ -256,6 +264,7 @@ class ClinicalRiskScorer:
             },
             "interpretations": interpretations,
             "recommendations": recommendations,
+            "abstain_for_review": abstain_for_review,
         }
 
     # Alias for backward compatibility
@@ -293,10 +302,28 @@ class ClinicalRiskScorer:
         return SEVERITY_GRADES[-1][1], SEVERITY_GRADES[-1][2], SEVERITY_GRADES[-1][3]
 
     def _generate_recommendations(
-        self, score: float, grade: str, lesion_count: int, exudate_ratio: float
+        self, score: float, grade: str, lesion_count: int, exudate_ratio: float,
+        grounding_result: Optional[object] = None,
     ) -> List[str]:
-        """Generate clinical action recommendations based on risk."""
+        """Generate clinical action recommendations based on risk and optional grounding."""
         recs = []
+
+        # Explainability-aware warning — prepended before clinical recommendations
+        if grounding_result is not None:
+            g_score = getattr(grounding_result, "score", None)
+            g_warnings = getattr(grounding_result, "warnings", [])
+            if any("HIGH_CONFIDENCE_LOW_GROUNDING" in w for w in g_warnings):
+                recs.append(
+                    f"⚠ EXPLAINABILITY WARNING: High prediction confidence but low Lesion Grounding "
+                    f"Score ({g_score:.0f}/100 if g_score is not None else 'N/A'). "
+                    "Model attention does not align with detected retinal pathology. "
+                    "Human ophthalmologist review is strongly recommended before any clinical action."
+                )
+            elif any("NO_LESION_CANDIDATES" in w for w in g_warnings):
+                recs.append(
+                    "⚠ EXPLAINABILITY WARNING: No lesion candidates detected by the DIP engine. "
+                    "Lesion-grounded explanation is unavailable for this image."
+                )
 
         if score <= 15:
             recs.append("Routine screening — no immediate referral required.")

@@ -36,10 +36,12 @@ def generate_html_report(
     original_base64: Optional[str] = None,
     risk_result: Optional[Dict[str, Any]] = None,
     dip_biomarkers: Optional[Dict[str, Any]] = None,
+    semantic_explainability: Optional[Dict[str, Any]] = None,
 ) -> str:
     """
     Generates an HTML clinical screening report suitable for PDF printing / download.
     Enhanced with Feature 3: DIP biomarker table, risk gauge, interpretations, recommendations.
+    Optional semantic_explainability adds Lesion Grounding Score section.
     """
     req_id = prediction_response.get("request_id", "N/A")
     task = prediction_response.get("task", "odir").upper()
@@ -246,6 +248,8 @@ def generate_html_report(
         {dip_images}
         """
 
+    semantic_section_html = _build_semantic_explainability_section(semantic_explainability)
+
     # ── Original + Grad-CAM images ──
     img_section = ""
     if original_base64 and overlay_base64:
@@ -358,6 +362,7 @@ def generate_html_report(
         </table>
 
         {dip_section_html}
+        {semantic_section_html}
         {img_section}
 
         <div class="disclaimer">
@@ -368,3 +373,153 @@ def generate_html_report(
 </html>
 """
     return html
+
+
+def _build_semantic_explainability_section(se: Optional[Dict[str, Any]]) -> str:
+    """
+    Render the Lesion-Level Semantic Explainability section for the PDF report.
+    Returns empty string when se is None or empty (backward-compatible).
+    """
+    if not se:
+        return ""
+
+    grounding = se.get("grounding_result", {})
+    score = grounding.get("score", 0.0)
+    label = grounding.get("label", "Insufficient evidence")
+    label_color = grounding.get("label_color", "#94a3b8")
+    interpretation = grounding.get("semantic_interpretation", "")
+    warnings = grounding.get("warnings", [])
+    per_lesion = grounding.get("per_lesion_metrics", [])
+    attn_dist = grounding.get("attention_distribution", {})
+    config_version = grounding.get("config_version", "N/A")
+    prediction_conf = se.get("prediction_confidence", 0.0)
+
+    # Gauge SVG (reuse existing helper)
+    gauge_svg = _risk_gauge_svg(score, label_color, label)
+
+    # Per-lesion metrics table
+    lesion_rows = ""
+    for m in per_lesion:
+        cls = m.get("lesion_class", "")
+        cnt = m.get("instance_count", 0)
+        lc = m.get("lesion_coverage", 0.0)
+        ac = m.get("attention_coverage", 0.0)
+        iou = m.get("iou")
+        pg = m.get("pointing_game_hit")
+        dist = m.get("distance_to_nearest_lesion")
+        iou_str = f"{iou:.3f}" if iou is not None else "N/A (tiny lesion)"
+        pg_str = "HIT ✓" if pg is True else ("MISS ✗" if pg is False else "N/A")
+        dist_str = f"{dist:.1f}px" if dist is not None else "N/A"
+        lesion_rows += f"""
+        <tr>
+            <td><strong>{cls.replace('_', ' ').title()}</strong></td>
+            <td>{cnt}</td>
+            <td>{lc*100:.1f}%</td>
+            <td>{ac*100:.1f}%</td>
+            <td>{iou_str}</td>
+            <td>{pg_str}</td>
+            <td>{dist_str}</td>
+        </tr>"""
+
+    # Attention distribution bars
+    dist_bars = ""
+    for region, frac in attn_dist.items():
+        pct = round(frac * 100, 1)
+        color = {
+            "microaneurysm": "#ef4444",
+            "hemorrhage": "#991b1b",
+            "hard_exudate": "#eab308",
+            "vessel": "#22c55e",
+            "optic_disc": "#3b82f6",
+            "other": "#94a3b8",
+        }.get(region, "#64748b")
+        dist_bars += f"""
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+            <div style="width:110px;font-size:11px;color:#64748b;">{region.replace('_',' ').title()}</div>
+            <div style="flex:1;background:#e2e8f0;border-radius:4px;height:14px;">
+                <div style="width:{min(pct,100):.1f}%;background:{color};height:14px;border-radius:4px;"></div>
+            </div>
+            <div style="width:38px;font-size:11px;font-weight:700;color:{color};">{pct}%</div>
+        </div>"""
+
+    # Warning banners
+    warning_html = ""
+    for w in warnings:
+        if "HIGH_CONFIDENCE_LOW_GROUNDING" in w:
+            bg, border = "#fef2f2", "#ef4444"
+        elif "NO_LESION_CANDIDATES" in w:
+            bg, border = "#fff7ed", "#f97316"
+        elif "BORDER_ATTENTION" in w:
+            bg, border = "#fef9c3", "#eab308"
+        else:
+            bg, border = "#f8fafc", "#94a3b8"
+        short = w.split(":")[0] if ":" in w else w[:60]
+        warning_html += f"""
+        <div style="background:{bg};border-left:4px solid {border};padding:10px 14px;
+                    border-radius:6px;margin-bottom:8px;font-size:12px;">
+            <strong style="color:{border};">{short}</strong><br/>
+            <span style="color:#475569;">{w}</span>
+        </div>"""
+
+    return f"""
+    <div style="background:#0f172a;border:2px solid #334155;border-radius:12px;
+                padding:24px;margin-top:24px;">
+        <h2 style="color:#7c3aed;font-size:16px;font-weight:800;margin-bottom:16px;
+                   letter-spacing:0.05em;">
+            &#x1F9EC; LESION-LEVEL SEMANTIC EXPLAINABILITY
+        </h2>
+
+        <div style="display:grid;grid-template-columns:200px 1fr;gap:24px;margin-bottom:20px;">
+            <div>
+                {gauge_svg}
+                <div style="text-align:center;font-size:11px;color:#94a3b8;margin-top:4px;">
+                    Grounding Score / 100
+                </div>
+            </div>
+            <div>
+                <div style="font-size:22px;font-weight:800;color:{label_color};">{label}</div>
+                <div style="font-size:12px;color:#94a3b8;margin-top:4px;">
+                    Prediction Confidence: <strong style="color:#e2e8f0;">{prediction_conf*100:.1f}%</strong>
+                    &nbsp;&nbsp;|&nbsp;&nbsp;
+                    Grounding Config v{config_version}
+                </div>
+                <div style="font-size:12px;color:#cbd5e1;margin-top:12px;line-height:1.6;">
+                    {interpretation}
+                </div>
+            </div>
+        </div>
+
+        <h3 style="color:#94a3b8;font-size:13px;font-weight:700;margin-bottom:10px;">Per-Lesion Metrics</h3>
+        <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:20px;">
+            <thead>
+                <tr style="background:#1e293b;">
+                    <th style="padding:8px;text-align:left;color:#7c3aed;">Lesion Class</th>
+                    <th style="padding:8px;text-align:center;color:#94a3b8;">Candidates</th>
+                    <th style="padding:8px;text-align:center;color:#94a3b8;">Lesion Coverage</th>
+                    <th style="padding:8px;text-align:center;color:#94a3b8;">Attn Coverage</th>
+                    <th style="padding:8px;text-align:center;color:#94a3b8;">IoU</th>
+                    <th style="padding:8px;text-align:center;color:#94a3b8;">Pointing Game</th>
+                    <th style="padding:8px;text-align:center;color:#94a3b8;">Dist. to Lesion</th>
+                </tr>
+            </thead>
+            <tbody style="color:#e2e8f0;">
+                {lesion_rows}
+            </tbody>
+        </table>
+
+        <h3 style="color:#94a3b8;font-size:13px;font-weight:700;margin-bottom:10px;">Attention Distribution</h3>
+        <div style="margin-bottom:20px;">
+            {dist_bars}
+        </div>
+
+        {warning_html}
+
+        <div style="background:#1e293b;border-radius:8px;padding:12px;margin-top:12px;
+                    font-size:10px;color:#64748b;line-height:1.6;">
+            <strong>Research Disclaimer:</strong> The Lesion Grounding Score is a research metric
+            and does not constitute clinical validation. Lesion candidates are generated by classical
+            Digital Image Processing algorithms and have not been expert-validated. A high score does
+            not prove diagnostic correctness. Expert ophthalmologist review is always required.
+        </div>
+    </div>
+"""

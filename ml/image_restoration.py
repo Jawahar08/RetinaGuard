@@ -40,6 +40,12 @@ from typing import Dict, List, Optional, Tuple
 import numpy as np
 from PIL import Image, ImageFilter, ImageEnhance, ImageOps
 
+try:
+    import cv2
+    HAS_CV2 = True
+except ImportError:
+    HAS_CV2 = False
+
 logger = logging.getLogger("retinal-restore")
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -55,17 +61,20 @@ def _arr_to_b64(arr: np.ndarray) -> str:
 
 
 def _compute_blur_score(img_rgb: np.ndarray) -> float:
-    """Laplacian variance blur score. Higher = sharper."""
+    """Laplacian variance blur score. Higher = sharper. High-speed OpenCV implementation."""
+    if HAS_CV2:
+        gray = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2GRAY)
+        return float(cv2.Laplacian(gray, cv2.CV_64F).var())
+
     gray = np.dot(img_rgb[..., :3], [0.299, 0.587, 0.114]).astype(np.float32)
-    # Laplacian kernel
-    kernel = np.array([[0, 1, 0], [1, -4, 1], [0, 1, 0]], dtype=np.float32)
-    h, w = gray.shape
-    # Pad
     padded = np.pad(gray, 1, mode="reflect")
-    lap = np.zeros_like(gray)
-    for r in range(h):
-        for c in range(w):
-            lap[r, c] = (kernel * padded[r:r+3, c:c+3]).sum()
+    lap = (
+        padded[:-2, 1:-1] +
+        padded[2:, 1:-1] +
+        padded[1:-1, :-2] +
+        padded[1:-1, 2:] -
+        4.0 * padded[1:-1, 1:-1]
+    )
     return float(np.var(lap))
 
 

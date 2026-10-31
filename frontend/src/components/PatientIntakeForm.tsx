@@ -33,6 +33,7 @@ export default function PatientIntakeForm({
     name: '',
     age: '',
     gender: 'Female',
+    eyeScanned: 'Right Eye (OD)',
     bloodGroup: 'O+',
     diabeticStatus: 'Non-Diabetic',
     hypertension: 'No',
@@ -65,6 +66,7 @@ export default function PatientIntakeForm({
       name: 'Maria Santos',
       age: '56',
       gender: 'Female',
+      eyeScanned: 'Right Eye (OD)',
       bloodGroup: 'O+',
       diabeticStatus: 'Type 2 Diabetes',
       hypertension: 'Yes (Controlled)',
@@ -82,18 +84,18 @@ export default function PatientIntakeForm({
   };
 
   return (
-    <div className="editorial-card" style={{ padding: '32px', marginBottom: '24px', background: 'linear-gradient(180deg, #FFFFFF 0%, #FAF8F5 100%)' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '2px solid var(--paper-light)', paddingBottom: '16px' }}>
+    <div className="editorial-card" style={{ padding: '28px 32px', marginBottom: '28px', background: 'linear-gradient(180deg, #FFFFFF 0%, #FAF8F5 100%)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1.5px solid var(--paper-light)', paddingBottom: '14px', flexWrap: 'wrap', gap: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ background: 'var(--signal-yellow)', width: '40px', height: '40px', borderRadius: '12px', border: '2px solid #000', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <User size={20} color="#000000" />
+          <div style={{ background: 'var(--signal-yellow)', width: '38px', height: '38px', borderRadius: '12px', border: 'var(--border-thick)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: 'var(--shadow-sm)' }}>
+            <User size={18} color="#000000" />
           </div>
           <div>
-            <h3 className="font-serif-display" style={{ fontSize: '1.4rem', fontWeight: 800, margin: 0 }}>
+            <h3 className="font-serif-display" style={{ fontSize: '1.3rem', fontWeight: 800, margin: 0, lineHeight: 1.2 }}>
               Patient Medical Intake
             </h3>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '2px 0 0' }}>
-              Basic demographic and physiological history for screening context
+              Demographic & physiological baseline for risk calibration
             </p>
           </div>
         </div>
@@ -101,56 +103,41 @@ export default function PatientIntakeForm({
         <button
           type="button"
           onClick={handleAutoFillDemo}
+          className="btn-editorial-secondary"
           style={{
             fontSize: '0.75rem',
-            fontWeight: 700,
-            padding: '8px 14px',
-            borderRadius: '20px',
-            border: 'var(--border-thick)',
+            padding: '6px 14px',
             background: '#F0F9FF',
             color: '#0284C7',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px'
+            borderColor: '#0284C7',
           }}
         >
-          <Sparkles size={14} /> Fill Demo Patient
+          <Sparkles size={13} /> Auto-Fill Demo Patient
         </button>
       </div>
 
       <form onSubmit={handleSubmit}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr 1fr 1.1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '18px' }}>
           {/* Patient Name */}
           <div>
-            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '6px', color: 'var(--ink-black)' }}>
+            <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, marginBottom: '6px', color: 'var(--ink-black)' }}>
               Full Name *
             </label>
             <input
               type="text"
               required
-              placeholder="e.g. Jane Doe"
+              placeholder="e.g. Maria Santos"
               value={safeInfo.name}
               onChange={(e) => {
                 setPatientInfo({ ...safeInfo, name: e.target.value });
                 setIsSaved(false);
-              }}
-              style={{
-                width: '100%',
-                padding: '12px 14px',
-                borderRadius: '12px',
-                border: 'var(--border-thick)',
-                fontSize: '0.9rem',
-                fontWeight: 600,
-                background: '#FFFFFF',
-                outline: 'none'
               }}
             />
           </div>
 
           {/* Age */}
           <div>
-            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '6px', color: 'var(--ink-black)' }}>
+            <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, marginBottom: '6px', color: 'var(--ink-black)' }}>
               Age *
             </label>
             <input
@@ -158,28 +145,18 @@ export default function PatientIntakeForm({
               required
               min="1"
               max="120"
-              placeholder="e.g. 54"
+              placeholder="e.g. 56"
               value={safeInfo.age}
               onChange={(e) => {
                 setPatientInfo({ ...safeInfo, age: e.target.value });
                 setIsSaved(false);
-              }}
-              style={{
-                width: '100%',
-                padding: '12px 14px',
-                borderRadius: '12px',
-                border: 'var(--border-thick)',
-                fontSize: '0.9rem',
-                fontWeight: 600,
-                background: '#FFFFFF',
-                outline: 'none'
               }}
             />
           </div>
 
           {/* Gender */}
           <div>
-            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '6px', color: 'var(--ink-black)' }}>
+            <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, marginBottom: '6px', color: 'var(--ink-black)' }}>
               Gender
             </label>
             <select
@@ -187,16 +164,6 @@ export default function PatientIntakeForm({
               onChange={(e) => {
                 setPatientInfo({ ...safeInfo, gender: e.target.value });
                 setIsSaved(false);
-              }}
-              style={{
-                width: '100%',
-                padding: '12px 14px',
-                borderRadius: '12px',
-                border: 'var(--border-thick)',
-                fontSize: '0.9rem',
-                fontWeight: 600,
-                background: '#FFFFFF',
-                outline: 'none'
               }}
             >
               <option value="Female">Female</option>
@@ -207,7 +174,7 @@ export default function PatientIntakeForm({
 
           {/* Scanned Eye Laterality */}
           <div>
-            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '6px', color: 'var(--ink-black)' }}>
+            <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, marginBottom: '6px', color: 'var(--ink-black)' }}>
               Scanned Eye (Laterality)
             </label>
             <select
@@ -215,16 +182,6 @@ export default function PatientIntakeForm({
               onChange={(e) => {
                 setPatientInfo({ ...safeInfo, eyeScanned: e.target.value });
                 setIsSaved(false);
-              }}
-              style={{
-                width: '100%',
-                padding: '12px 14px',
-                borderRadius: '12px',
-                border: 'var(--border-thick)',
-                fontSize: '0.9rem',
-                fontWeight: 600,
-                background: '#FFFFFF',
-                outline: 'none'
               }}
             >
               <option value="Right Eye (OD)">Right Eye (OD)</option>
@@ -235,7 +192,7 @@ export default function PatientIntakeForm({
 
           {/* Blood Group */}
           <div>
-            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '6px', color: 'var(--ink-black)' }}>
+            <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, marginBottom: '6px', color: 'var(--ink-black)' }}>
               Blood Group *
             </label>
             <select
@@ -244,17 +201,7 @@ export default function PatientIntakeForm({
                 setPatientInfo({ ...safeInfo, bloodGroup: e.target.value });
                 setIsSaved(false);
               }}
-              style={{
-                width: '100%',
-                padding: '12px 14px',
-                borderRadius: '12px',
-                border: 'var(--border-thick)',
-                fontSize: '0.9rem',
-                fontWeight: 700,
-                color: '#DC2626',
-                background: '#FFFFFF',
-                outline: 'none'
-              }}
+              style={{ fontWeight: 700, color: '#DC2626' }}
             >
               {bloodGroups.map((bg) => (
                 <option key={bg} value={bg}>{bg}</option>
@@ -263,10 +210,10 @@ export default function PatientIntakeForm({
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '16px', marginBottom: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '18px' }}>
           {/* Diabetic Status */}
           <div>
-            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '6px', color: 'var(--ink-black)' }}>
+            <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, marginBottom: '6px', color: 'var(--ink-black)' }}>
               Diabetes History / Status
             </label>
             <select
@@ -274,16 +221,6 @@ export default function PatientIntakeForm({
               onChange={(e) => {
                 setPatientInfo({ ...safeInfo, diabeticStatus: e.target.value });
                 setIsSaved(false);
-              }}
-              style={{
-                width: '100%',
-                padding: '12px 14px',
-                borderRadius: '12px',
-                border: 'var(--border-thick)',
-                fontSize: '0.9rem',
-                fontWeight: 600,
-                background: '#FFFFFF',
-                outline: 'none'
               }}
             >
               {diabeticOptions.map((opt) => (
@@ -294,7 +231,7 @@ export default function PatientIntakeForm({
 
           {/* Hypertension */}
           <div>
-            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '6px', color: 'var(--ink-black)' }}>
+            <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, marginBottom: '6px', color: 'var(--ink-black)' }}>
               Hypertension (High BP)
             </label>
             <select
@@ -303,18 +240,8 @@ export default function PatientIntakeForm({
                 setPatientInfo({ ...safeInfo, hypertension: e.target.value });
                 setIsSaved(false);
               }}
-              style={{
-                width: '100%',
-                padding: '12px 14px',
-                borderRadius: '12px',
-                border: 'var(--border-thick)',
-                fontSize: '0.9rem',
-                fontWeight: 600,
-                background: '#FFFFFF',
-                outline: 'none'
-              }}
             >
-              <option value="No">No</option>
+              <option value="No">No (Normotensive)</option>
               <option value="Yes (Controlled)">Yes (Controlled with Medication)</option>
               <option value="Yes (Uncontrolled)">Yes (Uncontrolled)</option>
             </select>
@@ -322,8 +249,8 @@ export default function PatientIntakeForm({
         </div>
 
         {/* Symptoms */}
-        <div style={{ marginBottom: '24px' }}>
-          <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '8px', color: 'var(--ink-black)' }}>
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, marginBottom: '8px', color: 'var(--ink-black)' }}>
             Current Visual Symptoms
           </label>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
@@ -338,14 +265,15 @@ export default function PatientIntakeForm({
                     setIsSaved(false);
                   }}
                   style={{
-                    padding: '8px 16px',
-                    borderRadius: '20px',
+                    padding: '6px 14px',
+                    borderRadius: 'var(--radius-pill)',
                     border: 'var(--border-thick)',
-                    fontSize: '0.8rem',
+                    fontSize: '0.78rem',
                     fontWeight: 700,
                     cursor: 'pointer',
                     background: active ? 'var(--ink-black)' : '#FFFFFF',
                     color: active ? '#FFFFFF' : 'var(--ink-black)',
+                    boxShadow: active ? 'var(--shadow-sm)' : 'none',
                     transition: 'all 0.15s ease'
                   }}
                 >
@@ -356,23 +284,23 @@ export default function PatientIntakeForm({
           </div>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--paper-light)', paddingTop: '16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1.5px solid var(--paper-light)', paddingTop: '14px', flexWrap: 'wrap', gap: '12px' }}>
           {isSaved ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#166534', fontSize: '0.85rem', fontWeight: 700 }}>
-              <CheckCircle2 size={18} /> Medical record saved & linked to scan session
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#166534', fontSize: '0.82rem', fontWeight: 700 }}>
+              <CheckCircle2 size={16} /> Medical record saved & linked to screening session
             </div>
           ) : (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
-              <AlertCircle size={16} /> Save info to proceed to fundus photo upload
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-muted)', fontSize: '0.78rem' }}>
+              <AlertCircle size={15} /> Save details to embed in final diagnostic PDF report
             </div>
           )}
 
           <button
             type="submit"
             className="btn-editorial-primary"
-            style={{ padding: '12px 24px', fontSize: '0.88rem' }}
+            style={{ padding: '10px 20px', fontSize: '0.82rem' }}
           >
-            Save Patient Profile & Proceed <ArrowRight size={16} />
+            Save Patient Profile <ArrowRight size={14} />
           </button>
         </div>
       </form>

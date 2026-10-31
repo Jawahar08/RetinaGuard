@@ -77,6 +77,12 @@ def run_smoke_test():
     smoke = model_factory("smoke_test", num_classes=num_classes)
 
     dummy_input = np.random.randn(2, 3, 224, 224).astype(np.float32)
+    if hasattr(r50, "extract_features") and getattr(r50, "backbone", None) is not None:
+        try:
+            import torch
+            dummy_input = torch.from_numpy(dummy_input)
+        except Exception:
+            pass
     print(f"  - Smoke Model Output: {smoke.forward(dummy_input).shape}")
     print(f"  - ResNet50 Feature Extractor: {r50.extract_features(dummy_input).shape} (Expected: [2, 2048])")
     print(f"  - DenseNet121 Feature Extractor: {d121.extract_features(dummy_input).shape} (Expected: [2, 1024])")
